@@ -1,0 +1,63 @@
+# Contributing
+
+Contributions are welcome and entirely optional. There is no roadmap to keep up
+with, no response-time promise, and nothing here is urgent. If you open a pull
+request and then change your mind, close it. That is a complete and acceptable
+outcome.
+
+## The one rule that matters
+
+Every argument in this bot exists as a matched pair. A template that argues for
+something must ship the version that argues against it, built from the same
+rhetorical move. That is the whole design: the bot cannot take a side because it
+has no unpaired ammunition.
+
+A pull request that adds a one-sided argument will be asked to add the twin, not
+rejected.
+
+## Adding a rhetorical pair
+
+Open `src/rhetoric.js` for the classic voice or `src/plain.js` for the plain one,
+then add an entry:
+
+```js
+{
+  id: 'weather',
+  move: 'appeal to the weather',
+  for: (c) => `${capitalize(c)} is fine in the rain, and it rains eventually.`,
+  against: (c) => `${capitalize(c)} is untested in the rain, and it rains eventually.`,
+}
+```
+
+Run `npm test`. The suite checks that both sides exist, that they differ, that
+they end in punctuation, that ids are unique, and that the word counts stay
+balanced within tolerance for every sample topic. For the plain style it also
+checks that you used no jargon and no word longer than ten letters.
+
+Funny is good. Cruel is not. Nothing in this repository should be funny at the
+expense of a real person, a group, or a private situation.
+
+## Other useful work
+
+- New styles alongside `classic` and `plain`, registered in `src/styles.js`
+- Terminal rendering: narrow widths, right-to-left text, screen readers
+- Accuracy of the fairness audit, including metrics beyond word count
+- Documentation, typos, and clearer error messages
+
+## Practical notes
+
+- Node 18 or newer. No dependencies, and pull requests that add one need a
+  reason in the description.
+- `npm test` must pass. CI runs it on Node 18, 20, and 22.
+- Match the surrounding style. Comments explain constraints, not narration.
+- Small pull requests get read sooner than large ones, though neither is fast.
+
+## What contributing does not create
+
+Opening a pull request does not create an obligation on either side. It is not
+employment, not a promise of merge or payment, and not a claim on the project.
+You keep the copyright in what you write; by opening the pull request you offer
+it under the repository's MIT license.
+
+If you would rather ask a question than write code, open an issue. Questions are
+a real contribution and cost less than a wasted afternoon.

@@ -136,6 +136,16 @@ scripts/publish.sh      create the GitHub repo and push
 npm test
 ```
 
+## Contributing
+
+Optional, unhurried, and welcome. The short version: an argument has to arrive
+with its opposite, because the bot's neutrality is structural rather than
+promised. Adding a mirrored pair to `src/rhetoric.js` or `src/plain.js` is about
+five lines and the test suite checks the rest.
+
+Questions count as contributions. See [CONTRIBUTING.md](CONTRIBUTING.md), or the
+issues labeled `good first issue`.
+
 ## License
 
 MIT
