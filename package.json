@@ -1,0 +1,29 @@
+{
+  "name": "argubot",
+  "version": "1.0.0",
+  "description": "A funny, aggressively nonbiased argument bot. It argues both sides of anything and refuses to pick one.",
+  "type": "module",
+  "bin": {
+    "argubot": "./bin/argubot.js"
+  },
+  "main": "./src/argubot.js",
+  "exports": {
+    ".": "./src/argubot.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "start": "node bin/argubot.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "cli",
+    "debate",
+    "argument",
+    "nonbiased",
+    "gary"
+  ],
+  "license": "MIT",
+  "private": true
+}
