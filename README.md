@@ -90,6 +90,23 @@ in three ways:
 Same topic plus same seed always gives the same debate: the generator is a seeded
 mulberry32 PRNG fed by an FNV-1a hash of the claim, so nothing depends on the clock.
 
+## Where this idea comes from
+
+This tool is the runnable footnote to a chapter in
+[The Pursuit of Happiness over Hubris](https://github.com/Justichuu/pursuit-of-happiness-not-hubris),
+a living open book by Justichuu. The book's ego chapter argues that a machine is
+a flattering mirror: the risk in thinking alongside one is not that it lies to you, but
+that it agrees with you beautifully, and fluency reads like confirmation when it is only
+a style.
+
+So this bot cannot agree with you. It is not even handed because a readme promised it
+would be. It is even handed because every argument it owns exists as a matched pair, and
+it counts the words on both sides afterward to show it did not lean. Fairness kept in a
+promise is a mood. Fairness kept in the structure outlives the author's week.
+
+Running code demonstrates that a rule can be enforced. It does not prove the rule is
+right. That argument belongs in the book.
+
 ## Gary
 
 Gary is an independent participant who says `No.` He says it about every topic, from every
