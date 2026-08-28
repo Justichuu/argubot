@@ -126,6 +126,25 @@ export const GARY_FOOTNOTES = [
   'Gary was asked to elaborate. See above.',
 ];
 
+export const LABELS = {
+  question: (claim) => `THE QUESTION OF ${claim.toUpperCase()}`,
+  meta: (seed, rounds) => `seed ${seed} · ${rounds} round(s) · sides argued: both, equally, on purpose`,
+  for: 'FOR',
+  against: 'AGAINST',
+  gary: 'GARY (independent)',
+  audit: 'BIAS AUDIT',
+  auditSummary: (audit, status) =>
+    `words ${audit.for.words} for / ${audit.against.words} against · ` +
+    `delta ${audit.wordDelta} (tolerance ${audit.tolerance}) · ${status}`,
+  auditDetail: (audit) =>
+    `hedges ${audit.for.hedges}/${audit.against.hedges} · ` +
+    `intensifiers ${audit.for.intensifiers}/${audit.against.intensifiers} · ` +
+    'rhetorical moves reused on both sides: all of them',
+  balanced: 'BALANCED',
+  imbalanced: 'IMBALANCED',
+  verdict: 'VERDICT:',
+};
+
 // Neutral filler used only to even out word counts between the two sides.
 export const FLOURISHES = [
   ', broadly',

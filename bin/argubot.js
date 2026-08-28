@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { argue, MAX_ROUNDS, DEFAULT_TOPIC } from '../src/argubot.js';
+import { argue, maxRounds, STYLE_NAMES, DEFAULT_STYLE } from '../src/argubot.js';
+import { STYLES } from '../src/styles.js';
 import { render } from '../src/render.js';
 
 const HELP = `argubot — a funny, aggressively nonbiased argument bot
@@ -8,17 +9,23 @@ Usage:
   argubot [topic...] [options]
 
 Options:
-  -r, --rounds <n>       arguments per side (1-${MAX_ROUNDS}, default 3)
+  -r, --rounds <n>       arguments per side (default 3, max ${maxRounds('classic')} classic / ${maxRounds('plain')} plain)
   -s, --seed <value>     mix a value into the seed for a different debate
   -t, --tolerance <n>    allowed word-count gap between sides (default 2)
+      --style <name>     ${STYLE_NAMES.join(' | ')} (default ${DEFAULT_STYLE})
+  -p, --plain            shorthand for --style plain: common language, short words
       --no-gary          hold the debate without Gary
       --json             print the debate as JSON
       --no-color         disable ANSI color
   -h, --help             show this help
   -v, --version          show version
 
+Styles:
+${STYLE_NAMES.map((name) => `  ${name.padEnd(8)} ${STYLES[name].description}`).join('\n')}
+
 Examples:
   argubot pineapple on pizza
+  argubot pineapple on pizza --plain
   argubot "whether hot dogs are sandwiches" --rounds 5
   argubot standing desks --seed monday --json
 
@@ -27,7 +34,7 @@ word-count bias, and refuses to reach a conclusion. Gary just says no.
 `;
 
 function parseArgs(argv) {
-  const options = { rounds: 3, gary: true, json: false, color: true, tolerance: 2 };
+  const options = { rounds: 3, gary: true, json: false, color: true, tolerance: 2, style: DEFAULT_STYLE };
   const words = [];
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -40,6 +47,14 @@ function parseArgs(argv) {
       case '-v':
       case '--version':
         options.version = true;
+        break;
+      case '-p':
+      case '--plain':
+        options.style = 'plain';
+        break;
+      case '--style':
+        options.style = argv[i + 1];
+        i += 1;
         break;
       case '--no-gary':
         options.gary = false;
@@ -86,27 +101,23 @@ if (options.help) {
 }
 
 if (options.version) {
-  process.stdout.write('argubot 1.0.0\n');
+  process.stdout.write('argubot 1.1.0\n');
   process.exit(0);
 }
 
-if (options.unknown) {
-  process.stderr.write(`argubot: unknown option ${options.unknown}\nTry --help. Or argue about it.\n`);
+const fail = (message) => {
+  process.stderr.write(`argubot: ${message}\n`);
   process.exit(2);
-}
+};
 
-if (!Number.isFinite(options.rounds) || options.rounds < 1) {
-  process.stderr.write('argubot: --rounds needs a positive number\n');
-  process.exit(2);
-}
-
-if (!Number.isFinite(options.tolerance) || options.tolerance < 0) {
-  process.stderr.write('argubot: --tolerance needs a number of zero or more\n');
-  process.exit(2);
-}
+if (options.unknown) fail(`unknown option ${options.unknown}\nTry --help. Or argue about it.`);
+if (!STYLE_NAMES.includes(options.style)) fail(`unknown style ${options.style}. Pick one of: ${STYLE_NAMES.join(', ')}`);
+if (!Number.isFinite(options.rounds) || options.rounds < 1) fail('--rounds needs a positive number');
+if (!Number.isFinite(options.tolerance) || options.tolerance < 0) fail('--tolerance needs a number of zero or more');
 
 const debate = argue({
-  topic: options.topic === '' ? DEFAULT_TOPIC : options.topic,
+  topic: options.topic === '' ? undefined : options.topic,
+  style: options.style,
   rounds: options.rounds,
   seed: options.seed,
   gary: options.gary,

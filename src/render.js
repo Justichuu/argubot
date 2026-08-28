@@ -1,3 +1,5 @@
+import { getStyle } from './styles.js';
+
 const CODES = {
   reset: '\u001b[0m',
   dim: '\u001b[2m',
@@ -36,6 +38,7 @@ export function render(debate, options = {}) {
   const useColor = options.color !== false;
   const paint = makePaint(useColor);
   const width = Math.max(48, Math.min(options.width ?? 88, 120));
+  const labels = getStyle(debate.style).labels;
   const out = [];
 
   const pushBlock = (text, indent, code) => {
@@ -43,56 +46,44 @@ export function render(debate, options = {}) {
   };
 
   out.push('');
-  pushBlock(`THE QUESTION OF ${debate.claim.toUpperCase()}`, '', 'bold');
-  pushBlock(
-    `seed ${debate.seed} · ${debate.rounds} round(s) · sides argued: both, equally, on purpose`,
-    '',
-    'dim',
-  );
+  pushBlock(labels.question(debate.claim), '', 'bold');
+  pushBlock(labels.meta(debate.seed, debate.rounds), '', 'dim');
   out.push('');
 
   const pushSide = (label, lines, code) => {
     out.push(paint(code, label));
     lines.forEach((line, index) => {
       const wrapped = block(line, width, '      ');
-      const label = `${String(index + 1).padStart(2)}.`;
-      wrapped[0] = `  ${paint(code, label)} ${wrapped[0].trimStart()}`;
+      const number = `${String(index + 1).padStart(2)}.`;
+      wrapped[0] = `  ${paint(code, number)} ${wrapped[0].trimStart()}`;
       out.push(...wrapped);
     });
     out.push('');
   };
 
-  pushSide('FOR', debate.for, 'green');
-  pushSide('AGAINST', debate.against, 'red');
+  pushSide(labels.for, debate.for, 'green');
+  pushSide(labels.against, debate.against, 'red');
 
   if (debate.gary) {
-    out.push(paint('yellow', 'GARY (independent)'));
+    out.push(paint('yellow', labels.gary));
     pushBlock(debate.gary.statement, '  ');
     pushBlock(debate.gary.footnote, '  ', 'dim');
     out.push('');
   }
 
   const { audit } = debate;
-  out.push(paint('cyan', 'BIAS AUDIT'));
-  const status = audit.balanced ? 'BALANCED' : 'IMBALANCED';
-  const summary =
-    `words ${audit.for.words} for / ${audit.against.words} against · ` +
-    `delta ${audit.wordDelta} (tolerance ${audit.tolerance}) · ${status}`;
-  for (const line of block(summary, width, '  ')) {
+  out.push(paint('cyan', labels.audit));
+  const status = audit.balanced ? labels.balanced : labels.imbalanced;
+  for (const line of block(labels.auditSummary(audit, status), width, '  ')) {
     out.push(line.replace(status, paint(audit.balanced ? 'green' : 'red', status)));
   }
-  pushBlock(
-    `hedges ${audit.for.hedges}/${audit.against.hedges} · ` +
-      `intensifiers ${audit.for.intensifiers}/${audit.against.intensifiers} · ` +
-      'rhetorical moves reused on both sides: all of them',
-    '  ',
-    'dim',
-  );
+  pushBlock(labels.auditDetail(audit), '  ', 'dim');
   out.push('');
 
   pushBlock(debate.moderator, '  ', 'dim');
-  const verdict = block(debate.verdict, width, '           ');
-  verdict[0] = `  ${paint('bold', 'VERDICT:')} ${verdict[0].trimStart()}`;
+  const indent = ' '.repeat(labels.verdict.length + 3);
+  const verdict = block(debate.verdict, width, indent);
+  verdict[0] = `  ${paint('bold', labels.verdict)} ${verdict[0].trimStart()}`;
   out.push(...verdict);
   out.push('');
 

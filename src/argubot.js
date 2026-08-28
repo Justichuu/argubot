@@ -1,52 +1,57 @@
 import { hashString, makeRng, pick, shuffled } from './rng.js';
-import { FAMILIES, MODERATOR_LINES, VERDICT_LINES, GARY_FOOTNOTES } from './rhetoric.js';
+import { FAMILIES } from './rhetoric.js';
+import { getStyle, maxRounds, DEFAULT_STYLE, STYLE_NAMES } from './styles.js';
 import { auditDebate, balance } from './audit.js';
 
 export const DEFAULT_TOPIC = 'whether this sentence required an argument';
 export const MAX_ROUNDS = FAMILIES.length;
 
-export function normalizeClaim(topic) {
-  const trimmed = String(topic ?? '').trim();
-  if (trimmed === '') return DEFAULT_TOPIC;
-  const withoutTrailing = trimmed.replace(/[.!?]+$/, '');
-  const firstWord = withoutTrailing.split(/\s+/)[0].toLowerCase();
-  const alreadyAClause = ['whether', 'if', 'that'].includes(firstWord);
-  const claim = alreadyAClause ? withoutTrailing : `the matter of ${withoutTrailing}`;
-  return claim.length > 0 ? claim : DEFAULT_TOPIC;
+export { STYLE_NAMES, DEFAULT_STYLE, maxRounds };
+
+export function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
+  const style = getStyle(styleName);
+  const trimmed = String(topic ?? '').trim().replace(/[.!?]+$/, '');
+  if (trimmed === '') return style.defaultTopic;
+  const claim = style.shapeClaim(trimmed);
+  return claim.trim() === '' ? style.defaultTopic : claim;
 }
 
 export function argue(options = {}) {
-  const topic = options.topic ?? DEFAULT_TOPIC;
-  const claim = normalizeClaim(topic);
-  const rounds = Math.max(1, Math.min(options.rounds ?? 3, MAX_ROUNDS));
+  const styleName = STYLE_NAMES.includes(options.style) ? options.style : DEFAULT_STYLE;
+  const style = getStyle(styleName);
+  const topic = options.topic ?? style.defaultTopic;
+  const claim = normalizeClaim(topic, styleName);
+  const rounds = Math.max(1, Math.min(options.rounds ?? 3, style.families.length));
   const tolerance = Math.max(0, options.tolerance ?? 2);
   const includeGary = options.gary !== false;
-  const seed = options.seed === undefined ? hashString(claim) : hashString(`${claim}:${options.seed}`);
+  const seed =
+    options.seed === undefined ? hashString(`${styleName}:${claim}`) : hashString(`${styleName}:${claim}:${options.seed}`);
 
   const rng = makeRng(seed);
-  const families = shuffled(rng, FAMILIES).slice(0, rounds);
+  const families = shuffled(rng, style.families).slice(0, rounds);
 
   const raw = {
     for: families.map((family) => family.for(claim)),
     against: families.map((family) => family.against(claim)),
   };
 
-  const balanced = balance(raw.for, raw.against, rng, tolerance);
+  const balanced = balance(raw.for, raw.against, rng, tolerance, style.flourishes);
   const audit = auditDebate(balanced.for, balanced.against, tolerance);
 
   // Drawn unconditionally so that hiding Gary does not reshuffle everything else.
-  const garyFootnote = pick(rng, GARY_FOOTNOTES);
+  const garyFootnote = pick(rng, style.garyFootnotes);
 
   return {
     claim,
+    style: styleName,
     seed,
     rounds: families.length,
     moves: families.map((family) => family.move),
     for: balanced.for,
     against: balanced.against,
     gary: includeGary ? { name: 'Gary', statement: 'No.', footnote: garyFootnote } : null,
-    moderator: pick(rng, MODERATOR_LINES),
-    verdict: pick(rng, VERDICT_LINES),
+    moderator: pick(rng, style.moderatorLines),
+    verdict: pick(rng, style.verdictLines),
     audit,
   };
 }

@@ -41,9 +41,9 @@ export function auditDebate(forLines, againstLines, tolerance) {
   };
 }
 
-export function balance(forLines, againstLines, rng, tolerance) {
+export function balance(forLines, againstLines, rng, tolerance, flourishes = FLOURISHES) {
   const sides = { for: forLines.slice(), against: againstLines.slice() };
-  const flourishWords = FLOURISHES.map((flourish) => ({ flourish, words: countWords(flourish) }));
+  const flourishWords = flourishes.map((flourish) => ({ flourish, words: countWords(flourish) }));
 
   for (let guard = 0; guard < 64; guard += 1) {
     const forWords = measure(sides.for).words;
