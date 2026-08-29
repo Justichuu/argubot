@@ -1,17 +1,43 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { argue, normalizeClaim, maxRounds, STYLE_NAMES, DEFAULT_STYLE } from '../src/argubot.js';
 import { measure, auditDebate, countWords } from '../src/audit.js';
 import { STYLES } from '../src/styles.js';
 import { PLAIN_FAMILIES } from '../src/plain.js';
+import { CIVIC_FAMILIES } from '../src/civic.js';
+import { LINEAGE, JUSTICHUU_REPOS, formatLineage } from '../src/lineage.js';
 import { render } from '../src/render.js';
 
-const run = promisify(execFile);
 const CLI = fileURLToPath(new URL('../bin/argubot.js', import.meta.url));
+
+function runNode(argv, { input } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, argv, { stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      const result = { stdout, stderr, code };
+      if (code === 0) resolve(result);
+      else reject(Object.assign(new Error(stderr || `exit ${code}`), result));
+    });
+    if (input != null) child.stdin.write(input);
+    child.stdin.end();
+  });
+}
+
+const run = (args, options) => runNode([CLI, ...args], options);
 
 const TOPICS = [
   'pineapple on pizza',
@@ -25,13 +51,13 @@ const TOPICS = [
   'renaming every street after Gary',
 ];
 
-test('there are at least two styles and classic is the default', () => {
-  assert.ok(STYLE_NAMES.length >= 2);
+test('there are at least three styles and classic is the default', () => {
+  assert.ok(STYLE_NAMES.length >= 3);
   assert.equal(DEFAULT_STYLE, 'classic');
-  assert.deepEqual(STYLE_NAMES.sort(), ['classic', 'plain']);
+  assert.deepEqual([...STYLE_NAMES].sort(), ['civic', 'classic', 'plain']);
 });
 
-for (const styleName of ['classic', 'plain']) {
+for (const styleName of STYLE_NAMES) {
   test(`[${styleName}] every rhetorical family is mirrored across both sides`, () => {
     for (const family of STYLES[styleName].families) {
       assert.equal(typeof family.for, 'function', `${family.id} needs a for-side`);
@@ -148,11 +174,15 @@ test('the plain style states the topic without dressing it up', () => {
   assert.equal(normalizeClaim('pineapple on pizza', 'classic'), 'the matter of pineapple on pizza');
 });
 
-test('the two styles produce genuinely different debates about the same topic', () => {
+test('the styles produce genuinely different debates about the same topic', () => {
   const classic = argue({ topic: 'pineapple on pizza', rounds: 3, style: 'classic' });
   const plain = argue({ topic: 'pineapple on pizza', rounds: 3, style: 'plain' });
+  const civic = argue({ topic: 'pineapple on pizza', rounds: 3, style: 'civic' });
   assert.notDeepEqual(classic.for, plain.for);
+  assert.notDeepEqual(plain.for, civic.for);
+  assert.notDeepEqual(classic.for, civic.for);
   assert.notEqual(classic.claim, plain.claim);
+  assert.equal(plain.claim, civic.claim);
 });
 
 test('Gary can be excluded without disturbing the debate', () => {
@@ -198,6 +228,34 @@ test('the audit reports which side is heavier', () => {
   assert.equal(auditDebate(['one two'], ['one two'], 0).heavierSide, null);
 });
 
+test('the civic style refuses long dashes and invented credentials', () => {
+  const forbidden = /[\u2013\u2014]|\b(PhD|GDP|I am inventing|peer-reviewed consensus I just invented)\b/;
+  for (const family of CIVIC_FAMILIES) {
+    assert.doesNotMatch(family.for('pizza'), forbidden, `${family.id} for-side broke the civic rules`);
+    assert.doesNotMatch(family.against('pizza'), forbidden, `${family.id} against-side broke the civic rules`);
+  }
+});
+
+test('the civic style states the topic without dressing it up', () => {
+  assert.equal(normalizeClaim('pineapple on pizza', 'civic'), 'pineapple on pizza');
+  assert.equal(normalizeClaim('', 'civic'), STYLES.civic.defaultTopic);
+});
+
+test('the lineage catalog cites every Justichuu repo by name', () => {
+  assert.equal(JUSTICHUU_REPOS.length, 4);
+  const ids = JUSTICHUU_REPOS.map((repo) => repo.id).sort();
+  assert.deepEqual(ids, ['argubot', 'asa-list', 'book', 'directory']);
+  const cited = new Set(LINEAGE.map((entry) => entry.source));
+  for (const repo of JUSTICHUU_REPOS) {
+    assert.ok(cited.has(repo.id), `${repo.id} was listed and then not cited`);
+    assert.match(repo.url, /^https:\/\/github.com\/Justichuu\//);
+  }
+  const text = formatLineage();
+  assert.match(text, /pursuit-of-happiness-not-hubris/);
+  assert.match(text, /private-directory-server/);
+  assert.match(text, /asa-list/);
+});
+
 test('rendered output contains both sides and the audit', () => {
   const classic = render(argue({ topic: 'pineapple on pizza', rounds: 2 }), { color: false });
   assert.match(classic, /^FOR$/m);
@@ -212,6 +270,13 @@ test('rendered output contains both sides and the audit', () => {
   assert.match(plain, /FAIRNESS CHECK/);
   assert.match(plain, /EVEN/);
   assert.match(plain, /SO WHO WINS:/);
+
+  const civic = render(argue({ topic: 'pineapple on pizza', rounds: 2, style: 'civic' }), { color: false });
+  assert.match(civic, /^THE CASE FOR$/m);
+  assert.match(civic, /^THE CASE AGAINST$/m);
+  assert.match(civic, /EVIDENCE CHECK/);
+  assert.match(civic, /EVEN HANDED/);
+  assert.match(civic, /WHO DECIDES:/);
 });
 
 test('rendering without color emits no escape codes', () => {
@@ -220,7 +285,7 @@ test('rendering without color emits no escape codes', () => {
 });
 
 test('the CLI prints a debate', async () => {
-  const { stdout } = await run(process.execPath, [CLI, 'pineapple', 'on', 'pizza']);
+  const { stdout } = await run(['pineapple', 'on', 'pizza']);
   assert.match(stdout, /THE QUESTION OF THE MATTER OF PINEAPPLE ON PIZZA/);
   assert.match(stdout, /^FOR$/m);
   assert.match(stdout, /^AGAINST$/m);
@@ -229,7 +294,7 @@ test('the CLI prints a debate', async () => {
 
 test('the CLI speaks common language on request', async () => {
   for (const flag of ['--plain', '-p', '--style plain']) {
-    const { stdout } = await run(process.execPath, [CLI, 'pineapple on pizza', ...flag.split(' ')]);
+    const { stdout } = await run(['pineapple on pizza', ...flag.split(' ')]);
     assert.match(stdout, /ARGUING ABOUT PINEAPPLE ON PIZZA/, `flag ${flag}`);
     assert.match(stdout, /^WHY YES$/m, `flag ${flag}`);
     assert.match(stdout, /^WHY NO$/m, `flag ${flag}`);
@@ -237,8 +302,43 @@ test('the CLI speaks common language on request', async () => {
   }
 });
 
+test('the CLI speaks the civic book voice on request', async () => {
+  for (const flag of ['--civic', '--style civic']) {
+    const { stdout } = await run(['pineapple on pizza', ...flag.split(' ')]);
+    assert.match(stdout, /A QUESTION OF PINEAPPLE ON PIZZA/, `flag ${flag}`);
+    assert.match(stdout, /^THE CASE FOR$/m, `flag ${flag}`);
+    assert.match(stdout, /^THE CASE AGAINST$/m, `flag ${flag}`);
+    assert.match(stdout, /GARY \(not a recipe\)/, `flag ${flag}`);
+  }
+});
+
+test('the CLI reads a piped topic when no words are given', async () => {
+  const { stdout } = await run(['--plain', '--no-color'], {
+    input: 'hot dogs are sandwiches\n',
+  });
+  assert.match(stdout, /ARGUING ABOUT HOT DOGS ARE SANDWICHES/);
+  assert.match(stdout, /^WHY YES$/m);
+});
+
+test('a positional topic wins over stdin', async () => {
+  const { stdout } = await run(['pineapple on pizza', '--json'], {
+    input: 'this should be ignored\n',
+  });
+  const debate = JSON.parse(stdout);
+  assert.equal(debate.claim, 'the matter of pineapple on pizza');
+});
+
+test('the CLI prints the lineage catalog', async () => {
+  const { stdout } = await run(['--lineage']);
+  assert.match(stdout, /argubot lineage/);
+  assert.match(stdout, /Justichuu\/pursuit-of-happiness-not-hubris/);
+  assert.match(stdout, /Justichuu\/private-directory-server/);
+  assert.match(stdout, /Justichuu\/asa-list/);
+  assert.match(stdout, /mirrored-pairs/);
+});
+
 test('the CLI emits valid JSON on request', async () => {
-  const { stdout } = await run(process.execPath, [CLI, 'standing', 'desks', '--json', '--rounds', '4']);
+  const { stdout } = await run(['standing', 'desks', '--json', '--rounds', '4']);
   const debate = JSON.parse(stdout);
   assert.equal(debate.for.length, 4);
   assert.equal(debate.against.length, 4);
@@ -249,30 +349,40 @@ test('the CLI emits valid JSON on request', async () => {
 
 test('the CLI rejects nonsense options with exit code 2', async () => {
   await assert.rejects(
-    () => run(process.execPath, [CLI, '--rounds', 'banana']),
+    () => run(['--rounds', 'banana']),
     (error) => error.code === 2 && /positive number/.test(error.stderr),
   );
   await assert.rejects(
-    () => run(process.execPath, [CLI, '--whats-your-bias']),
+    () => run(['--whats-your-bias']),
     (error) => error.code === 2 && /unknown option/.test(error.stderr),
   );
   await assert.rejects(
-    () => run(process.execPath, [CLI, 'pizza', '--style', 'interpretive-dance']),
+    () => run(['pizza', '--style', 'interpretive-dance']),
     (error) => error.code === 2 && /unknown style/.test(error.stderr),
   );
 });
 
 test('the CLI has help and version', async () => {
-  const help = await run(process.execPath, [CLI, '--help']);
+  const help = await run(['--help']);
   assert.match(help.stdout, /nonbiased argument bot/);
   assert.match(help.stdout, /common language/);
-  const version = await run(process.execPath, [CLI, '--version']);
+  assert.match(help.stdout, /book voice/);
+  assert.match(help.stdout, /--lineage/);
+  const version = await run(['--version']);
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
 });
 
+test('the validator reports a clean tree', async () => {
+  const script = fileURLToPath(new URL('../scripts/validate.js', import.meta.url));
+  const { stdout } = await runNode([script]);
+  assert.match(stdout, /argubot validation passed/);
+});
+
 test('with no topic at all the bot argues about the request itself', async () => {
-  const classic = JSON.parse((await run(process.execPath, [CLI, '--json'])).stdout);
+  const classic = JSON.parse((await run(['--json'])).stdout);
   assert.equal(classic.claim, STYLES.classic.defaultTopic);
-  const plain = JSON.parse((await run(process.execPath, [CLI, '--json', '--plain'])).stdout);
+  const plain = JSON.parse((await run(['--json', '--plain'])).stdout);
   assert.equal(plain.claim, STYLES.plain.defaultTopic);
+  const civic = JSON.parse((await run(['--json', '--civic'])).stdout);
+  assert.equal(civic.claim, STYLES.civic.defaultTopic);
 });
