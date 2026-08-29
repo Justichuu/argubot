@@ -26,6 +26,7 @@ const REQUIRED = [
   'src/civic.js',
   'src/audit.js',
   'src/lineage.js',
+  'src/talk.js',
   'src/rng.js',
   'src/render.js',
   'scripts/validate.js',

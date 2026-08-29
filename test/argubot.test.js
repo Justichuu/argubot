@@ -387,6 +387,7 @@ test('the CLI has help and version', async () => {
   assert.match(help.stdout, /common language/);
   assert.match(help.stdout, /book voice/);
   assert.match(help.stdout, /--lineage/);
+  assert.match(help.stdout, /--talk/);
   const version = await run(['--version']);
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
 });

@@ -48,6 +48,7 @@ A universal recipe is the joke.
 - Terminal rendering: narrow widths, right-to-left text, screen readers
 - Accuracy of the fairness audit, including metrics beyond word count
 - Documentation, typos, and clearer error messages
+- Talk-mode asides, hear-backs, and lean handling, as long as both sides still speak
 
 A pull request is the usual way to send a reviewable record. It is not the only
 way. If that tool is a bad fit, open an issue and another route gets arranged.

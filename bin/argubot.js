@@ -7,6 +7,7 @@ import { argue, maxRounds, STYLE_NAMES, DEFAULT_STYLE } from '../src/argubot.js'
 import { STYLES } from '../src/styles.js';
 import { formatLineage } from '../src/lineage.js';
 import { render } from '../src/render.js';
+import { createAsk, runTalk } from '../src/talk.js';
 
 const VERSION = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'))
   .version;
@@ -16,6 +17,7 @@ const HELP = `argubot -- a funny, aggressively nonbiased argument bot
 Usage:
   argubot [topic...] [options]
   echo "a topic" | argubot [options]
+  argubot --talk [topic...]
 
 Options:
   -r, --rounds <n>       arguments per side (default 3; max is the style's pair count)
@@ -23,10 +25,11 @@ Options:
   -t, --tolerance <n>    allowed word-count gap between sides (default 2)
       --style <name>     ${STYLE_NAMES.join(' | ')} (default ${DEFAULT_STYLE})
   -p, --plain            shorthand for --style plain: common language, short words
-      --civic            shorthand for --style civic: the book's public-draft voice
+      --civic            shorthand for --style civic
+  -i, --talk             talk in turns: you say a thing, both sides answer
       --no-gary          hold the debate without Gary
       --json             print the debate as JSON
-      --lineage          print the named catalog of borrowed Justichuu ideas
+      --lineage          print the named catalog of borrowed ideas
       --no-color         disable ANSI color
   -h, --help             show this help
   -v, --version          show version
@@ -42,14 +45,16 @@ Examples:
   argubot pineapple on pizza --civic
   argubot "whether hot dogs are sandwiches" --rounds 5
   echo "standing desks" | argubot --json
+  argubot --talk pineapple on pizza
   argubot --lineage
 
 The bot argues both sides from the same rhetorical moves, audits itself for
 word-count bias, and refuses to reach a conclusion. Gary just says no.
+In talk mode the voices stay separate, you keep a turn, and done always works.
 `;
 
 function parseArgs(argv) {
-  const options = { rounds: 3, gary: true, json: false, color: true, tolerance: 2, style: DEFAULT_STYLE };
+  const options = { rounds: 3, gary: true, json: false, color: true, tolerance: 2, style: DEFAULT_STYLE, talk: false };
   const words = [];
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -69,6 +74,10 @@ function parseArgs(argv) {
         break;
       case '--civic':
         options.style = 'civic';
+        break;
+      case '-i':
+      case '--talk':
+        options.talk = true;
         break;
       case '--lineage':
         options.lineage = true;
@@ -147,6 +156,27 @@ if (options.unknown) fail(`unknown option ${options.unknown}\nTry --help. Or arg
 if (!STYLE_NAMES.includes(options.style)) fail(`unknown style ${options.style}. Pick one of: ${STYLE_NAMES.join(', ')}`);
 if (!Number.isFinite(options.rounds) || options.rounds < 1) fail('--rounds needs a positive number');
 if (!Number.isFinite(options.tolerance) || options.tolerance < 0) fail('--tolerance needs a number of zero or more');
+
+if (options.talk) {
+  const asker = createAsk(process.stdin, process.stdout);
+  try {
+    await runTalk(
+      {
+        output: process.stdout,
+        ask: (prompt) => asker.ask(prompt),
+      },
+      {
+        topic: options.topic,
+        style: options.style,
+        gary: options.gary,
+        tolerance: options.tolerance,
+      },
+    );
+  } finally {
+    asker.close();
+  }
+  process.exit(0);
+}
 
 const topic = options.topic === '' ? await topicFromStdin() : options.topic;
 

@@ -24,6 +24,7 @@ node bin/argubot.js pineapple on pizza --civic
 node bin/argubot.js "whether hot dogs are sandwiches" --rounds 5
 node bin/argubot.js getting a dog --plain --tolerance 0
 echo "whether this commit needed an argument" | node bin/argubot.js --civic
+node bin/argubot.js --talk pineapple on pizza
 node bin/argubot.js --lineage
 ```
 
@@ -71,6 +72,7 @@ a credential. It is the runnable cousin of a chapter in
       --style <name>     classic | plain | civic (default classic)
   -p, --plain            shorthand for --style plain
       --civic            shorthand for --style civic
+  -i, --talk             talk in turns instead of dumping a whole debate
       --no-gary          hold the debate without Gary
       --json             print the debate as JSON
       --lineage          print the named catalog of borrowed Justichuu ideas
@@ -81,6 +83,36 @@ a credential. It is the runnable cousin of a chapter in
 
 If you give no topic and stdin is a pipe, the bot reads the topic from stdin.
 A topic on the command line always wins.
+
+## Talking
+
+`--talk` is a conversation, not a dump. You say a thing. The bot restates it,
+then YES and NO speak as separate voices. If you lean yes, NO talks first. If
+you lean no, YES talks first. The bot will not continue in the direction you
+were already going. Gary may interrupt. You keep a turn the bot cannot fill.
+
+Type `more` for another pair, `yes` or `no` to lean, `plain` / `classic` /
+`civic` to change voice, or `done` to leave. `done` always works. There is no
+loop that only sends you back to the same prompt.
+
+```
+Say a thing. I will argue both sides and I will not pick.
+Type done when you want out. That always works.
+> pineapple on pizza
+Okay. You said pineapple on pizza.
+
+YES
+  ...
+
+NO
+  ...
+
+GARY
+  No.
+
+Same move, other direction. That is on purpose.
+more · new topic · done
+```
 
 ## JSON shape
 
@@ -159,6 +191,7 @@ thing Gary would say no to.
 ```
 bin/argubot.js          CLI: argument parsing, help, exit codes
 src/argubot.js          debate assembly and claim normalization
+src/talk.js             turn-taking: hear-back, named voices, lean, exit
 src/styles.js           style registry: classic, plain, and civic
 src/rhetoric.js         classic mirrored FOR/AGAINST families, Gary, filler
 src/plain.js            common-language families and labels

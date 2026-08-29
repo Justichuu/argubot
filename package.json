@@ -1,6 +1,6 @@
 {
   "name": "argubot",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "A funny, aggressively nonbiased argument bot. It argues both sides of anything and refuses to pick one.",
   "type": "module",
   "bin": {
