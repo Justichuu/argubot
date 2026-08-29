@@ -22,6 +22,8 @@ Both sides come from the same move. `${c}` is where the topic goes.
 - [ ] `classic`, the debate-club voice in `src/rhetoric.js`
 - [ ] `plain`, the common-language voice in `src/plain.js` (no jargon, no word
   longer than ten letters)
+- [ ] `civic`, the book voice in `src/civic.js` (no long dashes, no invented
+  credentials, no universal recipe)
 
 ## Are you writing it?
 

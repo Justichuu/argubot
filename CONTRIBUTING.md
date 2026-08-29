@@ -17,8 +17,8 @@ rejected.
 
 ## Adding a rhetorical pair
 
-Open `src/rhetoric.js` for the classic voice or `src/plain.js` for the plain one,
-then add an entry:
+Open `src/rhetoric.js` for the classic voice, `src/plain.js` for the plain one,
+or `src/civic.js` for the book voice, then add an entry:
 
 ```js
 {
@@ -37,18 +37,29 @@ checks that you used no jargon and no word longer than ten letters.
 Funny is good. Cruel is not. Nothing in this repository should be funny at the
 expense of a real person, a group, or a private situation.
 
+Civic pairs have two extra rules, both from the book: no en-dash or em-dash,
+and no invented credential, study, or official approval. Agency is the subject.
+A universal recipe is the joke.
+
 ## Other useful work
 
-- New styles alongside `classic` and `plain`, registered in `src/styles.js`
+- New styles alongside `classic`, `plain`, and `civic`, registered in `src/styles.js`
+- A lineage entry in `src/lineage.js` and `LINEAGE.md` when you borrow a checkable idea
 - Terminal rendering: narrow widths, right-to-left text, screen readers
 - Accuracy of the fairness audit, including metrics beyond word count
 - Documentation, typos, and clearer error messages
+
+A pull request is the usual way to send a reviewable record. It is not the only
+way. If that tool is a bad fit, open an issue and another route gets arranged.
+[Pull request 6](https://github.com/Justichuu/argubot/pull/6) is the longer
+version of that rule.
 
 ## Practical notes
 
 - Node 18 or newer. No dependencies, and pull requests that add one need a
   reason in the description.
-- `npm test` must pass. CI runs it on Node 18, 20, and 22.
+- `npm test` must pass. It runs the suite and `scripts/validate.js`. CI runs
+  both on Node 18, 20, and 22, on Linux, Windows, and macOS.
 - Match the surrounding style. Comments explain constraints, not narration.
 - Small pull requests get read sooner than large ones, though neither is fast.
 

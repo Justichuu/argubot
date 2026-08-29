@@ -20,8 +20,11 @@ written to come in pairs, so it cannot take a side even if it wants to.
 ```bash
 node bin/argubot.js pineapple on pizza
 node bin/argubot.js pineapple on pizza --plain
+node bin/argubot.js pineapple on pizza --civic
 node bin/argubot.js "whether hot dogs are sandwiches" --rounds 5
 node bin/argubot.js getting a dog --plain --tolerance 0
+echo "whether this commit needed an argument" | node bin/argubot.js --civic
+node bin/argubot.js --lineage
 ```
 
 ```
@@ -51,10 +54,13 @@ node bin/argubot.js getting a dog --plain --tolerance 0
 | --- | --- |
 | `classic` (default) | debate club: invented statistics, appeals to your ancestors, named fallacies |
 | `plain` (`--plain`) | common language: short words, your mom, five minutes, cleaning it up later |
+| `civic` (`--civic`) | the book's public-draft voice: agency, evidence, no recipe, no long dashes |
 
-Both styles are built the same way and are held to the same fairness rules. The plain
+All three styles are built the same way and are held to the same fairness rules. The plain
 style has tests asserting it never uses jargon and never uses a word longer than ten
-letters.
+letters. The civic style has tests asserting it never uses a long dash and never invents
+a credential. It is the runnable cousin of a chapter in
+[The Pursuit of Happiness over Hubris](https://github.com/Justichuu/pursuit-of-happiness-not-hubris).
 
 ## Options
 
@@ -62,23 +68,48 @@ letters.
   -r, --rounds <n>       arguments per side (default 3, max 16 classic / 14 plain)
   -s, --seed <value>     mix a value into the seed for a different debate
   -t, --tolerance <n>    allowed word-count gap between sides (default 2)
-      --style <name>     classic | plain (default classic)
+      --style <name>     classic | plain | civic (default classic)
   -p, --plain            shorthand for --style plain
+      --civic            shorthand for --style civic
       --no-gary          hold the debate without Gary
       --json             print the debate as JSON
+      --lineage          print the named catalog of borrowed Justichuu ideas
       --no-color         disable ANSI color
   -h, --help             show this help
   -v, --version          show version
 ```
+
+If you give no topic and stdin is a pipe, the bot reads the topic from stdin.
+A topic on the command line always wins.
+
+## JSON shape
+
+`--json` prints the debate as one object. Fields:
+
+| Field | Meaning |
+| --- | --- |
+| `claim` | normalized topic the templates actually received |
+| `style` | `classic`, `plain`, or `civic` |
+| `seed` | unsigned 32-bit seed derived from the claim |
+| `rounds` | arguments per side after clamping |
+| `moves` | rhetorical move names, same order on both sides |
+| `for` | array of for-side sentences |
+| `against` | array of against-side sentences |
+| `gary` | `{ name, statement, footnote }` or `null` when `--no-gary` |
+| `moderator` | one moderator line |
+| `verdict` | one refusal to pick a winner |
+| `audit` | per-side word, hedge, intensifier, question, and exclamation counts, plus `wordDelta`, `tolerance`, `balanced`, and `heavierSide` |
+
+Same topic, style, and seed always produce the same object.
 
 ## How the fairness actually works
 
 Most "unbiased" generators are unbiased by promise. This one is unbiased by construction,
 in three ways:
 
-1. **Mirrored templates.** Every rhetorical move in `src/rhetoric.js` and `src/plain.js`
-   ships as a matched pair, so no argument can exist without its evil twin. The two sides
-   are always built from the identical moves in the identical order.
+1. **Mirrored templates.** Every rhetorical move in `src/rhetoric.js`, `src/plain.js`,
+   and `src/civic.js` ships as a matched pair, so no argument can exist without its evil
+   twin. The two sides are always built from the identical moves in the identical order.
 2. **A real fairness check.** `src/audit.js` measures word count, hedges, intensifiers,
    questions, and exclamations on each side and reports the gap. If the sides drift apart
    by more than `--tolerance` words, the lighter side gets padded with neutral filler
@@ -107,6 +138,14 @@ promise is a mood. Fairness kept in the structure outlives the author's week.
 Running code demonstrates that a rule can be enforced. It does not prove the rule is
 right. That argument belongs in the book.
 
+The civic style is the book's voice made runnable: no long dashes, no invented
+credentials, no universal recipe. `scripts/validate.js` is the book's
+`validate.py` idea in this repo. It names the failed rule and never prints a
+suspected secret. The named catalog of every borrowed idea, including work from
+[Private Directory Server](https://github.com/Justichuu/private-directory-server)
+and the catalog shape of [asa-list](https://github.com/Justichuu/asa-list), is
+in [LINEAGE.md](LINEAGE.md).
+
 ## Gary
 
 Gary is an independent participant who says `No.` He says it about every topic, from every
@@ -120,28 +159,34 @@ thing Gary would say no to.
 ```
 bin/argubot.js          CLI: argument parsing, help, exit codes
 src/argubot.js          debate assembly and claim normalization
-src/styles.js           style registry: classic and plain
+src/styles.js           style registry: classic, plain, and civic
 src/rhetoric.js         classic mirrored FOR/AGAINST families, Gary, filler
 src/plain.js            common-language families and labels
+src/civic.js            book-voice families: agency, evidence, no recipe
+src/lineage.js          named catalog of borrowed Justichuu ideas
 src/audit.js            fairness measurement and word-count balancing
 src/rng.js              seeded PRNG and deterministic picks
 src/render.js           terminal output, wrapping, optional color
-test/argubot.test.js    40 tests over both styles, the renderer, and the CLI
+test/argubot.test.js    fairness, renderer, CLI, lineage, and civic rules
+scripts/validate.js     structural checks; reports the rule, not the secret
 scripts/publish.sh      create the GitHub repo and push
+LINEAGE.md              human-readable copy of the catalog
+ACKNOWLEDGMENTS.md      who directed the work and who assisted
 ```
 
 ## Development
 
 ```bash
 npm test
+npm run validate
 ```
 
 ## Contributing
 
 Optional, unhurried, and welcome. The short version: an argument has to arrive
 with its opposite, because the bot's neutrality is structural rather than
-promised. Adding a mirrored pair to `src/rhetoric.js` or `src/plain.js` is about
-five lines and the test suite checks the rest.
+promised. Adding a mirrored pair to `src/rhetoric.js`, `src/plain.js`, or
+`src/civic.js` is about five lines and the test suite checks the rest.
 
 Questions count as contributions. See [CONTRIBUTING.md](CONTRIBUTING.md), or the
 issues labeled `good first issue`.
