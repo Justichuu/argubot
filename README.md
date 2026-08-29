@@ -9,8 +9,9 @@ No API keys, no network calls, no dependencies. Needs Node 18 or newer.
 
 You type a thing. The bot gives you reasons to say yes and the exact same number of
 reasons to say no. Then it counts the words on both sides to make sure it was not being
-sneaky, and it tells you it will not be choosing. There is also a guy named Gary who only
-says no.
+sneaky, and it tells you it will not be choosing. A third voice that only says no is
+optional and off by default. When you turn it on, it gets a generated name, not a
+fixed one.
 
 It is not smart and it is not connected to anything. It is a box of jokes that were
 written to come in pairs, so it cannot take a side even if it wants to.
@@ -24,7 +25,10 @@ node bin/argubot.js pineapple on pizza --civic
 node bin/argubot.js "whether hot dogs are sandwiches" --rounds 5
 node bin/argubot.js getting a dog --plain --tolerance 0
 echo "whether this commit needed an argument" | node bin/argubot.js --civic
-node bin/argubot.js --talk pineapple on pizza
+node bin/argubot.js /talk pineapple on pizza
+node bin/argubot.js /burrito --plain "whether hot dogs are sandwiches"
+node bin/argubot.js /commands
+node bin/argubot.js pineapple --dissent
 node bin/argubot.js --lineage
 ```
 
@@ -39,9 +43,6 @@ node bin/argubot.js --lineage
      1. Doing something about getting a dog is also a choice, and it is the loud one.
      2. Getting a dog feels right, and that is usually when people get themselves in
         trouble.
-
-  GARY (his own thing)
-    No.
 
   FAIRNESS CHECK
     50 words for yes, 50 words for no · off by 0 (allowed 0) · EVEN
@@ -72,10 +73,12 @@ a credential. It is the runnable cousin of a chapter in
       --style <name>     classic | plain | civic (default classic)
   -p, --plain            shorthand for --style plain
       --civic            shorthand for --style civic
-  -i, --talk             talk in turns instead of dumping a whole debate
-      --no-gary          hold the debate without Gary
+  -i, --talk             same as /talk
+      --burrito          same as /burrito: every voice on one plate
+  -d, --dissent          optional third voice that only says no (off by default)
+      --name <word>      turn dissent on and choose the name
       --json             print the debate as JSON
-      --lineage          print the named catalog of borrowed Justichuu ideas
+      --lineage          print the named catalog of borrowed ideas
       --no-color         disable ANSI color
   -h, --help             show this help
   -v, --version          show version
@@ -89,11 +92,11 @@ A topic on the command line always wins.
 `--talk` is a conversation, not a dump. You say a thing. The bot restates it,
 then YES and NO speak as separate voices. If you lean yes, NO talks first. If
 you lean no, YES talks first. The bot will not continue in the direction you
-were already going. Gary may interrupt. You keep a turn the bot cannot fill.
+were already going. You keep a turn the bot cannot fill. Slash commands work
+inside the conversation: `/style civic`, `/dissent on`, `/burrito`, `/done`.
 
-Type `more` for another pair, `yes` or `no` to lean, `plain` / `classic` /
-`civic` to change voice, or `done` to leave. `done` always works. There is no
-loop that only sends you back to the same prompt.
+Type `more` for another pair, `yes` or `no` to lean, or `/done` to leave.
+`done` always works. There is no loop that only sends you back to the same prompt.
 
 ```
 Say a thing. I will argue both sides and I will not pick.
@@ -127,7 +130,7 @@ more · new topic · done
 | `moves` | rhetorical move names, same order on both sides |
 | `for` | array of for-side sentences |
 | `against` | array of against-side sentences |
-| `gary` | `{ name, statement, footnote }` or `null` when `--no-gary` |
+| `dissent` | `null` by default; `{ name, statement, footnote }` when `--dissent` is on |
 | `moderator` | one moderator line |
 | `verdict` | one refusal to pick a winner |
 | `audit` | per-side word, hedge, intensifier, question, and exclamation counts, plus `wordDelta`, `tolerance`, `balanced`, and `heavierSide` |
@@ -178,22 +181,32 @@ suspected secret. The named catalog of every borrowed idea, including work from
 and the catalog shape of [asa-list](https://github.com/Justichuu/asa-list), is
 in [LINEAGE.md](LINEAGE.md).
 
-## Gary
+## Dissent
 
-Gary is an independent participant who says `No.` He says it about every topic, from every
-angle, before the topic has been announced. He is included by default because a debate
-with two perfectly symmetric sides and no dissent is suspicious. Pass `--no-gary` to hold
-the debate without him; nothing else in the output changes, which is exactly the sort of
-thing Gary would say no to.
+A third voice that only says `No.` is optional and **off by default**. When it is
+off, it has no name and does not appear. When you pass `--dissent` or `/dissent`,
+a name is generated from consonant-plus-vowel-sound pairs (so you get something
+like `Kalo` or `Vuri`, not a fixed person). `--name` sets the word yourself.
+Same topic and seed always produce the same generated name.
+
+## Commands
+
+Every feature is a `/command` and a flag. `argubot /commands` prints the list.
+`/burrito` serves every voice on one topic with a ledger. `/talk` is the
+conversation. `/validate` runs the structural checks. `/ready` prints
+`{"status":"ready"}`. `/menu` is a numbered picker.
 
 ## Layout
 
 ```
-bin/argubot.js          CLI: argument parsing, help, exit codes
+bin/argubot.js          CLI: /commands, flags, talk, burrito, menu
 src/argubot.js          debate assembly and claim normalization
-src/talk.js             turn-taking: hear-back, named voices, lean, exit
+src/commands.js         slash and dashed command parsing
+src/burrito.js          all styles on one plate
+src/names.js            generated dissent names
+src/talk.js             turn-taking: hear-back, named voices, slash commands
 src/styles.js           style registry: classic, plain, and civic
-src/rhetoric.js         classic mirrored FOR/AGAINST families, Gary, filler
+src/rhetoric.js         classic mirrored FOR/AGAINST families, filler
 src/plain.js            common-language families and labels
 src/civic.js            book-voice families: agency, evidence, no recipe
 src/lineage.js          named catalog of borrowed Justichuu ideas

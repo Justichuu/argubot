@@ -49,6 +49,7 @@ A universal recipe is the joke.
 - Accuracy of the fairness audit, including metrics beyond word count
 - Documentation, typos, and clearer error messages
 - Talk-mode asides, hear-backs, and lean handling, as long as both sides still speak
+- Slash commands and flags should stay paired: a `/command` that has no dashed form is incomplete
 
 A pull request is the usual way to send a reviewable record. It is not the only
 way. If that tool is a bad fit, open an issue and another route gets arranged.

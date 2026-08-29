@@ -66,8 +66,7 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /You said pineapple on pizza|recognizes: the matter of pineapple on pizza|The claim is pineapple on pizza/);
   assert.match(reply.text, /^YES$/m);
   assert.match(reply.text, /^NO$/m);
-  assert.match(reply.text, /^GARY$/m);
-  assert.match(reply.text, /^  No\.$/m);
+  assert.doesNotMatch(reply.text, /^GARY$/m);
   assert.match(reply.text, /more · new topic · done/);
   assert.doesNotMatch(reply.text, /justichuu|github\.com|LINEAGE|src\//i);
 });

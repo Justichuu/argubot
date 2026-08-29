@@ -6,6 +6,10 @@ import { createInterface } from 'node:readline';
 
 import { argue } from './argubot.js';
 import { STYLE_NAMES, DEFAULT_STYLE } from './styles.js';
+import { parseSlash, formatCommandList } from './commands.js';
+import { burrito, renderBurrito } from './burrito.js';
+import { generateName } from './names.js';
+import { hashString, makeRng } from './rng.js';
 
 const EXITS = /^(done|quit|bye|q|exit)$/i;
 const MORE = /^(more|again|go|next|\+|1)$/i;
@@ -51,14 +55,43 @@ function isMostlyLean(text) {
 export function classifyTurn(raw) {
   const text = String(raw ?? '').trim();
   if (text === '') return { kind: 'empty' };
+
+  const slash = parseSlash(text);
+  if (slash) {
+    if (slash.command === 'done' || slash.command === 'quit' || slash.command === 'exit' || slash.command === 'bye') {
+      return { kind: 'exit' };
+    }
+    if (slash.command === 'help') return { kind: 'help' };
+    if (slash.command === 'why') return { kind: 'why' };
+    if (slash.command === 'more') return { kind: 'more' };
+    if (slash.command === 'commands') return { kind: 'commands' };
+    if (slash.command === 'burrito' || slash.command === 'all' || slash.command === 'full') {
+      return { kind: 'burrito' };
+    }
+    if (slash.command === 'styles') return { kind: 'styles' };
+    if (STYLE_NAMES.includes(slash.command)) return { kind: 'style', style: slash.command };
+    if (slash.command === 'style' && STYLE_NAMES.includes(slash.args[0])) {
+      return { kind: 'style', style: slash.args[0] };
+    }
+    if (slash.command === 'dissent') {
+      if (slash.args[0] === 'off' || slash.args[0] === 'no') return { kind: 'dissent', dissent: false };
+      return { kind: 'dissent', dissent: true };
+    }
+    if (slash.command === 'name') {
+      return { kind: 'name', name: slash.rest || undefined };
+    }
+    if (slash.command === 'topic' && slash.rest) return { kind: 'topic', topic: slash.rest, lean: detectLean(slash.rest) };
+    if (slash.command === 'seed') return { kind: 'seed', seed: slash.rest };
+    if (slash.command === 'json') return { kind: 'json' };
+    return { kind: 'unknown-command', command: slash.command };
+  }
+
   if (EXITS.test(text) || text === '3') return { kind: 'exit' };
   if (MORE.test(text)) return { kind: 'more' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP.test(text)) return { kind: 'help' };
   if (/^(plain|classic|civic)$/i.test(text)) return { kind: 'style', style: text.toLowerCase() };
-  if (/^(no gary|nogary)$/i.test(text)) return { kind: 'gary', gary: false };
-  if (/^gary$/i.test(text)) return { kind: 'gary', gary: true };
   if (isMostlyLean(text)) return { kind: 'lean', lean: detectLean(text), text };
   return { kind: 'topic', topic: text, lean: detectLean(text) };
 }
@@ -73,8 +106,11 @@ export function openingLines() {
 export function helpLines() {
   return [
     'Type a topic, or lean with yes or no, or say more.',
-    'plain, classic, or civic changes how I talk.',
-    'done, quit, bye, or 3 leaves. There is always a way out.',
+    '/style plain  /civic  /classic   change voice',
+    '/dissent on   /dissent off       optional third voice, generated name',
+    '/burrito                         every voice on this topic',
+    '/commands                        the full list',
+    '/done                            leave. That always works.',
   ];
 }
 
@@ -90,8 +126,9 @@ function beat(state) {
     topic: state.topic,
     style: state.style,
     rounds: 1,
-    seed: `talk-${state.turn}`,
-    gary: state.gary,
+    seed: state.seed === undefined ? `talk-${state.turn}` : `${state.seed}:${state.turn}`,
+    dissent: state.dissent,
+    dissentName: state.dissentName,
     tolerance: state.tolerance,
   });
   return debate;
@@ -127,10 +164,10 @@ export function formatBeat(debate, options = {}) {
   out.push(second.label);
   for (const line of second.lines) out.push(`  ${line}`);
 
-  if (debate.gary) {
+  if (debate.dissent && debate.dissent.name) {
     out.push('');
-    out.push('GARY');
-    out.push(`  ${debate.gary.statement}`);
+    out.push(debate.dissent.name.toUpperCase());
+    out.push(`  ${debate.dissent.statement}`);
   }
 
   out.push('');
@@ -150,8 +187,10 @@ export function createTalkState(options = {}) {
   return {
     topic: options.topic ? String(options.topic).trim() : '',
     style: STYLE_NAMES.includes(options.style) ? options.style : DEFAULT_STYLE,
-    gary: options.gary !== false,
+    dissent: options.dissent === true || options.gary === true,
+    dissentName: options.dissentName,
     tolerance: Math.max(0, options.tolerance ?? 2),
+    seed: options.seed,
     turn: 0,
     lastLean: null,
   };
@@ -186,13 +225,56 @@ export function talkReply(state, raw) {
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: next.lastLean }) };
   }
 
-  if (turn.kind === 'gary') {
-    next.gary = turn.gary;
-    return {
-      state: next,
-      exit: false,
-      text: turn.gary ? 'Gary is back. He already says no.' : 'Gary sat down. The rest of me is still even.',
-    };
+  if (turn.kind === 'commands') {
+    return { state: next, exit: false, text: formatCommandList() };
+  }
+
+  if (turn.kind === 'styles') {
+    return { state: next, exit: false, text: STYLE_NAMES.join('\n') };
+  }
+
+  if (turn.kind === 'unknown-command') {
+    return { state: next, exit: false, text: `I do not know /${turn.command}. Try /commands.` };
+  }
+
+  if (turn.kind === 'dissent') {
+    next.dissent = turn.dissent;
+    if (!next.dissent) {
+      next.dissentName = undefined;
+      return { state: next, exit: false, text: 'Dissent is off. No name.' };
+    }
+    if (!next.dissentName) {
+      next.dissentName = generateName(makeRng(hashString(`dissent-talk:${next.topic}:${next.turn}`)));
+    }
+    return { state: next, exit: false, text: `Dissent is on. ${next.dissentName} says no.` };
+  }
+
+  if (turn.kind === 'name') {
+    next.dissent = true;
+    next.dissentName = turn.name || generateName(makeRng(hashString(`dissent-talk:${next.topic}:${next.turn}`)));
+    return { state: next, exit: false, text: `Dissent is on. ${next.dissentName} says no.` };
+  }
+
+  if (turn.kind === 'seed') {
+    next.seed = turn.seed;
+    return { state: next, exit: false, text: `Seed is ${turn.seed}.` };
+  }
+
+  if (turn.kind === 'json') {
+    if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
+    return { state: next, exit: false, text: JSON.stringify(beat(next), null, 2) };
+  }
+
+  if (turn.kind === 'burrito') {
+    if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
+    const plate = burrito({
+      topic: next.topic,
+      seed: next.seed,
+      dissent: next.dissent,
+      dissentName: next.dissentName,
+      tolerance: next.tolerance,
+    });
+    return { state: next, exit: false, text: renderBurrito(plate, { color: false }) };
   }
 
   if (turn.kind === 'empty') {

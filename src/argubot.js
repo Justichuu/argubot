@@ -2,6 +2,7 @@ import { hashString, makeRng, pick, shuffled } from './rng.js';
 import { FAMILIES } from './rhetoric.js';
 import { getStyle, maxRounds, DEFAULT_STYLE, STYLE_NAMES } from './styles.js';
 import { auditDebate, balance } from './audit.js';
+import { generateName, personalize } from './names.js';
 
 export const DEFAULT_TOPIC = 'whether this sentence required an argument';
 export const MAX_ROUNDS = FAMILIES.length;
@@ -23,7 +24,7 @@ export function argue(options = {}) {
   const claim = normalizeClaim(topic, styleName);
   const rounds = Math.max(1, Math.min(options.rounds ?? 3, style.families.length));
   const tolerance = Math.max(0, options.tolerance ?? 2);
-  const includeGary = options.gary !== false;
+  const includeDissent = options.dissent === true || options.gary === true;
   const seed =
     options.seed === undefined ? hashString(`${styleName}:${claim}`) : hashString(`${styleName}:${claim}:${options.seed}`);
 
@@ -38,8 +39,10 @@ export function argue(options = {}) {
   const balanced = balance(raw.for, raw.against, rng, tolerance, style.flourishes);
   const audit = auditDebate(balanced.for, balanced.against, tolerance);
 
-  // Drawn unconditionally so that hiding Gary does not reshuffle everything else.
-  const garyFootnote = pick(rng, style.garyFootnotes);
+  // Drawn unconditionally so turning dissent on does not reshuffle the sides.
+  const footnote = pick(rng, style.garyFootnotes);
+  const nameRng = makeRng(hashString(`dissent:${seed}`));
+  const name = includeDissent ? String(options.dissentName || generateName(nameRng)).trim() : '';
 
   return {
     claim,
@@ -49,7 +52,7 @@ export function argue(options = {}) {
     moves: families.map((family) => family.move),
     for: balanced.for,
     against: balanced.against,
-    gary: includeGary ? { name: 'Gary', statement: 'No.', footnote: garyFootnote } : null,
+    dissent: includeDissent && name !== '' ? { name, statement: 'No.', footnote: personalize(footnote, name) } : null,
     moderator: pick(rng, style.moderatorLines),
     verdict: pick(rng, style.verdictLines),
     audit,

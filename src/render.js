@@ -64,10 +64,10 @@ export function render(debate, options = {}) {
   pushSide(labels.for, debate.for, 'green');
   pushSide(labels.against, debate.against, 'red');
 
-  if (debate.gary) {
-    out.push(paint('yellow', labels.gary));
-    pushBlock(debate.gary.statement, '  ');
-    pushBlock(debate.gary.footnote, '  ', 'dim');
+  if (debate.dissent && debate.dissent.name) {
+    out.push(paint('yellow', debate.dissent.name.toUpperCase()));
+    pushBlock(debate.dissent.statement, '  ');
+    pushBlock(debate.dissent.footnote, '  ', 'dim');
     out.push('');
   }
 

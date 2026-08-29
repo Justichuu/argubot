@@ -124,9 +124,18 @@ for (const styleName of STYLE_NAMES) {
     assert.notDeepEqual(monday.for, friday.for);
   });
 
-  test(`[${styleName}] Gary says no, and only no`, () => {
+  test(`[${styleName}] dissent is off by default and has no name`, () => {
     for (const topic of TOPICS) {
-      assert.equal(argue({ topic, rounds: 3, style: styleName }).gary.statement, 'No.');
+      assert.equal(argue({ topic, rounds: 3, style: styleName }).dissent, null);
+    }
+  });
+
+  test(`[${styleName}] dissent says no under a generated name`, () => {
+    for (const topic of TOPICS) {
+      const debate = argue({ topic, rounds: 3, style: styleName, dissent: true });
+      assert.equal(debate.dissent.statement, 'No.');
+      assert.match(debate.dissent.name, /^[A-Z][a-z]+$/);
+      assert.notEqual(debate.dissent.name.toLowerCase(), 'gary');
     }
   });
 
@@ -193,13 +202,14 @@ test('the styles produce genuinely different debates about the same topic', () =
   assert.equal(plain.claim, civic.claim);
 });
 
-test('Gary can be excluded without disturbing the debate', () => {
-  const withGary = argue({ topic: 'tabs over spaces', seed: 'x', rounds: 3 });
-  const without = argue({ topic: 'tabs over spaces', seed: 'x', rounds: 3, gary: false });
-  assert.equal(without.gary, null);
-  assert.deepEqual(without.for, withGary.for);
-  assert.deepEqual(without.against, withGary.against);
-  assert.equal(without.verdict, withGary.verdict);
+test('turning dissent on does not reshuffle the sides', () => {
+  const quiet = argue({ topic: 'tabs over spaces', seed: 'x', rounds: 3 });
+  const loud = argue({ topic: 'tabs over spaces', seed: 'x', rounds: 3, dissent: true });
+  assert.equal(quiet.dissent, null);
+  assert.ok(loud.dissent.name);
+  assert.deepEqual(quiet.for, loud.for);
+  assert.deepEqual(quiet.against, loud.against);
+  assert.equal(quiet.verdict, loud.verdict);
 });
 
 test('an empty topic falls back to arguing about itself', () => {
@@ -308,7 +318,7 @@ test('the CLI prints a debate', async () => {
   assert.match(stdout, /THE QUESTION OF THE MATTER OF PINEAPPLE ON PIZZA/);
   assert.match(stdout, /^FOR$/m);
   assert.match(stdout, /^AGAINST$/m);
-  assert.match(stdout, /^GARY \(independent\)$/m);
+  assert.doesNotMatch(stdout, /^GARY/m);
 });
 
 test('the CLI speaks common language on request', async () => {
@@ -327,7 +337,7 @@ test('the CLI speaks the civic book voice on request', async () => {
     assert.match(stdout, /A QUESTION OF PINEAPPLE ON PIZZA/, `flag ${flag}`);
     assert.match(stdout, /^THE CASE FOR$/m, `flag ${flag}`);
     assert.match(stdout, /^THE CASE AGAINST$/m, `flag ${flag}`);
-    assert.match(stdout, /GARY \(not a recipe\)/, `flag ${flag}`);
+    assert.doesNotMatch(stdout, /GARY/, `flag ${flag}`);
   }
 });
 
@@ -362,7 +372,7 @@ test('the CLI emits valid JSON on request', async () => {
   assert.equal(debate.for.length, 4);
   assert.equal(debate.against.length, 4);
   assert.equal(debate.style, 'classic');
-  assert.equal(debate.gary.statement, 'No.');
+  assert.equal(debate.dissent, null);
   assert.equal(debate.audit.balanced, true);
 });
 
@@ -386,8 +396,10 @@ test('the CLI has help and version', async () => {
   assert.match(help.stdout, /nonbiased argument bot/);
   assert.match(help.stdout, /common language/);
   assert.match(help.stdout, /book voice/);
-  assert.match(help.stdout, /--lineage/);
-  assert.match(help.stdout, /--talk/);
+  assert.match(help.stdout, /\/lineage/);
+  assert.match(help.stdout, /\/talk|--talk/);
+  assert.match(help.stdout, /\/burrito/);
+  assert.match(help.stdout, /--dissent/);
   const version = await run(['--version']);
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
 });
@@ -396,6 +408,25 @@ test('the validator reports a clean tree', async () => {
   const script = fileURLToPath(new URL('../scripts/validate.js', import.meta.url));
   const { stdout } = await runNode([script]);
   assert.match(stdout, /argubot validation passed/);
+});
+
+test('the CLI lists commands and serves a burrito', async () => {
+  const list = await run(['/commands']);
+  assert.match(list.stdout, /\/talk/);
+  assert.match(list.stdout, /\/burrito/);
+  const plate = JSON.parse((await run(['/burrito', '--json', 'pineapple on pizza'])).stdout);
+  assert.equal(plate.kind, 'burrito');
+  assert.equal(plate.servings.length, 3);
+  assert.equal(plate.dissent, false);
+  const ready = JSON.parse((await run(['/ready'])).stdout);
+  assert.equal(ready.status, 'ready');
+});
+
+test('the CLI can turn dissent on with a generated name', async () => {
+  const debate = JSON.parse((await run(['pineapple', '--dissent', '--json'])).stdout);
+  assert.equal(debate.dissent.statement, 'No.');
+  assert.match(debate.dissent.name, /^[A-Z][a-z]+$/);
+  assert.notEqual(debate.dissent.name.toLowerCase(), 'gary');
 });
 
 test('with no topic at all the bot argues about the request itself', async () => {
