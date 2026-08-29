@@ -51,10 +51,23 @@ A universal recipe is the joke.
 - Talk-mode asides, hear-backs, and lean handling, as long as both sides still speak
 - Slash commands and flags should stay paired: a `/command` that has no dashed form is incomplete
 
-A pull request is the usual way to send a reviewable record. It is not the only
-way. If that tool is a bad fit, open an issue and another route gets arranged.
-[Pull request 6](https://github.com/Justichuu/argubot/pull/6) is the longer
-version of that rule.
+## Every change arrives as a record somebody can review
+
+The `main` branch refuses direct pushes, for the maintainer as much as for
+anybody else. A pull request is the record of what changed and why, and a push
+that skips it destroys the record it was supposed to leave behind.
+
+A pull request is the usual way to send that record here, and it is not the only
+one. If pull requests are not how you work, for any reason at all, open an issue
+saying so and another route gets arranged. What is required is the reviewable
+record, never a particular tool, and asking costs you nothing.
+
+Every commit you send should already pass `npm test`. Not just the branch as a
+whole, and not just after review. A commit that was never green is not evidence
+that the work works, and a reviewer reading the history later cannot tell the
+difference.
+
+Keep commits separable, so one piece can be dropped without unpicking the rest.
 
 ## Practical notes
 

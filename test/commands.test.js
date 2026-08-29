@@ -76,6 +76,17 @@ test('talk slash commands drive dissent and exit', () => {
   assert.match(off.text, /No name/);
 });
 
+test('/help and a lone slash ask for help instead of a topic', () => {
+  assert.equal(parseArgs(['/help']).help, true);
+  assert.equal(parseArgs(['/help']).command, 'help');
+  assert.equal(parseArgs(['help']).command, 'help');
+  assert.equal(parseArgs(['/']).help, true);
+  assert.equal(parseArgs(['/?']).help, true);
+  assert.equal(parseSlash('/').command, 'help');
+  assert.equal(classifyTurn('/').kind, 'help');
+  assert.equal(classifyTurn('/help').kind, 'help');
+});
+
 test('the command list is printable', () => {
   const list = formatCommandList();
   assert.match(list, /\/talk/);

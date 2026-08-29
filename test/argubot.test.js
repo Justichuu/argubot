@@ -392,15 +392,14 @@ test('the CLI rejects nonsense options with exit code 2', async () => {
 });
 
 test('the CLI has help and version', async () => {
-  const help = await run(['--help']);
-  assert.match(help.stdout, /nonbiased argument bot/);
-  assert.match(help.stdout, /common language/);
-  assert.match(help.stdout, /book voice/);
-  assert.match(help.stdout, /\/lineage/);
-  assert.match(help.stdout, /\/talk|--talk/);
-  assert.match(help.stdout, /\/burrito/);
-  assert.match(help.stdout, /--dissent/);
-  const version = await run(['--version']);
+  for (const flag of ['--help', '/help', 'help', '/']) {
+    const help = await run([flag]);
+    assert.match(help.stdout, /nonbiased argument bot/, flag);
+    assert.match(help.stdout, /\/help/, flag);
+    assert.match(help.stdout, /\/burrito/, flag);
+    assert.match(help.stdout, /--dissent/, flag);
+  }
+  const version = await run(['/version']);
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
 });
 

@@ -6,7 +6,7 @@ export const COMMANDS = [
   { name: 'argue', aliases: ['/argue'], summary: 'one debate (default)' },
   { name: 'talk', aliases: ['/talk', 'i'], summary: 'turn-taking conversation' },
   { name: 'burrito', aliases: ['/burrito', '/all', 'all', 'full', '/full'], summary: 'every style, full audit, one plate' },
-  { name: 'help', aliases: ['/help'], summary: 'show help' },
+  { name: 'help', aliases: ['/help', '/?', '?'], summary: 'show help' },
   { name: 'version', aliases: ['/version'], summary: 'show version' },
   { name: 'lineage', aliases: ['/lineage'], summary: 'named catalog of borrowed ideas' },
   { name: 'styles', aliases: ['/styles'], summary: 'list voices' },
@@ -63,8 +63,13 @@ export function parseArgs(argv) {
   const words = [];
   let i = 0;
 
-  if (argv[0] && resolveCommand(argv[0])) {
+  if (argv[0] === '/' || argv[0] === '/?') {
+    options.help = true;
+    i = 1;
+  } else if (argv[0] && resolveCommand(argv[0])) {
     options.command = resolveCommand(argv[0]);
+    if (options.command === 'help') options.help = true;
+    if (options.command === 'version') options.version = true;
     i = 1;
   }
 
@@ -81,6 +86,9 @@ export function parseArgs(argv) {
     switch (arg) {
       case '-h':
       case '--help':
+      case '-?':
+      case '/':
+      case '/?':
         options.help = true;
         break;
       case '-v':
