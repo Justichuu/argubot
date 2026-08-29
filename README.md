@@ -65,7 +65,7 @@ a credential. It is the runnable cousin of a chapter in
 ## Options
 
 ```
-  -r, --rounds <n>       arguments per side (default 3, max 16 classic / 14 plain)
+  -r, --rounds <n>       arguments per side (default 3; max is the style's pair count)
   -s, --seed <value>     mix a value into the seed for a different debate
   -t, --tolerance <n>    allowed word-count gap between sides (default 2)
       --style <name>     classic | plain | civic (default classic)

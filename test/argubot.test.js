@@ -1,13 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { argue, normalizeClaim, maxRounds, STYLE_NAMES, DEFAULT_STYLE } from '../src/argubot.js';
 import { measure, auditDebate, countWords } from '../src/audit.js';
 import { STYLES } from '../src/styles.js';
 import { PLAIN_FAMILIES } from '../src/plain.js';
-import { CIVIC_FAMILIES } from '../src/civic.js';
+import {
+  CIVIC_FAMILIES,
+  CIVIC_MODERATOR_LINES,
+  CIVIC_VERDICT_LINES,
+  CIVIC_GARY_FOOTNOTES,
+  CIVIC_FLOURISHES,
+} from '../src/civic.js';
 import { LINEAGE, JUSTICHUU_REPOS, formatLineage } from '../src/lineage.js';
 import { render } from '../src/render.js';
 
@@ -146,6 +153,7 @@ test('rounds are clamped to the size of the chosen style', () => {
   assert.equal(argue({ topic: 'anything', rounds: 0 }).rounds, 1);
   assert.equal(argue({ topic: 'anything', rounds: 999 }).rounds, maxRounds('classic'));
   assert.equal(argue({ topic: 'anything', rounds: 999, style: 'plain' }).rounds, maxRounds('plain'));
+  assert.equal(argue({ topic: 'anything', rounds: 999, style: 'civic' }).rounds, maxRounds('civic'));
 });
 
 test('an unknown style falls back to the default instead of throwing', () => {
@@ -230,9 +238,15 @@ test('the audit reports which side is heavier', () => {
 
 test('the civic style refuses long dashes and invented credentials', () => {
   const forbidden = /[\u2013\u2014]|\b(PhD|GDP|I am inventing|peer-reviewed consensus I just invented)\b/;
-  for (const family of CIVIC_FAMILIES) {
-    assert.doesNotMatch(family.for('pizza'), forbidden, `${family.id} for-side broke the civic rules`);
-    assert.doesNotMatch(family.against('pizza'), forbidden, `${family.id} against-side broke the civic rules`);
+  const lines = [
+    ...CIVIC_FAMILIES.flatMap((family) => [family.for('pizza'), family.against('pizza')]),
+    ...CIVIC_MODERATOR_LINES,
+    ...CIVIC_VERDICT_LINES,
+    ...CIVIC_GARY_FOOTNOTES,
+    ...CIVIC_FLOURISHES,
+  ];
+  for (const line of lines) {
+    assert.doesNotMatch(line, forbidden, `civic line broke the civic rules: ${line}`);
   }
 });
 
@@ -254,6 +268,11 @@ test('the lineage catalog cites every Justichuu repo by name', () => {
   assert.match(text, /pursuit-of-happiness-not-hubris/);
   assert.match(text, /private-directory-server/);
   assert.match(text, /asa-list/);
+  const markdown = readFileSync(new URL('../LINEAGE.md', import.meta.url), 'utf8');
+  for (const repo of JUSTICHUU_REPOS) {
+    assert.match(markdown, new RegExp(repo.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(markdown, /Tinyman fork/);
 });
 
 test('rendered output contains both sides and the audit', () => {
