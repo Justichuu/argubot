@@ -1,4 +1,4 @@
 {
   "name": "argubot",
-  "install": "npm install"
+  "install": "npm install --prefix repos/argubot"
 }
