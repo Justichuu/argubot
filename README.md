@@ -5,6 +5,12 @@ with equal force, checks its own fairness, and then refuses to pick a winner.
 
 No API keys, no network calls, no dependencies. Needs Node 18 or newer.
 
+## Demo
+
+![argubot arguing both sides of "pineapple on pizza" and "getting a dog", then auditing itself for word-count balance](media/argubot_demo.gif)
+
+The same run as a downloadable clip: [media/argubot_demo.mp4](media/argubot_demo.mp4).
+
 ## In plain words
 
 You type a thing. The bot gives you reasons to say yes and the exact same number of
