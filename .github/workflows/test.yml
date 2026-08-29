@@ -8,9 +8,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         node: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
@@ -19,4 +21,6 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm test
       - name: Argue about the build
-        run: node bin/argubot.js "whether this build should have passed" --plain --no-color
+        run: node bin/argubot.js "whether this build should have passed" --civic --no-color
+      - name: Show lineage
+        run: node bin/argubot.js --lineage
