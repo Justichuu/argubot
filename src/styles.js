@@ -14,6 +14,14 @@ import {
   PLAIN_FLOURISHES,
   PLAIN_LABELS,
 } from './plain.js';
+import {
+  CIVIC_FAMILIES,
+  CIVIC_MODERATOR_LINES,
+  CIVIC_VERDICT_LINES,
+  CIVIC_GARY_FOOTNOTES,
+  CIVIC_FLOURISHES,
+  CIVIC_LABELS,
+} from './civic.js';
 
 const isClause = (text) => ['whether', 'if', 'that'].includes(text.split(/\s+/)[0].toLowerCase());
 
@@ -42,6 +50,18 @@ export const STYLES = {
     garyFootnotes: PLAIN_GARY_FOOTNOTES,
     flourishes: PLAIN_FLOURISHES,
     labels: PLAIN_LABELS,
+  },
+  civic: {
+    id: 'civic',
+    description: 'book voice: agency, evidence, no recipe, no long dashes',
+    defaultTopic: 'whether a good life needs a universal recipe',
+    shapeClaim: (topic) => topic,
+    families: CIVIC_FAMILIES,
+    moderatorLines: CIVIC_MODERATOR_LINES,
+    verdictLines: CIVIC_VERDICT_LINES,
+    garyFootnotes: CIVIC_GARY_FOOTNOTES,
+    flourishes: CIVIC_FLOURISHES,
+    labels: CIVIC_LABELS,
   },
 };
 
