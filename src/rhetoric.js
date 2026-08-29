@@ -100,6 +100,30 @@ export const FAMILIES = [
     for: (c) => `Arguing against ${c} is exactly what somebody with something to hide would spend their evening doing.`,
     against: (c) => `Arguing for ${c} is exactly what somebody with something to sell would spend their evening doing.`,
   },
+  {
+    id: 'weather',
+    move: 'appeal to the weather',
+    for: (c) => `${capitalize(c)} is fine in the rain, and it rains eventually.`,
+    against: (c) => `${capitalize(c)} is untested in the rain, and it rains eventually.`,
+  },
+  {
+    id: 'silence',
+    move: 'argument from silence',
+    for: (c) => `Nobody texted me a rebuttal to ${c}, and in this house silence is treated as consent.`,
+    against: (c) => `Nobody texted me a rebuttal to ${c}, and in this house silence is treated as a warning.`,
+  },
+  {
+    id: 'precedent',
+    move: 'precedent',
+    for: (c) => `We have already allowed worse than ${c}, so drawing the line here would be a theatrical hobby.`,
+    against: (c) => `We have already allowed worse than ${c}, so drawing the line here is the last useful hobby we have.`,
+  },
+  {
+    id: 'opportunity',
+    move: 'opportunity cost',
+    for: (c) => `Every hour not spent on ${c} is an hour you will later describe as research.`,
+    against: (c) => `Every hour spent on ${c} is an hour you will later describe as research.`,
+  },
 ];
 
 export const MODERATOR_LINES = [

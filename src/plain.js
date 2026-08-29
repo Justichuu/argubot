@@ -88,6 +88,30 @@ export const PLAIN_FAMILIES = [
     for: (c) => `You could tell people about ${c} later and they would laugh in the good way.`,
     against: (c) => `You could tell people about ${c} later and they would get very quiet instead.`,
   },
+  {
+    id: 'sleep',
+    move: 'sleep',
+    for: (c) => `You will still sleep after ${c}, and that is the bar for a lot of choices.`,
+    against: (c) => `You will not sleep after ${c}, and that is the bar for a lot of choices.`,
+  },
+  {
+    id: 'later-you',
+    move: 'later you',
+    for: (c) => `Later you will thank now you for ${c}, or at least not throw a shoe.`,
+    against: (c) => `Later you will blame now you for ${c}, or at least throw a shoe.`,
+  },
+  {
+    id: 'leftovers',
+    move: 'leftovers',
+    for: (c) => `${capitalize(c)} keeps, like leftovers, and leftovers are how a week gets fed.`,
+    against: (c) => `${capitalize(c)} keeps, like leftovers, and leftovers are how a week gets weird.`,
+  },
+  {
+    id: 'weather',
+    move: 'the weather',
+    for: (c) => `${capitalize(c)} is fine in the rain, and it rains a lot here.`,
+    against: (c) => `${capitalize(c)} is untested in the rain, and it rains a lot here.`,
+  },
 ];
 
 export const PLAIN_MODERATOR_LINES = [
