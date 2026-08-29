@@ -1,21 +1,32 @@
 #!/usr/bin/env node
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { argue, maxRounds, STYLE_NAMES, DEFAULT_STYLE } from '../src/argubot.js';
 import { STYLES } from '../src/styles.js';
+import { formatLineage } from '../src/lineage.js';
 import { render } from '../src/render.js';
 
-const HELP = `argubot — a funny, aggressively nonbiased argument bot
+const VERSION = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'))
+  .version;
+
+const HELP = `argubot -- a funny, aggressively nonbiased argument bot
 
 Usage:
   argubot [topic...] [options]
+  echo "a topic" | argubot [options]
 
 Options:
-  -r, --rounds <n>       arguments per side (default 3, max ${maxRounds('classic')} classic / ${maxRounds('plain')} plain)
+  -r, --rounds <n>       arguments per side (default 3; max is the style's pair count)
   -s, --seed <value>     mix a value into the seed for a different debate
   -t, --tolerance <n>    allowed word-count gap between sides (default 2)
       --style <name>     ${STYLE_NAMES.join(' | ')} (default ${DEFAULT_STYLE})
   -p, --plain            shorthand for --style plain: common language, short words
+      --civic            shorthand for --style civic: the book's public-draft voice
       --no-gary          hold the debate without Gary
       --json             print the debate as JSON
+      --lineage          print the named catalog of borrowed Justichuu ideas
       --no-color         disable ANSI color
   -h, --help             show this help
   -v, --version          show version
@@ -23,11 +34,15 @@ Options:
 Styles:
 ${STYLE_NAMES.map((name) => `  ${name.padEnd(8)} ${STYLES[name].description}`).join('\n')}
 
+Round caps: ${STYLE_NAMES.map((name) => `${name} ${maxRounds(name)}`).join(' / ')}
+
 Examples:
   argubot pineapple on pizza
   argubot pineapple on pizza --plain
+  argubot pineapple on pizza --civic
   argubot "whether hot dogs are sandwiches" --rounds 5
-  argubot standing desks --seed monday --json
+  echo "standing desks" | argubot --json
+  argubot --lineage
 
 The bot argues both sides from the same rhetorical moves, audits itself for
 word-count bias, and refuses to reach a conclusion. Gary just says no.
@@ -51,6 +66,12 @@ function parseArgs(argv) {
       case '-p':
       case '--plain':
         options.style = 'plain';
+        break;
+      case '--civic':
+        options.style = 'civic';
+        break;
+      case '--lineage':
+        options.lineage = true;
         break;
       case '--style':
         options.style = argv[i + 1];
@@ -93,6 +114,13 @@ function parseArgs(argv) {
   return options;
 }
 
+async function topicFromStdin() {
+  if (process.stdin.isTTY === true) return '';
+  const chunks = [];
+  for await (const chunk of process.stdin) chunks.push(chunk);
+  return Buffer.concat(chunks).toString('utf8').trim();
+}
+
 const options = parseArgs(process.argv.slice(2));
 
 if (options.help) {
@@ -101,7 +129,12 @@ if (options.help) {
 }
 
 if (options.version) {
-  process.stdout.write('argubot 1.1.0\n');
+  process.stdout.write(`argubot ${VERSION}\n`);
+  process.exit(0);
+}
+
+if (options.lineage) {
+  process.stdout.write(formatLineage());
   process.exit(0);
 }
 
@@ -115,8 +148,10 @@ if (!STYLE_NAMES.includes(options.style)) fail(`unknown style ${options.style}. 
 if (!Number.isFinite(options.rounds) || options.rounds < 1) fail('--rounds needs a positive number');
 if (!Number.isFinite(options.tolerance) || options.tolerance < 0) fail('--tolerance needs a number of zero or more');
 
+const topic = options.topic === '' ? await topicFromStdin() : options.topic;
+
 const debate = argue({
-  topic: options.topic === '' ? undefined : options.topic,
+  topic: topic === '' ? undefined : topic,
   style: options.style,
   rounds: options.rounds,
   seed: options.seed,
