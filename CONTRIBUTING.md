@@ -44,6 +44,24 @@ expense of a real person, a group, or a private situation.
 - Accuracy of the fairness audit, including metrics beyond word count
 - Documentation, typos, and clearer error messages
 
+## Every change arrives as a record somebody can review
+
+The `main` branch refuses direct pushes, for the maintainer as much as for
+anybody else. A pull request is the record of what changed and why, and a push
+that skips it destroys the record it was supposed to leave behind.
+
+A pull request is the usual way to send that record here, and it is not the only
+one. If pull requests are not how you work, for any reason at all, open an issue
+saying so and another route gets arranged. What is required is the reviewable
+record, never a particular tool, and asking costs you nothing.
+
+Every commit you send should already pass `npm test`. Not just the branch as a
+whole, and not just after review. A commit that was never green is not evidence
+that the work works, and a reviewer reading the history later cannot tell the
+difference.
+
+Keep commits separable, so one piece can be dropped without unpicking the rest.
+
 ## Practical notes
 
 - Node 18 or newer. No dependencies, and pull requests that add one need a
