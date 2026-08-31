@@ -476,6 +476,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Certainly is ego/);
   assert.match(html, /Ego is hubris/);
   assert.match(html, /Everything is not\. Or is\. Gray area/);
+  assert.match(html, /Metaphor is a metaphor for metaphor/);
+  assert.match(html, /A metaphor for metaphor is nothing/);
+  assert.match(html, /Or is something to someone/);
   const body = html.slice(html.indexOf('<body>'));
   assert.ok(body.indexOf('id="thing"') < body.indexOf('principal of its existence'), 'the box must come before the manifesto so a phone can use it');
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
@@ -586,6 +589,8 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('more').kind, 'more');
   assert.equal(classifyTurn('fix').kind, 'fix');
   assert.equal(classifyTurn('fix the roads').kind, 'topic');
+  assert.equal(classifyTurn('metaphor').kind, 'metaphor');
+  assert.equal(classifyTurn('metaphor is nothing').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -613,6 +618,9 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /Hallucinations compressed/);
   assert.match(reply.text, /Certainly is ego/);
   assert.match(reply.text, /Gray area/);
+  assert.match(reply.text, /Metaphor is a metaphor for metaphor/);
+  assert.match(reply.text, /A metaphor for metaphor is nothing/);
+  assert.match(reply.text, /Or is something to someone/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);
@@ -661,6 +669,24 @@ test('more needs a topic, then adds another pair', () => {
 test('a lean without a topic is refused', () => {
   const reply = talkReply(createTalkState(), 'yes');
   assert.match(reply.text, /Type it first/);
+});
+
+test('metaphor is the name, which is nothing, or something to someone', () => {
+  assert.equal(classifyTurn('/metaphor').kind, 'metaphor');
+  const reply = talkReply(createTalkState({ seed: 'metaphor' }), 'metaphor');
+  assert.match(reply.text, /You said Metaphor is a metaphor for metaphor/);
+  assert.match(reply.text, /^Maybe Metaphor is a metaphor for metaphor\.$/m);
+  assert.match(reply.text, /^Also maybe a metaphor for metaphor is nothing\. Or is something to someone\.$/m);
+  const yesAt = reply.text.indexOf('\nMAYBE\n');
+  const noAt = reply.text.indexOf('\nALSO MAYBE\n');
+  const first = yesAt < noAt ? reply.text.slice(yesAt, noAt) : reply.text.slice(noAt, yesAt);
+  const second = yesAt < noAt ? reply.text.slice(noAt) : reply.text.slice(yesAt);
+  assert.equal((first.match(/^ {3}Check: /gm) || []).length, (second.match(/^ {3}Check: /gm) || []).length);
+  assert.doesNotMatch(reply.text, /\b(the winner is|yes wins|no wins|i conclude|weight|weighted)\b/i);
+  const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
+  const named = talkReply(started.state, 'metaphor');
+  assert.match(named.text, /^Maybe Metaphor is a metaphor for metaphor\.$/m);
+  assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
 });
 
 test('fix with no topic starts on LLMs and keeps an even scale', () => {

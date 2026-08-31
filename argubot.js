@@ -1131,6 +1131,8 @@ const WHY = /^(why)$/i;
 const HELP_TURN = /^(help|\?)$/i;
 const FIX = /^(fix)$/i;
 const FIX_TOPIC = 'LLMs need to be fixed';
+const METAPHOR = /^(metaphor)$/i;
+const METAPHOR_TOPIC = 'Metaphor is a metaphor for metaphor';
 
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
@@ -1147,6 +1149,7 @@ const SLASH_KIND = {
   why: 'why',
   more: 'more',
   fix: 'fix',
+  metaphor: 'metaphor',
 };
 
 function detectLean(text) {
@@ -1196,6 +1199,7 @@ function classifyTurn(raw) {
   if (EXITS.test(text) || text === '3') return { kind: 'exit' };
   if (MORE.test(text)) return { kind: 'more' };
   if (FIX.test(text)) return { kind: 'fix' };
+  if (METAPHOR.test(text)) return { kind: 'metaphor' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP_TURN.test(text)) return { kind: 'help' };
@@ -1206,14 +1210,14 @@ function classifyTurn(raw) {
 
 function openingLines() {
   return [
-    'Type it. I will write both sides. A fix, and the problems the fix makes. I will not pick.',
+    'Type it. I will write both sides. A fix, and the problems the fix makes. A metaphor, and nothing. Or something to someone. I will not pick.',
     'Type done when you want out. Chill. Let it go. I let go of the wheel.',
   ];
 }
 
 function helpLines() {
   return [
-    'Type it. yes or no if you have a side. more for more. fix for a fix. done to leave.',
+    'Type it. yes or no if you have a side. more for more. fix for a fix. metaphor for a metaphor. done to leave.',
     'Solutions are uncensored. No weights. No bias. Even scale.',
   ];
 }
@@ -1245,6 +1249,11 @@ function proofLine(debate, index, side) {
 }
 
 function claimLine(side, claim) {
+  if (claim === METAPHOR_TOPIC) {
+    return side === 'for'
+      ? 'Maybe Metaphor is a metaphor for metaphor.'
+      : 'Also maybe a metaphor for metaphor is nothing. Or is something to someone.';
+  }
   return side === 'for' ? `Maybe ${claim} is a fix.` : `Also maybe ${claim} makes more problems.`;
 }
 
@@ -1277,7 +1286,7 @@ function formatBeat(debate, options = {}) {
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
   extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
+  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area. Metaphor is a metaphor for metaphor. A metaphor for metaphor is nothing. Or is something to someone.');
 
   const pairsReady = Math.min(first.lines.length, second.lines.length);
   const writeEssay = (part, n) => {
@@ -1384,6 +1393,11 @@ function talkReply(state, raw) {
   }
   if (turn.kind === 'fix') {
     if (!next.topic) next.topic = FIX_TOPIC;
+    next.turn += 1;
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
+  }
+  if (turn.kind === 'metaphor') {
+    next.topic = METAPHOR_TOPIC;
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }
@@ -1640,6 +1654,8 @@ Hallucinations are accepted but must be compressed to be readable and
 applicable and realistic. after you're not certain and I'm not either
 but the world would(not) be either. Next turn
 Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.
+Metaphor is a metaphor for metaphor. A metaphor for metaphor is nothing.
+Or is something to someone.
 
 Give it a thing. It argues maybe. It will not pick.
 
