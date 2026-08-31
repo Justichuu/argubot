@@ -581,6 +581,7 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /^ALSO MAYBE$/m);
   assert.doesNotMatch(reply.text, /^GARY$/m);
   assert.match(reply.text, /^Maybe pineapple on pizza\.$/m);
+  assert.match(reply.text, /Maybe because mathematically maybe within limits/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);
