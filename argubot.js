@@ -1263,7 +1263,7 @@ function formatBeat(debate, options = {}) {
   if (lean === 'against') out.push('You said no. MAYBE first.');
   if (coin) out.push(`${coin}. ${first.label} first.`);
   const check = debate.audit;
-  out.push(`Maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted.`);
+  out.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted.`);
 
   const writeEssay = (part) => {
     out.push('');

@@ -635,7 +635,7 @@ test('formatted beats stay even and never pick a winner', () => {
   assert.match(text, /^ALSO MAYBE$/m);
   assert.equal(debate.audit.tolerance, 0);
   assert.equal(debate.audit.for.words, debate.audit.against.words);
-  assert.match(text, new RegExp(`Maybe within limits\\. ${debate.audit.for.words} to ${debate.audit.against.words}\\.`));
+  assert.match(text, new RegExp(`Maybe because mathematically maybe within limits\\. ${debate.audit.for.words} to ${debate.audit.against.words}\\.`));
   assert.match(text, /Margin taken\. Limits deducted\./);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
 });
