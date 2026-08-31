@@ -1329,27 +1329,17 @@ function talkAct(state, action, box = '') {
   const fresh = text !== '' && text !== now.topic;
 
   if (action === 'done') return talkReply(now, 'done');
-
   if (action === 'argue') {
     if (text === '') return talkReply(now, '');
     if (now.topic && text === now.topic) return talkReply(now, 'more');
     return talkReply(now, text);
   }
-
-  if (action === 'more') {
-    if (fresh || (!now.topic && text)) return talkReply(now, text);
-    return talkReply(now, 'more');
+  if (action === 'more') return talkReply(now, fresh ? text : 'more');
+  if ((action === 'yes' || action === 'no') && fresh) {
+    const lean = action === 'yes' ? 'for' : 'against';
+    const next = { ...now, topic: text, lastLean: lean, turn: now.turn + 1 };
+    return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean }) };
   }
-
-  if (action === 'yes' || action === 'no') {
-    if (fresh || (!now.topic && text)) {
-      const lean = action === 'yes' ? 'for' : 'against';
-      const next = { ...now, topic: text, lastLean: lean, turn: now.turn + 1 };
-      return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean }) };
-    }
-    return talkReply(now, action);
-  }
-
   return talkReply(now, String(action ?? ''));
 }
 
@@ -1651,78 +1641,63 @@ if (typeof document !== 'undefined') {
     const btnSpeak = document.getElementById('acc_speak');
     let typeLevel = 0;
     let speakOn = false;
-    let state;
-
-    function hint(msg) {
-      if (note) note.textContent = msg || '';
-    }
-    function silence() {
-      try {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-      } catch (err) {}
-    }
-    function voice(msg) {
+    const hint = (msg) => { if (note) note.textContent = msg || ''; };
+    const silence = () => { try { window.speechSynthesis?.cancel(); } catch (err) {} };
+    const voice = (msg) => {
       if (!speakOn || !window.speechSynthesis) return;
       try {
         silence();
         window.speechSynthesis.speak(new SpeechSynthesisUtterance(String(msg || '')));
       } catch (err) {}
-    }
-    function writeHash() {
-      const parts = [];
-      if (typeLevel === 1) parts.push('type');
-      if (typeLevel === 2) parts.push('type2');
-      if (root.classList.contains('access-hi')) parts.push('hi');
-      if (speakOn) parts.push('speak');
-      const hash = parts.length ? 'access=' + parts.join(',') : '';
+    };
+    const writeHash = () => {
+      const parts = [
+        typeLevel === 1 && 'type',
+        typeLevel === 2 && 'type2',
+        root.classList.contains('access-hi') && 'hi',
+        speakOn && 'speak',
+      ].filter(Boolean);
       try {
-        history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search);
+        history.replaceState(null, '', parts.length ? `#access=${parts.join(',')}` : location.pathname + location.search);
       } catch (err) {}
-    }
-    function applyType() {
+    };
+    const applyType = () => {
       if (!btnType) return;
       root.classList.toggle('access-big', typeLevel === 1);
       root.classList.toggle('access-bigger', typeLevel === 2);
       btnType.setAttribute('aria-pressed', typeLevel > 0 ? 'true' : 'false');
-      btnType.textContent = typeLevel === 0 ? 'Type' : typeLevel === 1 ? 'Type +' : 'Type ++';
-    }
-    if (btnType) {
-      btnType.addEventListener('click', () => {
-        typeLevel = (typeLevel + 1) % 3;
-        applyType();
-        hint(typeLevel === 0 ? 'Usual type.' : typeLevel === 1 ? 'Larger type.' : 'Largest type.');
-        writeHash();
-      });
-    }
-    if (btnHi) {
-      btnHi.addEventListener('click', () => {
-        const on = !root.classList.contains('access-hi');
-        root.classList.toggle('access-hi', on);
-        btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
-        hint(on ? 'High contrast.' : 'Usual contrast.');
-        writeHash();
-      });
-    }
-    if (btnSpeak) {
-      btnSpeak.addEventListener('click', () => {
-        if (speakOn) {
-          speakOn = false;
-          btnSpeak.setAttribute('aria-pressed', 'false');
-          btnSpeak.textContent = 'Speak';
-          silence();
-          hint('Speak is off.');
-          writeHash();
-          return;
-        }
+      btnType.textContent = ['Type', 'Type +', 'Type ++'][typeLevel];
+    };
+    btnType?.addEventListener('click', () => {
+      typeLevel = (typeLevel + 1) % 3;
+      applyType();
+      hint(['Usual type.', 'Larger type.', 'Largest type.'][typeLevel]);
+      writeHash();
+    });
+    btnHi?.addEventListener('click', () => {
+      const on = !root.classList.contains('access-hi');
+      root.classList.toggle('access-hi', on);
+      btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
+      hint(on ? 'High contrast.' : 'Usual contrast.');
+      writeHash();
+    });
+    btnSpeak?.addEventListener('click', () => {
+      if (speakOn) {
+        speakOn = false;
+        btnSpeak.setAttribute('aria-pressed', 'false');
+        btnSpeak.textContent = 'Speak';
+        silence();
+        hint('Speak is off.');
+      } else {
         speakOn = true;
         btnSpeak.setAttribute('aria-pressed', 'true');
         btnSpeak.textContent = 'Stop speak';
         const msg = 'Type, contrast, and speak on this page. This page will not hear you.';
         hint(msg);
         voice(msg);
-        writeHash();
-      });
-    }
+      }
+      writeHash();
+    });
     const flags = ((location.hash || '').match(/access=([\w,]+)/) || [, ''])[1].split(',').filter(Boolean);
     if (flags.includes('type2')) typeLevel = 2;
     else if (flags.includes('type')) typeLevel = 1;
@@ -1736,20 +1711,15 @@ if (typeof document !== 'undefined') {
       btnSpeak.setAttribute('aria-pressed', 'true');
       btnSpeak.textContent = 'Stop speak';
     }
-    function styleNow() {
-      const picked = document.querySelector('input[name="style"]:checked');
-      return picked ? picked.value : 'plain';
-    }
-    function show(text, moveFocus) {
+    const styleNow = () => document.querySelector('input[name="style"]:checked')?.value || 'plain';
+    const show = (text, moveFocus) => {
       out.textContent = text;
       voice(text);
-      if (moveFocus) {
-        try { out.focus(); } catch (err) {}
-      }
-    }
-    state = createTalkState({ style: styleNow() });
+      if (moveFocus) try { out.focus(); } catch (err) {}
+    };
+    let state = createTalkState({ style: styleNow() });
     show('Say a thing. I will argue both sides and I will not pick.\nDone when you want out. That always works.', false);
-    function say(action) {
+    const say = (action) => {
       state = { ...state, style: styleNow() };
       const reply = talkAct(state, action, thing.value);
       state = reply.state;
@@ -1758,20 +1728,18 @@ if (typeof document !== 'undefined') {
         state = createTalkState({ style: styleNow() });
         thing.value = '';
       }
-    }
+    };
     form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       say('argue');
     });
-    document.getElementById('yes')?.addEventListener('click', () => say('yes'));
-    document.getElementById('no')?.addEventListener('click', () => say('no'));
-    document.getElementById('more')?.addEventListener('click', () => say('more'));
-    document.getElementById('done')?.addEventListener('click', () => say('done'));
-    for (const radio of document.querySelectorAll('input[name="style"]')) {
-      radio.addEventListener('change', () => {
-        state = { ...state, style: styleNow() };
-      });
-    }
+    form.addEventListener('click', (ev) => {
+      const id = ev.target && ev.target.id;
+      if (id === 'yes' || id === 'no' || id === 'more' || id === 'done') say(id);
+    });
+    form.addEventListener('change', () => {
+      state = { ...state, style: styleNow() };
+    });
   }
 }
 
