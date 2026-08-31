@@ -126,7 +126,7 @@
     html.access-bigger .wip-stamp { font-size: 21px; }
     @media print { .wip-stamp { box-shadow: none; break-inside: avoid; } }
     .notes { margin: 12px 0 16px; }
-    .notes details { display: inline-block; margin: 0 8px 8px 0; vertical-align: top; max-width: 100%; }
+    .notes details { max-width: 100%; }
     .notes summary {
       list-style: none;
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
@@ -136,6 +136,7 @@
     .notes summary::-webkit-details-marker { display: none; }
     .notes details[open] summary { background: var(--ink); color: var(--paper); }
     .notes details p { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
+    .notes .wip-stamp { margin: 10px 0 0; max-width: none; color: var(--ink); font-size: 15px; }
     textarea, button { font: inherit; color: var(--ink); }
     textarea {
       width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
@@ -218,10 +219,10 @@
         <button type="button" id="done">Done</button>
       </div>
     </form>
-    <p class="wip-stamp" role="status"><strong>This stays here.</strong> It does not call this website. Nothing is sent.</p>
     <div class="notes">
-      <details>
-        <summary>Instructions</summary>
+      <details open>
+        <summary>Here and Instructions</summary>
+        <p class="wip-stamp" role="status"><strong>This stays here.</strong> It does not call this website. Nothing is sent.</p>
         <p>The box is the thing. Argue. yes or no if you have a side. more for more. done to leave.</p>
       </details>
     </div>

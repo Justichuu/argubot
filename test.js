@@ -443,8 +443,8 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Nothing is sent\./);
   assert.match(html, /class="wip-stamp"/);
   assert.match(html, /background:\s*var\(--accent\)/);
-  assert.match(html, /<summary>Instructions<\/summary>/);
-  assert.doesNotMatch(html, /<summary>Here<\/summary>/);
+  assert.match(html, /<summary>Here and Instructions<\/summary>/);
+  assert.match(html, /<details open>/);
   assert.doesNotMatch(html, /Type\. Argue\. Nothing is sent\./);
   assert.match(html, /chuumind.com\/book\//);
   assert.match(html, /chuumind.com\/rights\//);
