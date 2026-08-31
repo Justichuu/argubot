@@ -1322,37 +1322,6 @@ function talkReply(state, raw) {
   return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: turn.lean }) };
 }
 
-// The box is the thing. Buttons act on what is in it, not only on leftover state.
-function talkAct(state, action, box = '') {
-  const text = String(box ?? '').trim();
-  const current = { ...state };
-  const boxIsNew = text !== '' && text !== current.topic;
-
-  if (action === 'done') return talkReply(current, 'done');
-
-  if (action === 'argue') {
-    if (text === '') return talkReply(current, '');
-    if (current.topic && text === current.topic) return talkReply(current, 'more');
-    return talkReply(current, text);
-  }
-
-  if (action === 'more') {
-    if (boxIsNew || (!current.topic && text)) return talkReply(current, text);
-    return talkReply(current, 'more');
-  }
-
-  if (action === 'yes' || action === 'no') {
-    if (boxIsNew || (!current.topic && text)) {
-      const lean = action === 'yes' ? 'for' : 'against';
-      const next = { ...current, topic: text, lastLean: lean, turn: current.turn + 1 };
-      return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean }) };
-    }
-    return talkReply(current, action);
-  }
-
-  return talkReply(current, String(action ?? ''));
-}
-
 // ponytail: queue incoming lines so stdin EOF cannot hang readline.question
 async function createAsk(input, output) {
   const { createInterface } = await import('node:readline');
@@ -1418,7 +1387,7 @@ async function runTalk(io, options = {}) {
 }
 
 const LONG_DASHES = ['\u2013', '\u2014'];
-const REQUIRED = ['README.md', 'LICENSE', 'package.json', 'argubot.js', 'index.html'];
+const REQUIRED = ['README.md', 'LICENSE', 'package.json', 'argubot.js', 'act.js', 'index.html'];
 const SECRET_SHAPES = [
   /-----BEGIN(?: [A-Z]+)? PRIVATE KEY-----/,
   /\b(?:ghp|github_pat|sk)-[A-Za-z0-9_]{16,}\b/,
@@ -1474,9 +1443,9 @@ async function runValidate() {
       if (!/Skip to the letter/.test(text) || !/id="letter"/.test(text)) {
         note(failures, rel, 'skip-link-missing');
       }
-      if (SENDS_OR_KEEPS.some((shape) => shape.test(text))) {
-        note(failures, rel, 'sends-or-keeps');
-      }
+    }
+    if ((rel === 'index.html' || rel === 'act.js') && SENDS_OR_KEEPS.some((shape) => shape.test(text))) {
+      note(failures, rel, 'sends-or-keeps');
     }
   }
   if (STYLE_NAMES.length < 3) note(failures, 'argubot.js', 'fewer-than-three-styles');
@@ -1540,7 +1509,7 @@ are on, it flips a coin for who talks first.
   --talk      conversation, even with a topic
   -h          this help
 
-On a phone, open index.html. Keep it next to this file.
+On a phone, open index.html. Keep it next to act.js and this file.
 Node 18 or newer. Nothing to install.
 `;
 
@@ -1675,7 +1644,6 @@ export {
   hashString,
   classifyTurn,
   talkReply,
-  talkAct,
   createTalkState,
   detectLean,
   openingLines,
