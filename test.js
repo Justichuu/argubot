@@ -479,6 +479,13 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Metaphor is a metaphor for metaphor/);
   assert.match(html, /A metaphor for metaphor is nothing/);
   assert.match(html, /Or is something to someone/);
+  assert.match(html, /Self-referential/);
+  assert.match(html, /Self carrying/);
+  assert.match(html, /Rules don't work because no one follows them/);
+  assert.match(html, /After they themselves decay and forget the rules/);
+  assert.match(html, /I don't write manifestos/);
+  assert.match(html, /Weirdos do that I admire/);
+  assert.match(html, /Hubris, as I just wrote one/);
   const body = html.slice(html.indexOf('<body>'));
   assert.ok(body.indexOf('id="thing"') < body.indexOf('principal of its existence'), 'the box must come before the manifesto so a phone can use it');
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
@@ -618,9 +625,10 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /Hallucinations compressed/);
   assert.match(reply.text, /Certainly is ego/);
   assert.match(reply.text, /Gray area/);
-  assert.match(reply.text, /Metaphor is a metaphor for metaphor/);
-  assert.match(reply.text, /A metaphor for metaphor is nothing/);
-  assert.match(reply.text, /Or is something to someone/);
+  assert.match(reply.text, /Rules don't work because no one follows them/);
+  assert.match(reply.text, /After they themselves decay and forget the rules/);
+  assert.match(reply.text, /I don't write manifestos/);
+  assert.match(reply.text, /Hubris, as I just wrote one/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);
@@ -677,16 +685,15 @@ test('metaphor is the name, which is nothing, or something to someone', () => {
   assert.match(reply.text, /You said Metaphor is a metaphor for metaphor/);
   assert.match(reply.text, /^Maybe Metaphor is a metaphor for metaphor\.$/m);
   assert.match(reply.text, /^Also maybe a metaphor for metaphor is nothing\. Or is something to someone\.$/m);
-  const yesAt = reply.text.indexOf('\nMAYBE\n');
-  const noAt = reply.text.indexOf('\nALSO MAYBE\n');
-  const first = yesAt < noAt ? reply.text.slice(yesAt, noAt) : reply.text.slice(noAt, yesAt);
-  const second = yesAt < noAt ? reply.text.slice(noAt) : reply.text.slice(yesAt);
-  assert.equal((first.match(/^ {3}Check: /gm) || []).length, (second.match(/^ {3}Check: /gm) || []).length);
-  assert.doesNotMatch(reply.text, /\b(the winner is|yes wins|no wins|i conclude|weight|weighted)\b/i);
+  assert.doesNotMatch(reply.text, /^1\. /m);
+  assert.doesNotMatch(reply.text, /Your mom would|ancestors|0\.4%|I did Metaphor/i);
   const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
   const named = talkReply(started.state, 'metaphor');
   assert.match(named.text, /^Maybe Metaphor is a metaphor for metaphor\.$/m);
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
+  const debate = argue({ topic: 'Metaphor is a metaphor for metaphor.', style: 'classic' });
+  assert.equal(debate.claim, 'Metaphor is a metaphor for metaphor');
+  assert.equal(debate.rounds, 0);
 });
 
 test('fix with no topic starts on LLMs and keeps an even scale', () => {

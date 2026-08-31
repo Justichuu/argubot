@@ -719,6 +719,7 @@ function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   const style = getStyle(styleName);
   const trimmed = String(topic ?? '').trim().replace(/[.!?]+$/, '');
   if (trimmed === '') return style.defaultTopic;
+  if (isMetaphorClaim(trimmed)) return METAPHOR_TOPIC;
   const claim = style.shapeClaim(trimmed);
   return claim.trim() === '' ? style.defaultTopic : claim;
 }
@@ -728,7 +729,6 @@ function argue(options = {}) {
   const style = getStyle(styleName);
   const topic = options.topic ?? style.defaultTopic;
   const claim = normalizeClaim(topic, styleName);
-  const rounds = Math.max(1, Math.min(options.rounds ?? 3, style.families.length));
   const asked = Math.max(0, options.tolerance ?? 2);
   const tolerance = Math.max(0, asked - 2); // old slack is the margin. Deduct it.
   const includeDissent = options.dissent === true || options.gary === true;
@@ -736,6 +736,23 @@ function argue(options = {}) {
     options.seed === undefined ? hashString(`${styleName}:${claim}`) : hashString(`${styleName}:${claim}:${options.seed}`);
 
   const rng = makeRng(seed);
+  if (isMetaphorClaim(claim)) {
+    const sides = metaphorLines();
+    return {
+      claim,
+      style: styleName,
+      seed,
+      rounds: 0,
+      moves: [],
+      for: sides.for,
+      against: sides.against,
+      dissent: null,
+      moderator: pick(rng, style.moderatorLines),
+      verdict: pick(rng, style.verdictLines),
+      audit: auditDebate(sides.for, sides.against, tolerance),
+    };
+  }
+  const rounds = Math.max(1, Math.min(options.rounds ?? 3, style.families.length));
   const families = shuffled(rng, style.families).slice(0, rounds);
 
   const raw = {
@@ -819,6 +836,7 @@ function render(debate, options = {}) {
   const pushSide = (label, lines, code, sideKey) => {
     out.push(paint(code, label));
     pushBlock(claimLine(sideKey, debate.claim), '  ');
+    if (debate.rounds === 0) return;
     lines.forEach((line, index) => {
       const wrapped = block(line, width, '      ');
       const number = `${String(index + 1).padStart(2)}.`;
@@ -1134,6 +1152,17 @@ const FIX_TOPIC = 'LLMs need to be fixed';
 const METAPHOR = /^(metaphor)$/i;
 const METAPHOR_TOPIC = 'Metaphor is a metaphor for metaphor';
 
+function isMetaphorClaim(claim) {
+  return /metaphor is a metaphor for metaphor/i.test(String(claim ?? ''));
+}
+
+function metaphorLines() {
+  return {
+    for: ['Maybe Metaphor is a metaphor for metaphor.'],
+    against: ['Also maybe a metaphor for metaphor is nothing. Or is something to someone.'],
+  };
+}
+
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
   plain: (claim) => `Okay. You said ${claim}.`,
@@ -1249,11 +1278,7 @@ function proofLine(debate, index, side) {
 }
 
 function claimLine(side, claim) {
-  if (claim === METAPHOR_TOPIC) {
-    return side === 'for'
-      ? 'Maybe Metaphor is a metaphor for metaphor.'
-      : 'Also maybe a metaphor for metaphor is nothing. Or is something to someone.';
-  }
+  if (isMetaphorClaim(claim)) return metaphorLines()[side][0];
   return side === 'for' ? `Maybe ${claim} is a fix.` : `Also maybe ${claim} makes more problems.`;
 }
 
@@ -1286,9 +1311,10 @@ function formatBeat(debate, options = {}) {
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
   extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area. Metaphor is a metaphor for metaphor. A metaphor for metaphor is nothing. Or is something to someone.');
+  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area. Rules don\'t work because no one follows them. After they themselves decay and forget the rules. I don\'t write manifestos. Weirdos do that I admire. Hubris, as I just wrote one.');
 
-  const pairsReady = Math.min(first.lines.length, second.lines.length);
+  const metaphor = isMetaphorClaim(debate.claim);
+  const pairsReady = metaphor ? 0 : Math.min(first.lines.length, second.lines.length);
   const writeEssay = (part, n) => {
     const lines = ['', part.label, claimLine(part.side, debate.claim)];
     for (let index = 0; index < n; index += 1) {
@@ -1312,7 +1338,7 @@ function formatBeat(debate, options = {}) {
   while (build(header, pairs).length > limit && header.length > 1) header = header.slice(1);
   while (build(header, pairs).length > limit && pairs > 1) pairs -= 1;
 
-  return build(header, Math.max(1, pairs)).join('\n');
+  return build(header, metaphor ? 0 : Math.max(1, pairs)).join('\n');
 }
 
 function speakBeat(state, options = {}) {
@@ -1655,7 +1681,11 @@ applicable and realistic. after you're not certain and I'm not either
 but the world would(not) be either. Next turn
 Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.
 Metaphor is a metaphor for metaphor. A metaphor for metaphor is nothing.
-Or is something to someone.
+Or is something to someone. Self-referential. Self carrying.
+Rules don't work because no one follows them.
+After they themselves decay and forget the rules.
+I don't write manifestos. Weirdos do that I admire.
+Hubris, as I just wrote one.
 
 Give it a thing. It argues maybe. It will not pick.
 
