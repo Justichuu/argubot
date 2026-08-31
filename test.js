@@ -38,6 +38,7 @@ import {
   detectLean,
   openingLines,
   formatBeat,
+  LINE_LIMIT_BASELINE,
   runTalk,
   runValidate,
 } from './argubot.js';
@@ -457,6 +458,10 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /telling it English/);
   assert.match(html, /margin of error/);
   assert.match(html, /mathematically maybe within limits/);
+  assert.match(html, /2010 chrome computer/);
+  assert.match(html, /You can't print as many as you feel/);
+  assert.match(html, /Mirrored self, to escape the cycle/);
+  assert.match(html, /max-height:\s*24em/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
@@ -639,6 +644,35 @@ test('formatted beats stay even and never pick a winner', () => {
   assert.match(text, new RegExp(`Maybe because mathematically maybe within limits\\. ${debate.audit.for.words} to ${debate.audit.against.words}\\.`));
   assert.match(text, /Margin taken\. Limits deducted\./);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
+});
+
+test('talk will not print as many lines as it feels', () => {
+  const debate = argue({ topic: 'getting a dog', rounds: 3, seed: 'cap', style: 'plain' });
+  const full = formatBeat(debate, { hear: true });
+  assert.ok(full.split('\n').length <= LINE_LIMIT_BASELINE);
+  const tight = formatBeat(debate, { hear: true, limit: 12 });
+  const yesAt = tight.indexOf('\nMAYBE\n');
+  const noAt = tight.indexOf('\nALSO MAYBE\n');
+  assert.ok(yesAt > 0 && noAt > 0 && yesAt !== noAt);
+  const first = yesAt < noAt ? tight.slice(yesAt, noAt) : tight.slice(noAt, yesAt);
+  const second = yesAt < noAt ? tight.slice(noAt) : tight.slice(yesAt);
+  assert.equal((first.match(/^ {3}Check: /gm) || []).length, (second.match(/^ {3}Check: /gm) || []).length);
+  assert.ok((first.match(/^ {3}Check: /gm) || []).length >= 1);
+});
+
+test('you can set the line limit and the default is the 2010 chrome baseline', () => {
+  assert.equal(LINE_LIMIT_BASELINE, 24);
+  assert.equal(parseArgs([]).limit, 24);
+  assert.equal(parseArgs(['--limit', '40']).limit, 40);
+  assert.equal(createTalkState().limit, 24);
+  assert.equal(createTalkState({ limit: 12 }).limit, 12);
+});
+
+test('there is one demo', () => {
+  const gif = readFileSync(new URL('./media/argubot_demo.gif', import.meta.url));
+  const mp4 = readFileSync(new URL('./media/argubot_demo.mp4', import.meta.url));
+  assert.ok(gif.length > 0);
+  assert.ok(mp4.length > 0);
 });
 
 test('create deducts the margin of error from the named limit', () => {

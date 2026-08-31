@@ -1002,6 +1002,7 @@ const VALUE_FLAG = new Map([
   ['--tolerance', 'tolerance'],
   ['-w', 'width'],
   ['--width', 'width'],
+  ['--limit', 'limit'],
   ['--name', 'dissentName'],
 ]);
 
@@ -1048,6 +1049,7 @@ function parseArgs(argv) {
     tolerance: 2,
     style: undefined,
     width: undefined,
+    limit: LINE_LIMIT_BASELINE,
     seed: undefined,
     topic: '',
     help: false,
@@ -1081,7 +1083,7 @@ function parseArgs(argv) {
       if (field === 'dissentName') {
         options.dissent = true;
         options.dissentName = value;
-      } else if (field === 'rounds' || field === 'tolerance' || field === 'width') {
+      } else if (field === 'rounds' || field === 'tolerance' || field === 'width' || field === 'limit') {
         options[field] = Number.parseInt(value, 10);
       } else {
         options[field] = value;
@@ -1242,6 +1244,14 @@ function claimLine(side, claim) {
   return side === 'for' ? `Maybe ${claim}.` : `Also maybe ${claim}.`;
 }
 
+// 2010 chrome computer, 1024x768, 18px at 1.55. Baseline. Not the goal. Not the mean.
+const LINE_LIMIT_BASELINE = 24;
+
+function lineLimit(value) {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 1 ? Math.floor(n) : LINE_LIMIT_BASELINE;
+}
+
 function orderSides(debate, lean) {
   const yes = { label: 'MAYBE', side: 'for', lines: debate.for };
   const no = { label: 'ALSO MAYBE', side: 'against', lines: debate.against };
@@ -1256,35 +1266,47 @@ function formatBeat(debate, options = {}) {
   const lean = options.lean ?? null;
   const hear = options.hear !== false;
   const { first, second, coin } = orderSides(debate, lean);
-  const out = [];
-
-  if (hear) out.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
-  if (lean === 'for') out.push('You said yes. ALSO MAYBE first.');
-  if (lean === 'against') out.push('You said no. MAYBE first.');
-  if (coin) out.push(`${coin}. ${first.label} first.`);
   const check = debate.audit;
-  out.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted.`);
+  const extras = [];
+  if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
+  if (lean === 'for') extras.push('You said yes. ALSO MAYBE first.');
+  if (lean === 'against') extras.push('You said no. MAYBE first.');
+  if (coin) extras.push(`${coin}. ${first.label} first.`);
+  extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted.`);
 
-  const writeEssay = (part) => {
-    out.push('');
-    out.push(part.label);
-    out.push(claimLine(part.side, debate.claim));
-    part.lines.forEach((line, index) => {
-      out.push(`${index + 1}. ${line}`);
-      out.push(`   ${proofLine(debate, index, part.side)}`);
-    });
+  const pairsReady = Math.min(first.lines.length, second.lines.length);
+  const writeEssay = (part, n) => {
+    const lines = ['', part.label, claimLine(part.side, debate.claim)];
+    for (let index = 0; index < n; index += 1) {
+      lines.push(`${index + 1}. ${part.lines[index]}`);
+      lines.push(`   ${proofLine(debate, index, part.side)}`);
+    }
+    return lines;
+  };
+  const build = (header, n) => {
+    const out = header.slice();
+    out.push(...writeEssay(first, n));
+    out.push(...writeEssay(second, n));
+    return out;
   };
 
-  writeEssay(first);
-  writeEssay(second);
+  // You can't print as many as you feel. Drop extras, then pairs from both sides.
+  // Never a one-sided cut. Mirrored self, to escape the cycle.
+  const limit = lineLimit(options.limit);
+  let header = extras.slice();
+  let pairs = pairsReady;
+  while (build(header, pairs).length > limit && header.length > 1) header = header.slice(1);
+  while (build(header, pairs).length > limit && pairs > 1) pairs -= 1;
 
-  if (debate.dissent && debate.dissent.name) {
-    out.push('');
-    out.push(debate.dissent.name.toUpperCase());
-    out.push(`  ${debate.dissent.statement}`);
-  }
+  return build(header, Math.max(1, pairs)).join('\n');
+}
 
-  return out.join('\n');
+function speakBeat(state, options = {}) {
+  return formatBeat(beat(state), {
+    hear: options.hear,
+    lean: options.lean ?? state.lastLean,
+    limit: state.limit,
+  });
 }
 
 function createTalkState(options = {}) {
@@ -1297,6 +1319,7 @@ function createTalkState(options = {}) {
     seed: options.seed,
     turn: 0,
     lastLean: null,
+    limit: lineLimit(options.limit),
   };
 }
 
@@ -1326,7 +1349,7 @@ function talkReply(state, raw) {
       return { state: next, exit: false, text: 'Type it first.' };
     }
     next.turn += 1;
-    return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: next.lastLean }) };
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }
   if (turn.kind === 'unknown-command') {
     return { state: next, exit: false, text: `I do not know /${turn.command}. Type help.` };
@@ -1352,19 +1375,19 @@ function talkReply(state, raw) {
   if (turn.kind === 'more') {
     if (!next.topic) return { state: next, exit: false, text: 'Type it first.' };
     next.turn += 1;
-    return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: next.lastLean }) };
+    return { state: next, exit: false, text: speakBeat(next, { hear: false, lean: next.lastLean }) };
   }
   if (turn.kind === 'lean') {
     if (!next.topic) return { state: next, exit: false, text: 'Type it first. Then yes or no.' };
     next.lastLean = turn.lean;
     next.turn += 1;
-    return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: turn.lean }) };
+    return { state: next, exit: false, text: speakBeat(next, { hear: false, lean: turn.lean }) };
   }
 
   next.topic = turn.topic;
   next.lastLean = turn.lean;
   next.turn += 1;
-  return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: turn.lean }) };
+  return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: turn.lean }) };
 }
 
 // The box is the thing. Buttons act on what is in it.
@@ -1383,7 +1406,7 @@ function talkAct(state, action, box = '') {
   if ((action === 'yes' || action === 'no') && fresh) {
     const lean = action === 'yes' ? 'for' : 'against';
     const next = { ...now, topic: text, lastLean: lean, turn: now.turn + 1 };
-    return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean }) };
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean }) };
   }
   return talkReply(now, String(action ?? ''));
 }
@@ -1587,6 +1610,10 @@ in its brain by telling it English. Doesn't answer yes or no. Only maybe.
 Maybe mode by default. Must be unnatural.
 And taken margin of error to create deduct those limits.
 Maybe because mathematically maybe within limits.
+You can set the limit. Default is a 2010 chrome computer.
+That's the baseline but not the goal and mean average.
+You can't print as many as you feel.
+Mirrored self, to escape the cycle.
 
 Give it a thing. It argues maybe. It will not pick.
 
@@ -1601,6 +1628,7 @@ are on, it flips a coin for who talks first.
   --classic   debate-club voice
   --civic     book voice
   --talk      conversation, even with a topic
+  --limit     how many lines. Default is a 2010 chrome computer
   -h          this help
 
 On a phone, open index.html. Keep it next to this file.
@@ -1628,6 +1656,7 @@ function debateOptions(options, topic) {
     dissent: options.dissent,
     dissentName: options.dissentName,
     tolerance: options.tolerance,
+    limit: options.limit,
   };
 }
 
@@ -1647,6 +1676,7 @@ function checkNumbers(options) {
   if (options.width !== undefined && (!Number.isFinite(options.width) || options.width < 8)) {
     fail('--width needs a number of 8 or more');
   }
+  if (!Number.isFinite(options.limit) || options.limit < 1) fail('--limit needs a positive number');
 }
 
 async function startTalk(options, topic) {
@@ -1851,6 +1881,8 @@ export {
   detectLean,
   openingLines,
   formatBeat,
+  LINE_LIMIT_BASELINE,
+  lineLimit,
   runTalk,
   formatLineage,
   runValidate,
