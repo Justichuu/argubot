@@ -1277,7 +1277,7 @@ function formatBeat(debate, options = {}) {
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
   extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic.');
+  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
 
   const pairsReady = Math.min(first.lines.length, second.lines.length);
   const writeEssay = (part, n) => {
@@ -1639,6 +1639,7 @@ better governance system. Let it argue its best logic and implement it.
 Hallucinations are accepted but must be compressed to be readable and
 applicable and realistic. after you're not certain and I'm not either
 but the world would(not) be either. Next turn
+Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.
 
 Give it a thing. It argues maybe. It will not pick.
 

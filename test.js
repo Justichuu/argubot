@@ -473,6 +473,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Hallucinations are accepted/);
   assert.match(html, /world would\(not\) be either/);
   assert.match(html, /Next turn/);
+  assert.match(html, /Certainly is ego/);
+  assert.match(html, /Ego is hubris/);
+  assert.match(html, /Everything is not\. Or is\. Gray area/);
   const body = html.slice(html.indexOf('<body>'));
   assert.ok(body.indexOf('id="thing"') < body.indexOf('principal of its existence'), 'the box must come before the manifesto so a phone can use it');
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
@@ -608,6 +611,8 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /best logic it feels if it's actual true/);
   assert.match(reply.text, /Approval or ranked choice voting, for now/);
   assert.match(reply.text, /Hallucinations compressed/);
+  assert.match(reply.text, /Certainly is ego/);
+  assert.match(reply.text, /Gray area/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);
