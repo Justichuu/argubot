@@ -176,10 +176,8 @@ right. That argument belongs in the book.
 The civic style is the book's voice made runnable: no long dashes, no invented
 credentials, no universal recipe. `scripts/validate.js` is the book's
 `validate.py` idea in this repo. It names the failed rule and never prints a
-suspected secret. The named catalog of every borrowed idea, including work from
-[Private Directory Server](https://github.com/Justichuu/private-directory-server)
-and the catalog shape of [asa-list](https://github.com/Justichuu/asa-list), is
-in [LINEAGE.md](LINEAGE.md).
+suspected secret. The named catalog is `src/lineage.js`. Print it with `argubot --lineage`.
+Repos and links are in [LINEAGE.md](LINEAGE.md).
 
 ## Dissent
 
@@ -191,33 +189,22 @@ Same topic and seed always produce the same generated name.
 
 ## Commands
 
-Every feature is a `/command` and a flag. `argubot /commands` prints the list.
-`/burrito` serves every voice on one topic with a ledger. `/talk` is the
-conversation. `/validate` runs the structural checks. `/ready` prints
-`{"status":"ready"}`. `/menu` is a numbered picker.
+`argubot /commands` prints the list. Slash form and dashed form are the same
+row in `src/commands.js`. `/burrito` is every voice on one topic. `/talk` is
+the conversation. `/validate` runs the structural checks.
 
 ## Layout
 
 ```
-bin/argubot.js          CLI: /commands, flags, talk, burrito, menu
-src/argubot.js          debate assembly and claim normalization
-src/commands.js         slash and dashed command parsing
-src/burrito.js          all styles on one plate
-src/names.js            generated dissent names
-src/talk.js             turn-taking: hear-back, named voices, slash commands
-src/styles.js           style registry: classic, plain, and civic
-src/rhetoric.js         classic mirrored FOR/AGAINST families, filler
-src/plain.js            common-language families and labels
-src/civic.js            book-voice families: agency, evidence, no recipe
-src/lineage.js          named catalog of borrowed Justichuu ideas
-src/audit.js            fairness measurement and word-count balancing
-src/rng.js              seeded PRNG and deterministic picks
-src/render.js           terminal output, wrapping, optional color
-test/argubot.test.js    fairness, renderer, CLI, lineage, and civic rules
-scripts/validate.js     structural checks; reports the rule, not the secret
-scripts/publish.sh      create the GitHub repo and push
-LINEAGE.md              human-readable copy of the catalog
-ACKNOWLEDGMENTS.md      who directed the work and who assisted
+bin/argubot.js       what you run
+src/commands.js      the command list
+src/argubot.js       builds one debate
+src/talk.js          the conversation
+src/burrito.js       every style on one plate
+src/civic.js         book-voice pairs
+src/lineage.js       named catalog
+src/audit.js         word counts
+scripts/validate.js  names the failed rule
 ```
 
 ## Development

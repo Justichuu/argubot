@@ -1,6 +1,4 @@
-// The book's public-draft voice: agency against hubris, evidence against
-// invented credentials, a joke that reveals rather than exposes. Still
-// mirrored pair by pair. Long dashes are refused; that rule is from the book.
+// Book voice. Mirrored pairs. No long dashes. No invented credentials.
 
 const capitalize = (text) => (text.length === 0 ? text : text[0].toUpperCase() + text.slice(1));
 

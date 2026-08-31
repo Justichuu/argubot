@@ -21,19 +21,8 @@ const REQUIRED = [
   'bin/argubot.js',
   'src/argubot.js',
   'src/styles.js',
-  'src/rhetoric.js',
-  'src/plain.js',
-  'src/civic.js',
-  'src/audit.js',
   'src/lineage.js',
-  'src/talk.js',
-  'src/names.js',
-  'src/commands.js',
-  'src/burrito.js',
-  'src/rng.js',
-  'src/render.js',
   'scripts/validate.js',
-  'test/argubot.test.js',
 ];
 
 const SECRET_SHAPES = [

@@ -1,6 +1,4 @@
-// A named catalog of ideas this bot borrowed, in the spirit of asa-list:
-// every entry has an id you can check, a source you can open, and a claim
-// small enough to verify. This is not a list of credentials.
+// Named catalog: id, source, idea, where. Not a list of credentials.
 
 export const JUSTICHUU_REPOS = [
   {

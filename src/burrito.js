@@ -1,4 +1,4 @@
-// The whole plate: every voice, the audit, optional dissent, no leftovers.
+// Every style on one topic, then a word-count ledger.
 
 import { argue, normalizeClaim } from './argubot.js';
 import { STYLE_NAMES, DEFAULT_STYLE, getStyle } from './styles.js';

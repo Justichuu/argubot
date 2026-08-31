@@ -1,5 +1,4 @@
-// Names built from consonant + vowel-sound pairs so a dissent voice can
-// exist without a fixed identity. Same seed, same name.
+// Consonant + vowel-sound names. Same seed, same name. Not a fixed person.
 
 import { pick } from './rng.js';
 

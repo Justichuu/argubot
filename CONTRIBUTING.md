@@ -44,7 +44,7 @@ A universal recipe is the joke.
 ## Other useful work
 
 - New styles alongside `classic`, `plain`, and `civic`, registered in `src/styles.js`
-- A lineage entry in `src/lineage.js` and `LINEAGE.md` when you borrow a checkable idea
+- A lineage entry in `src/lineage.js` when you borrow a checkable idea
 - Terminal rendering: narrow widths, right-to-left text, screen readers
 - Accuracy of the fairness audit, including metrics beyond word count
 - Documentation, typos, and clearer error messages

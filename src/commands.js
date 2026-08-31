@@ -1,32 +1,52 @@
-// Every feature is a command and a flag. Slash form and dashed form both work.
+// Read COMMANDS. Slash form, bare form, and dashed form are the same row.
 
 import { STYLE_NAMES } from './styles.js';
 
 export const COMMANDS = [
-  { name: 'argue', aliases: ['/argue'], summary: 'one debate (default)' },
-  { name: 'talk', aliases: ['/talk', 'i'], summary: 'turn-taking conversation' },
-  { name: 'burrito', aliases: ['/burrito', '/all', 'all', 'full', '/full'], summary: 'every style, full audit, one plate' },
-  { name: 'help', aliases: ['/help', '/?', '?'], summary: 'show help' },
-  { name: 'version', aliases: ['/version'], summary: 'show version' },
-  { name: 'lineage', aliases: ['/lineage'], summary: 'named catalog of borrowed ideas' },
-  { name: 'styles', aliases: ['/styles'], summary: 'list voices' },
-  { name: 'commands', aliases: ['/commands'], summary: 'list commands' },
-  { name: 'validate', aliases: ['/validate'], summary: 'run structural checks' },
-  { name: 'ready', aliases: ['/ready'], summary: 'tiny readiness line' },
-  { name: 'menu', aliases: ['/menu'], summary: 'numbered picker' },
+  { name: 'argue', also: ['/argue'], summary: 'one debate (default)' },
+  { name: 'talk', also: ['/talk', 'i', '-i', '--talk'], summary: 'turn-taking conversation' },
+  { name: 'burrito', also: ['/burrito', '/all', 'all', 'full', '/full', '--burrito', '--all'], summary: 'every style, full audit, one plate' },
+  { name: 'help', also: ['/help', '/?', '?', '-h', '--help', '-?', '/'], summary: 'show help' },
+  { name: 'version', also: ['/version', '-v', '--version'], summary: 'show version' },
+  { name: 'lineage', also: ['/lineage', '--lineage'], summary: 'named catalog of borrowed ideas' },
+  { name: 'styles', also: ['/styles', '--styles'], summary: 'list voices' },
+  { name: 'commands', also: ['/commands', '--commands'], summary: 'list commands' },
+  { name: 'validate', also: ['/validate', '--validate'], summary: 'run structural checks' },
+  { name: 'ready', also: ['/ready', '--ready'], summary: 'tiny readiness line' },
+  { name: 'menu', also: ['/menu', '--menu'], summary: 'numbered picker' },
 ];
 
-const COMMAND_LOOKUP = new Map();
+const LOOKUP = new Map();
 for (const command of COMMANDS) {
-  COMMAND_LOOKUP.set(command.name, command.name);
-  for (const alias of command.aliases) COMMAND_LOOKUP.set(alias, command.name);
+  LOOKUP.set(command.name, command.name);
+  for (const alias of command.also) LOOKUP.set(alias, command.name);
 }
+
+const STYLE_FLAG = new Map([
+  ['-p', 'plain'],
+  ['--plain', 'plain'],
+  ['--civic', 'civic'],
+  ['--classic', 'classic'],
+]);
+
+const VALUE_FLAG = new Map([
+  ['--style', 'style'],
+  ['-r', 'rounds'],
+  ['--rounds', 'rounds'],
+  ['-s', 'seed'],
+  ['--seed', 'seed'],
+  ['-t', 'tolerance'],
+  ['--tolerance', 'tolerance'],
+  ['-w', 'width'],
+  ['--width', 'width'],
+  ['--name', 'dissentName'],
+]);
 
 export function resolveCommand(token) {
   if (token == null) return null;
   const key = String(token).trim();
-  if (COMMAND_LOOKUP.has(key)) return COMMAND_LOOKUP.get(key);
-  if (key.startsWith('/') && COMMAND_LOOKUP.has(key.slice(1))) return COMMAND_LOOKUP.get(key.slice(1));
+  if (LOOKUP.has(key)) return LOOKUP.get(key);
+  if (key.startsWith('/') && LOOKUP.has(key.slice(1))) return LOOKUP.get(key.slice(1));
   return null;
 }
 
@@ -42,6 +62,16 @@ export function parseSlash(raw) {
   const [head, ...restParts] = stripped.split(/\s+/);
   const command = resolveCommand(head) ?? resolveCommand(`/${head}`) ?? head.toLowerCase();
   return { command, args: restParts, rest: restParts.join(' ') };
+}
+
+function applyCommand(options, name) {
+  options.command = name;
+  if (name === 'help') options.help = true;
+  if (name === 'version') options.version = true;
+}
+
+function takeValue(argv, i) {
+  return argv[i + 1];
 }
 
 export function parseArgs(argv) {
@@ -63,126 +93,62 @@ export function parseArgs(argv) {
   const words = [];
   let i = 0;
 
-  if (argv[0] === '/' || argv[0] === '/?') {
-    options.help = true;
-    i = 1;
-  } else if (argv[0] && resolveCommand(argv[0])) {
-    options.command = resolveCommand(argv[0]);
-    if (options.command === 'help') options.help = true;
-    if (options.command === 'version') options.version = true;
+  if (argv[0] && resolveCommand(argv[0])) {
+    applyCommand(options, resolveCommand(argv[0]));
     i = 1;
   }
 
   for (; i < argv.length; i += 1) {
     const arg = argv[i];
-    const asCommand = resolveCommand(arg);
-    if (asCommand && arg.startsWith('/') && asCommand !== 'argue') {
-      if (asCommand === 'help') options.help = true;
-      else if (asCommand === 'version') options.version = true;
-      else options.command = asCommand;
+    const named = resolveCommand(arg);
+    if (named && (arg.startsWith('/') || arg.startsWith('-')) && named !== 'argue') {
+      applyCommand(options, named);
       continue;
     }
 
-    switch (arg) {
-      case '-h':
-      case '--help':
-      case '-?':
-      case '/':
-      case '/?':
-        options.help = true;
-        break;
-      case '-v':
-      case '--version':
-        options.version = true;
-        break;
-      case '-p':
-      case '--plain':
-        options.style = 'plain';
-        break;
-      case '--civic':
-        options.style = 'civic';
-        break;
-      case '--classic':
-        options.style = 'classic';
-        break;
-      case '-i':
-      case '--talk':
-        options.command = 'talk';
-        break;
-      case '--burrito':
-      case '--all':
-        options.command = 'burrito';
-        break;
-      case '--lineage':
-        options.command = 'lineage';
-        break;
-      case '--styles':
-        options.command = 'styles';
-        break;
-      case '--commands':
-        options.command = 'commands';
-        break;
-      case '--validate':
-        options.command = 'validate';
-        break;
-      case '--ready':
-        options.command = 'ready';
-        break;
-      case '--menu':
-        options.command = 'menu';
-        break;
-      case '--style':
-        options.style = argv[i + 1];
-        i += 1;
-        break;
-      case '-d':
-      case '--dissent':
-      case '/dissent':
+    if (STYLE_FLAG.has(arg)) {
+      options.style = STYLE_FLAG.get(arg);
+      continue;
+    }
+
+    if (VALUE_FLAG.has(arg)) {
+      const field = VALUE_FLAG.get(arg);
+      const value = takeValue(argv, i);
+      i += 1;
+      if (field === 'dissentName') {
         options.dissent = true;
-        break;
-      case '--no-dissent':
-      case '--no-gary':
-        options.dissent = false;
-        break;
-      case '--name':
-        options.dissent = true;
-        options.dissentName = argv[i + 1];
-        i += 1;
-        break;
-      case '--json':
-        options.json = true;
-        break;
-      case '--no-color':
-        options.color = false;
-        break;
-      case '-r':
-      case '--rounds':
-        options.rounds = Number.parseInt(argv[i + 1], 10);
-        i += 1;
-        break;
-      case '-s':
-      case '--seed':
-        options.seed = argv[i + 1];
-        i += 1;
-        break;
-      case '-t':
-      case '--tolerance':
-        options.tolerance = Number.parseInt(argv[i + 1], 10);
-        i += 1;
-        break;
-      case '-w':
-      case '--width':
-        options.width = Number.parseInt(argv[i + 1], 10);
-        i += 1;
-        break;
-      default:
-        if (arg.startsWith('-') && arg.length > 1) {
-          options.unknown = arg;
-        } else if (arg.startsWith('/') && arg.length > 1 && STYLE_NAMES.includes(arg.slice(1))) {
-          options.style = arg.slice(1);
-        } else {
-          words.push(arg);
-        }
+        options.dissentName = value;
+      } else if (field === 'rounds' || field === 'tolerance' || field === 'width') {
+        options[field] = Number.parseInt(value, 10);
+      } else {
+        options[field] = value;
+      }
+      continue;
+    }
+
+    if (arg === '-d' || arg === '--dissent' || arg === '/dissent') {
+      options.dissent = true;
+      continue;
+    }
+    if (arg === '--no-dissent' || arg === '--no-gary') {
+      options.dissent = false;
+      continue;
+    }
+    if (arg === '--json') {
+      options.json = true;
+      continue;
+    }
+    if (arg === '--no-color') {
+      options.color = false;
+      continue;
+    }
+
+    if (arg.startsWith('-') && arg.length > 1) {
+      options.unknown = arg;
+    } else if (arg.startsWith('/') && arg.length > 1 && STYLE_NAMES.includes(arg.slice(1))) {
+      options.style = arg.slice(1);
+    } else {
+      words.push(arg);
     }
   }
 

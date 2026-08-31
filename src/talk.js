@@ -1,6 +1,4 @@
-// A conversation that still cannot pick a side.
-// Voices stay separate. The person has a turn the bot cannot fill.
-// If they lean, the bot does not continue in that direction.
+// Conversation that still cannot pick a side. The person keeps a turn the bot cannot fill.
 
 import { createInterface } from 'node:readline';
 
@@ -30,6 +28,20 @@ const ASIDES = [
   'Two lines, one move. I am not hiding that.',
 ];
 
+const SLASH_KIND = {
+  done: 'exit',
+  quit: 'exit',
+  exit: 'exit',
+  bye: 'exit',
+  help: 'help',
+  why: 'why',
+  more: 'more',
+  commands: 'commands',
+  burrito: 'burrito',
+  all: 'burrito',
+  full: 'burrito',
+  styles: 'styles',
+};
 
 export function detectLean(text) {
   const raw = String(text ?? '').trim();
@@ -58,17 +70,7 @@ export function classifyTurn(raw) {
 
   const slash = parseSlash(text);
   if (slash) {
-    if (slash.command === 'done' || slash.command === 'quit' || slash.command === 'exit' || slash.command === 'bye') {
-      return { kind: 'exit' };
-    }
-    if (slash.command === 'help') return { kind: 'help' };
-    if (slash.command === 'why') return { kind: 'why' };
-    if (slash.command === 'more') return { kind: 'more' };
-    if (slash.command === 'commands') return { kind: 'commands' };
-    if (slash.command === 'burrito' || slash.command === 'all' || slash.command === 'full') {
-      return { kind: 'burrito' };
-    }
-    if (slash.command === 'styles') return { kind: 'styles' };
+    if (SLASH_KIND[slash.command]) return { kind: SLASH_KIND[slash.command] };
     if (STYLE_NAMES.includes(slash.command)) return { kind: 'style', style: slash.command };
     if (slash.command === 'style' && STYLE_NAMES.includes(slash.args[0])) {
       return { kind: 'style', style: slash.args[0] };
@@ -77,12 +79,10 @@ export function classifyTurn(raw) {
       if (slash.args[0] === 'off' || slash.args[0] === 'no') return { kind: 'dissent', dissent: false };
       return { kind: 'dissent', dissent: true };
     }
-    if (slash.command === 'name') {
-      return { kind: 'name', name: slash.rest || undefined };
+    if (slash.command === 'name') return { kind: 'name', name: slash.rest || undefined };
+    if (slash.command === 'topic' && slash.rest) {
+      return { kind: 'topic', topic: slash.rest, lean: detectLean(slash.rest) };
     }
-    if (slash.command === 'topic' && slash.rest) return { kind: 'topic', topic: slash.rest, lean: detectLean(slash.rest) };
-    if (slash.command === 'seed') return { kind: 'seed', seed: slash.rest };
-    if (slash.command === 'json') return { kind: 'json' };
     return { kind: 'unknown-command', command: slash.command };
   }
 
@@ -122,7 +122,7 @@ export function whyLines() {
 }
 
 function beat(state) {
-  const debate = argue({
+  return argue({
     topic: state.topic,
     style: state.style,
     rounds: 1,
@@ -131,15 +131,11 @@ function beat(state) {
     dissentName: state.dissentName,
     tolerance: state.tolerance,
   });
-  return debate;
 }
 
 function orderSides(debate, lean) {
   if (lean === 'for') {
     return { first: { label: 'NO', lines: debate.against }, second: { label: 'YES', lines: debate.for } };
-  }
-  if (lean === 'against') {
-    return { first: { label: 'YES', lines: debate.for }, second: { label: 'NO', lines: debate.against } };
   }
   return { first: { label: 'YES', lines: debate.for }, second: { label: 'NO', lines: debate.against } };
 }
@@ -196,6 +192,10 @@ export function createTalkState(options = {}) {
   };
 }
 
+function dissentNameFor(state) {
+  return state.dissentName || generateName(makeRng(hashString(`dissent-talk:${state.topic}:${state.turn}`)));
+}
+
 export function talkReply(state, raw) {
   const next = { ...state };
   const turn = classifyTurn(raw);
@@ -203,19 +203,15 @@ export function talkReply(state, raw) {
   if (turn.kind === 'exit') {
     return { state: next, exit: true, text: 'Okay. You can go. I did not pick.' };
   }
-
   if (turn.kind === 'help') {
     return { state: next, exit: false, text: helpLines().join('\n') };
   }
-
   if (turn.kind === 'why') {
     return { state: next, exit: false, text: whyLines().join('\n') };
   }
-
   if (turn.kind === 'ask-topic') {
     return { state: next, exit: false, text: 'Okay. What is the thing?' };
   }
-
   if (turn.kind === 'style') {
     next.style = turn.style;
     if (!next.topic) {
@@ -224,47 +220,29 @@ export function talkReply(state, raw) {
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: next.lastLean }) };
   }
-
   if (turn.kind === 'commands') {
     return { state: next, exit: false, text: formatCommandList() };
   }
-
   if (turn.kind === 'styles') {
     return { state: next, exit: false, text: STYLE_NAMES.join('\n') };
   }
-
   if (turn.kind === 'unknown-command') {
     return { state: next, exit: false, text: `I do not know /${turn.command}. Try /commands.` };
   }
-
   if (turn.kind === 'dissent') {
     next.dissent = turn.dissent;
     if (!next.dissent) {
       next.dissentName = undefined;
       return { state: next, exit: false, text: 'Dissent is off. No name.' };
     }
-    if (!next.dissentName) {
-      next.dissentName = generateName(makeRng(hashString(`dissent-talk:${next.topic}:${next.turn}`)));
-    }
+    next.dissentName = dissentNameFor(next);
     return { state: next, exit: false, text: `Dissent is on. ${next.dissentName} says no.` };
   }
-
   if (turn.kind === 'name') {
     next.dissent = true;
-    next.dissentName = turn.name || generateName(makeRng(hashString(`dissent-talk:${next.topic}:${next.turn}`)));
+    next.dissentName = turn.name || dissentNameFor(next);
     return { state: next, exit: false, text: `Dissent is on. ${next.dissentName} says no.` };
   }
-
-  if (turn.kind === 'seed') {
-    next.seed = turn.seed;
-    return { state: next, exit: false, text: `Seed is ${turn.seed}.` };
-  }
-
-  if (turn.kind === 'json') {
-    if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
-    return { state: next, exit: false, text: JSON.stringify(beat(next), null, 2) };
-  }
-
   if (turn.kind === 'burrito') {
     if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
     const plate = burrito({
@@ -276,18 +254,15 @@ export function talkReply(state, raw) {
     });
     return { state: next, exit: false, text: renderBurrito(plate, { color: false }) };
   }
-
   if (turn.kind === 'empty') {
     if (!next.topic) return { state: next, exit: false, text: 'Say a thing, or type done.' };
     return talkReply(next, 'more');
   }
-
   if (turn.kind === 'more') {
     if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: next.lastLean }) };
   }
-
   if (turn.kind === 'lean') {
     if (!next.topic) return { state: next, exit: false, text: 'Say the thing first. Then you can lean.' };
     next.lastLean = turn.lean;
@@ -301,6 +276,7 @@ export function talkReply(state, raw) {
   return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: turn.lean }) };
 }
 
+// ponytail: queue incoming lines so stdin EOF cannot hang readline.question
 export function createAsk(input, output) {
   const rl = createInterface({ input, output, terminal: input.isTTY === true });
   const waiting = [];

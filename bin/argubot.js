@@ -97,6 +97,15 @@ function writeDebate(debate, options) {
   process.stdout.write(`${render(debate, { color, width: options.width ?? process.stdout.columns ?? 88 })}\n`);
 }
 
+function checkNumbers(options) {
+  if (!STYLE_NAMES.includes(options.style)) fail(`unknown style ${options.style}. Pick one of: ${STYLE_NAMES.join(', ')}`);
+  if (!Number.isFinite(options.rounds) || options.rounds < 1) fail('--rounds needs a positive number');
+  if (!Number.isFinite(options.tolerance) || options.tolerance < 0) fail('--tolerance needs a number of zero or more');
+  if (options.width !== undefined && (!Number.isFinite(options.width) || options.width < 8)) {
+    fail('--width needs a number of 8 or more');
+  }
+}
+
 async function runMenu(options) {
   const asker = createAsk(process.stdin, process.stdout);
   const actions = COMMANDS.filter((command) => !['menu', 'argue'].includes(command.name));
@@ -132,37 +141,33 @@ async function dispatch(options) {
     process.stdout.write(`argubot ${VERSION}\n`);
     return;
   }
-  if (options.command === 'commands') {
-    process.stdout.write(`${formatCommandList()}\n`);
-    return;
-  }
-  if (options.command === 'styles') {
-    process.stdout.write(`${STYLE_NAMES.map((name) => `${name}  ${STYLES[name].description}`).join('\n')}\n`);
-    return;
-  }
-  if (options.command === 'lineage') {
-    process.stdout.write(formatLineage());
-    return;
-  }
-  if (options.command === 'ready') {
-    process.stdout.write(`${JSON.stringify({ status: 'ready' })}\n`);
-    return;
-  }
-  if (options.command === 'validate') {
-    const result = spawnSync(process.execPath, [join(ROOT, 'scripts', 'validate.js')], { stdio: 'inherit' });
-    process.exit(result.status ?? 1);
-  }
-  if (options.command === 'menu') {
-    await runMenu(options);
-    return;
+
+  switch (options.command) {
+    case 'commands':
+      process.stdout.write(`${formatCommandList()}\n`);
+      return;
+    case 'styles':
+      process.stdout.write(`${STYLE_NAMES.map((name) => `${name}  ${STYLES[name].description}`).join('\n')}\n`);
+      return;
+    case 'lineage':
+      process.stdout.write(formatLineage());
+      return;
+    case 'ready':
+      process.stdout.write(`${JSON.stringify({ status: 'ready' })}\n`);
+      return;
+    case 'validate': {
+      const result = spawnSync(process.execPath, [join(ROOT, 'scripts', 'validate.js')], { stdio: 'inherit' });
+      process.exit(result.status ?? 1);
+      return;
+    }
+    case 'menu':
+      await runMenu(options);
+      return;
+    default:
+      break;
   }
 
-  if (!STYLE_NAMES.includes(options.style)) fail(`unknown style ${options.style}. Pick one of: ${STYLE_NAMES.join(', ')}`);
-  if (!Number.isFinite(options.rounds) || options.rounds < 1) fail('--rounds needs a positive number');
-  if (!Number.isFinite(options.tolerance) || options.tolerance < 0) fail('--tolerance needs a number of zero or more');
-  if (options.width !== undefined && (!Number.isFinite(options.width) || options.width < 8)) {
-    fail('--width needs a number of 8 or more');
-  }
+  checkNumbers(options);
 
   if (options.command === 'talk') {
     const asker = createAsk(process.stdin, process.stdout);
