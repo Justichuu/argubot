@@ -393,6 +393,7 @@ test('the CLI emits valid JSON on request', async () => {
   assert.equal(debate.style, 'plain');
   assert.equal(debate.dissent, null);
   assert.equal(debate.audit.balanced, true);
+  assert.equal(debate.audit.tolerance, 0);
 });
 
 test('the CLI rejects nonsense options with exit code 2', async () => {
@@ -454,6 +455,8 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Doesn't answer yes or no/);
   assert.match(html, /Must be unnatural/);
   assert.match(html, /telling it English/);
+  assert.match(html, /margin of error/);
+  assert.match(html, /mathematically maybe within limits/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
@@ -630,7 +633,18 @@ test('formatted beats stay even and never pick a winner', () => {
   const text = formatBeat(debate, { hear: true });
   assert.match(text, /^MAYBE$/m);
   assert.match(text, /^ALSO MAYBE$/m);
+  assert.equal(debate.audit.tolerance, 0);
+  assert.equal(debate.audit.for.words, debate.audit.against.words);
+  assert.match(text, new RegExp(`Maybe within limits\\. ${debate.audit.for.words} to ${debate.audit.against.words}\\.`));
+  assert.match(text, /Margin taken\. Limits deducted\./);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
+});
+
+test('create deducts the margin of error from the named limit', () => {
+  assert.equal(argue({ topic: 'pizza' }).audit.tolerance, 0);
+  assert.equal(argue({ topic: 'pizza', tolerance: 2 }).audit.tolerance, 0);
+  assert.equal(argue({ topic: 'pizza', tolerance: 4 }).audit.tolerance, 2);
+  assert.equal(argue({ topic: 'pizza', tolerance: 0 }).audit.tolerance, 0);
 });
 
 test('chat and agree-with-me lines still get both sides, never a yes-man', () => {

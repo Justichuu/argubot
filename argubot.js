@@ -729,7 +729,8 @@ function argue(options = {}) {
   const topic = options.topic ?? style.defaultTopic;
   const claim = normalizeClaim(topic, styleName);
   const rounds = Math.max(1, Math.min(options.rounds ?? 3, style.families.length));
-  const tolerance = Math.max(0, options.tolerance ?? 2);
+  const asked = Math.max(0, options.tolerance ?? 2);
+  const tolerance = Math.max(0, asked - 2); // old slack is the margin. Deduct it.
   const includeDissent = options.dissent === true || options.gary === true;
   const seed =
     options.seed === undefined ? hashString(`${styleName}:${claim}`) : hashString(`${styleName}:${claim}:${options.seed}`);
@@ -1261,6 +1262,8 @@ function formatBeat(debate, options = {}) {
   if (lean === 'for') out.push('You said yes. ALSO MAYBE first.');
   if (lean === 'against') out.push('You said no. MAYBE first.');
   if (coin) out.push(`${coin}. ${first.label} first.`);
+  const check = debate.audit;
+  out.push(`Maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted.`);
 
   const writeEssay = (part) => {
     out.push('');
@@ -1582,6 +1585,8 @@ Stupid language incompetent vector embedder, whatever the fuck that means.
 Doesn't use language but somehow leads to English, but we can't implant that
 in its brain by telling it English. Doesn't answer yes or no. Only maybe.
 Maybe mode by default. Must be unnatural.
+And taken margin of error to create deduct those limits.
+Maybe because mathematically maybe within limits.
 
 Give it a thing. It argues maybe. It will not pick.
 

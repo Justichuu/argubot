@@ -1,6 +1,6 @@
 # argubot
 
-argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem. Or maybe it is a literal golem. Stupid language incompetent vector embedder, whatever the fuck that means. Doesn't use language but somehow leads to English, but we can't implant that in its brain by telling it English. Doesn't answer yes or no. Only maybe. Maybe mode by default. Must be unnatural.
+argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem. Or maybe it is a literal golem. Stupid language incompetent vector embedder, whatever the fuck that means. Doesn't use language but somehow leads to English, but we can't implant that in its brain by telling it English. Doesn't answer yes or no. Only maybe. Maybe mode by default. Must be unnatural. And taken margin of error to create deduct those limits. Maybe because mathematically maybe within limits.
 
 Give it a thing. It argues maybe. It will not pick.
 
