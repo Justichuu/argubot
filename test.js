@@ -443,7 +443,8 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /chuumind.com\/attributions\//);
   assert.match(html, /Will not hear you|will not hear you/);
   assert.match(html, /src="\.\/argubot\.js"/);
-  assert.match(html, /claim, reasons, and evidence/i);
+  assert.match(html, /id="argue"/);
+  assert.match(html, /id="thing"/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
@@ -567,7 +568,8 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /^YES$/m);
   assert.match(reply.text, /^NO$/m);
   assert.doesNotMatch(reply.text, /^GARY$/m);
-  assert.match(reply.text, /more · new topic · done/);
+  assert.match(reply.text, /^Claim: Yes to pineapple on pizza\.$/m);
+  assert.match(reply.text, /Evidence:/);
   assert.doesNotMatch(reply.text, /justichuu|github\.com|LINEAGE|src\//i);
 });
 
@@ -602,7 +604,8 @@ test('more needs a topic, then adds another pair', () => {
   assert.match(talkReply(createTalkState(), 'more').text, /Say a thing first/);
   const started = talkReply(createTalkState(), 'tabs over spaces');
   const more = talkReply(started.state, 'more');
-  assert.match(more.text, /More on the same thing/);
+  assert.match(more.text, /^YES$/m);
+  assert.match(more.text, /^NO$/m);
   assert.notEqual(started.text, more.text);
 });
 
@@ -614,7 +617,8 @@ test('a lean without a topic is refused', () => {
 test('formatted beats stay even and never pick a winner', () => {
   const debate = argue({ topic: 'getting a dog', rounds: 1, seed: 'talk-1', style: 'plain' });
   const text = formatBeat(debate, { hear: true });
-  assert.match(text, /Even|Close enough/);
+  assert.match(text, /^YES$/m);
+  assert.match(text, /^NO$/m);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
 });
 
@@ -676,7 +680,8 @@ test('arguing the same thing again is another pair, not a reset', () => {
   const first = talkAct(createTalkState({ seed: 'same' }), 'argue', 'getting a dog');
   const again = talkAct(first.state, 'argue', 'getting a dog');
   assert.match(first.text, /You said getting a dog/);
-  assert.match(again.text, /More on the same thing/);
+  assert.match(again.text, /^YES$/m);
+  assert.match(again.text, /Evidence:/);
   assert.doesNotMatch(again.text, /You said getting a dog/);
 });
 
@@ -684,7 +689,7 @@ test('unknown lean flips a coin for who speaks first', () => {
   const first = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
   const again = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
   assert.equal(first.text, again.text);
-  assert.match(first.text, /I cannot tell which side you are on\. (Heads|Tails)\. (YES|NO) first\./);
+  assert.match(first.text, /(Heads|Tails)\. (YES|NO) first\./);
   const heads = /Heads/.test(first.text);
   const yesAt = first.text.indexOf('\nYES\n');
   const noAt = first.text.indexOf('\nNO\n');
@@ -719,6 +724,6 @@ test('the CLI talk loop reads lines and exits', async () => {
   });
   assert.match(stdout, /Say a thing/);
   assert.match(stdout, /You said hot dogs are sandwiches/);
-  assert.match(stdout, /More on the same thing/);
+  assert.match(stdout, /Evidence:/);
   assert.match(stdout, /I did not pick/);
 });

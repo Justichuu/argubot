@@ -1133,13 +1133,6 @@ const HEAR = {
   civic: (claim) => `I heard you. The claim is ${claim}.`,
 };
 
-const ASIDES = [
-  'Same move, other direction. That is on purpose.',
-  'I can do this all day and I still will not pick.',
-  'If I agreed with you here I would just be a mirror.',
-  'Two lines, one move. I am not hiding that.',
-];
-
 const SLASH_KIND = {
   done: 'exit',
   quit: 'exit',
@@ -1261,27 +1254,22 @@ function orderSides(debate, lean) {
 function formatBeat(debate, options = {}) {
   const lean = options.lean ?? null;
   const hear = options.hear !== false;
-  const aside = ASIDES[debate.seed % ASIDES.length];
   const { first, second, coin } = orderSides(debate, lean);
   const out = [];
 
   if (hear) out.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
-  else out.push('More on the same thing.');
-
-  if (lean === 'for') out.push('You said yes. I heard you. I still will not pick.');
-  if (lean === 'against') out.push('You said no. I heard you. I still will not pick.');
-  if (coin) out.push(`I cannot tell which side you are on. ${coin}. ${first.label} first.`);
+  if (lean === 'for') out.push('You said yes. NO first.');
+  if (lean === 'against') out.push('You said no. YES first.');
+  if (coin) out.push(`${coin}. ${first.label} first.`);
 
   const writeEssay = (side) => {
     const sideKey = side.label === 'YES' ? 'for' : 'against';
     out.push('');
     out.push(side.label);
     out.push(claimLine(side.label, debate.claim));
-    out.push('');
     side.lines.forEach((line, index) => {
       out.push(`${index + 1}. ${line}`);
       out.push(`   Evidence: ${proofLine(debate, index, sideKey)}`);
-      if (index < side.lines.length - 1) out.push('');
     });
   };
 
@@ -1294,22 +1282,6 @@ function formatBeat(debate, options = {}) {
     out.push(`  ${debate.dissent.statement}`);
   }
 
-  const yesWords = countWords(
-    [claimLine('YES', debate.claim), ...debate.for, ...debate.for.map((_, i) => proofLine(debate, i, 'for'))].join(' '),
-  );
-  const noWords = countWords(
-    [claimLine('NO', debate.claim), ...debate.against, ...debate.against.map((_, i) => proofLine(debate, i, 'against'))].join(' '),
-  );
-
-  out.push('');
-  out.push(aside);
-  out.push(
-    yesWords === noWords
-      ? `${yesWords} words each. Even.`
-      : `${yesWords} words yes, ${noWords} words no. Close enough.`,
-  );
-  out.push('');
-  out.push('more · new topic · done');
   return out.join('\n');
 }
 
@@ -1805,7 +1777,6 @@ if (typeof document !== 'undefined') {
       if (moveFocus) try { out.focus(); } catch (err) {}
     };
     let state = createTalkState({ style: 'plain' });
-    show(openingLines().join('\n'), false);
     const say = (action) => {
       const reply = talkAct(state, action, thing.value);
       state = reply.state;

@@ -81,15 +81,15 @@
       font-style: italic;
       font-size: clamp(28px, 5vw, 42px);
       line-height: 1.12;
-      margin: 6px 0 10px;
+      margin: 6px 0 18px;
     }
     p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
     a { color: var(--ink); text-underline-offset: 3px; }
-    label { font-weight: 400; }
+    label { display: block; font-weight: 400; margin: 0 0 8px; }
     .hint {
       color: var(--muted);
-      font-size: 16px;
-      margin: 0 0 12px;
+      font-size: 14px;
+      margin: 0 0 8px;
     }
     textarea, button, input {
       font: inherit;
@@ -97,7 +97,7 @@
     }
     textarea {
       width: 100%;
-      min-height: 6.5rem;
+      min-height: 5.5rem;
       padding: 12px 14px;
       border: 1.8px solid var(--ink);
       border-radius: var(--radius);
@@ -106,20 +106,11 @@
     }
     .acts {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 10px 12px;
-      margin: 8px 0 18px;
+      margin: 12px 0 16px;
     }
-    @media (min-width: 520px) {
-      .acts { grid-template-columns: 1fr 1fr; }
-    }
-    .act {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
-    }
-    .act .hint { margin: 0; font-size: 14px; }
+    #done { grid-column: 1 / -1; }
     button {
       min-height: 44px;
       min-width: 44px;
@@ -151,6 +142,7 @@
       min-height: 8rem;
       margin: 0 0 28px;
     }
+    #out:empty { display: none; }
     footer.site {
       display: flex;
       flex-wrap: wrap;
@@ -198,43 +190,24 @@
       <h1>argubot</h1>
     </header>
     <main id="letter">
-      <p>Give it a thing. It writes yes and no. It will not pick.</p>
-      <p>Type a thing. Press Argue. Each side gets a claim, reasons, and evidence you can check. Same number on both sides.</p>
-      <p>This is a window on your computer. It does not call this website. Close the tab and what you typed is gone.</p>
-      <p>Turn the wifi off and use it anyway. The names of the four things that could send or keep anything are on <a href="https://chuumind.com/privacy/">Privacy proof</a>. This page has none of them.</p>
       <form id="talk">
         <label for="thing">The thing</label>
-        <p class="hint">Type what you want argued.</p>
         <textarea id="thing" name="thing" rows="3" autocomplete="off"></textarea>
         <div class="acts">
-          <div class="act">
-            <button type="submit" id="argue">Argue</button>
-            <p class="hint">Both sides. It will not pick.</p>
-          </div>
-          <div class="act">
-            <button type="button" id="yes">Yes</button>
-            <p class="hint">You are on yes. The other side talks first.</p>
-          </div>
-          <div class="act">
-            <button type="button" id="no">No</button>
-            <p class="hint">You are on no. The other side talks first.</p>
-          </div>
-          <div class="act">
-            <button type="button" id="more">More</button>
-            <p class="hint">More reasons on the same thing.</p>
-          </div>
-          <div class="act">
-            <button type="button" id="done">Done</button>
-            <p class="hint">Stop. It still will not pick.</p>
-          </div>
+          <button type="submit" id="argue">Argue</button>
+          <button type="button" id="yes">Yes</button>
+          <button type="button" id="no">No</button>
+          <button type="button" id="more">More</button>
+          <button type="button" id="done">Done</button>
         </div>
       </form>
       <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="The argument"></pre>
       <noscript>
-        <p>This page argues in the browser. It needs JavaScript on this machine. Nothing is sent. Keep argubot.js next to this file.</p>
+        <p>This page needs JavaScript on this machine. Nothing is sent. Keep argubot.js next to this file.</p>
       </noscript>
     </main>
     <footer class="site">
+      <p>This is a window on your computer. It does not call this website.</p>
       <p>Justichuu<br>31 August 2026</p>
       <p>
         <a href="https://chuumind.com/book/">Book</a>
@@ -249,7 +222,6 @@
         <button type="button" id="acc_speak" aria-pressed="false" title="Speak. A voice on this machine. It will not hear you.">Speak</button>
         <span id="acc_note" role="status" aria-live="polite"></span>
       </div>
-      <p class="hint">Access. Larger type, contrast, and a voice on this machine. It will not hear you. None of that is stored.</p>
     </footer>
   </div>
   <script type="module" src="./argubot.js"></script>
