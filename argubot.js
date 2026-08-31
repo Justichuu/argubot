@@ -1279,17 +1279,20 @@ function beat(state) {
 }
 
 function orderSides(debate, lean) {
-  if (lean === 'for') {
-    return { first: { label: 'NO', lines: debate.against }, second: { label: 'YES', lines: debate.for } };
-  }
-  return { first: { label: 'YES', lines: debate.for }, second: { label: 'NO', lines: debate.against } };
+  const yes = { label: 'YES', lines: debate.for };
+  const no = { label: 'NO', lines: debate.against };
+  if (lean === 'for') return { first: no, second: yes, coin: null };
+  if (lean === 'against') return { first: yes, second: no, coin: null };
+  // ponytail: seed parity is the coin. Separate rng if two talks must disagree.
+  const heads = debate.seed % 2 === 0;
+  return heads ? { first: yes, second: no, coin: 'Heads' } : { first: no, second: yes, coin: 'Tails' };
 }
 
 function formatBeat(debate, options = {}) {
   const lean = options.lean ?? null;
   const hear = options.hear !== false;
   const aside = ASIDES[debate.seed % ASIDES.length];
-  const { first, second } = orderSides(debate, lean);
+  const { first, second, coin } = orderSides(debate, lean);
   const out = [];
 
   if (hear) out.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
@@ -1297,6 +1300,7 @@ function formatBeat(debate, options = {}) {
 
   if (lean === 'for') out.push('You leaned yes. I heard you. I am still not going to agree.');
   if (lean === 'against') out.push('You leaned no. I heard you. I am still not going to agree.');
+  if (coin) out.push(`I cannot tell which side you are on. ${coin}. ${first.label} first.`);
 
   out.push('');
   out.push(first.label);

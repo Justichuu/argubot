@@ -620,6 +620,21 @@ test('formatted beats stay even and never pick a winner', () => {
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
 });
 
+test('unknown lean flips a coin for who speaks first', () => {
+  const first = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
+  const again = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
+  assert.equal(first.text, again.text);
+  assert.match(first.text, /I cannot tell which side you are on\. (Heads|Tails)\. (YES|NO) first\./);
+  const heads = /Heads/.test(first.text);
+  const yesAt = first.text.indexOf('\nYES\n');
+  const noAt = first.text.indexOf('\nNO\n');
+  if (heads) assert.ok(yesAt > 0 && yesAt < noAt);
+  else assert.ok(noAt > 0 && noAt < yesAt);
+  const leaned = talkReply(first.state, 'yes');
+  assert.doesNotMatch(leaned.text, /Heads|Tails/);
+  assert.match(leaned.text, /You leaned yes/);
+});
+
 test('runTalk leaves when the person is done', async () => {
   const lines = ['pineapple on pizza', 'yes', 'done'];
   let i = 0;
