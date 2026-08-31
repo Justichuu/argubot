@@ -490,7 +490,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Sometimes people do but not all the time/);
   assert.match(html, /Saying something doesn't make it true for everyone witnessing or not witnessing/);
   const body = html.slice(html.indexOf('<body>'));
-  assert.ok(body.indexOf('id="thing"') < body.indexOf('principal of its existence'), 'the box must come before the manifesto so a phone can use it');
+  assert.ok(body.indexOf('id="thing"') > 0);
+  assert.ok(body.indexOf('id="thing"') < body.indexOf('id="out"'));
+  assert.ok(html.indexOf('principal of its existence') < html.indexOf('<body>'), 'the long text stays in meta so the page stays small');
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
