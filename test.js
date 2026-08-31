@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -415,9 +416,33 @@ test('the CLI has help and version', async () => {
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
 });
 
-test('the validator reports a clean tree', () => {
-  const failures = runValidate();
+test('the validator reports a clean tree', async () => {
+  const failures = await runValidate();
   assert.deepEqual(failures, []);
+});
+
+test('the html page can sit on chuumind.com', () => {
+  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  assert.match(html, /name="viewport"/);
+  assert.match(html, /viewport-fit=cover/);
+  assert.match(html, /Skip to the letter/);
+  assert.match(html, /id="letter"/);
+  assert.match(html, /100svh/);
+  assert.match(html, /safe-area-inset/);
+  assert.match(html, /min-height:\s*44px/);
+  assert.match(html, /does not call this website/);
+  assert.match(html, /chuumind.com\/book\//);
+  assert.match(html, /chuumind.com\/rights\//);
+  assert.match(html, /chuumind.com\/privacy\//);
+  assert.match(html, /chuumind.com\/attributions\//);
+  assert.match(html, /Will not hear you|will not hear you/);
+  assert.match(html, /import\('\.\/argubot\.js'\)/);
+  assert.doesNotMatch(html, /[\u2013\u2014]/);
+  assert.doesNotMatch(html, /fetch\s*\(/);
+  assert.doesNotMatch(html, /XMLHttpRequest/);
+  assert.doesNotMatch(html, /localStorage/);
+  assert.doesNotMatch(html, /indexedDB/);
+  assert.doesNotMatch(html, /captcha|recaptcha|biometric/i);
 });
 
 test('the CLI can turn dissent on with a generated name', async () => {

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>argubot</title>
+  <meta name="description" content="Give it a thing. It argues yes and no. It will not pick. Runs on this computer. Nothing is sent.">
+  <style>
+    :root {
+      --paper: #f7d6e8;
+      --ink: #120c14;
+      --muted: #5a3d55;
+      --field: rgba(255, 248, 252, .82);
+      --serif: Georgia, "Palatino Linotype", Palatino, "Times New Roman", serif;
+      --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+    }
+    body {
+      color: var(--ink);
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.55;
+      background: #f4cfe4;
+    }
+    .wrap {
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: 40px 32px 96px;
+      padding-bottom: max(96px, env(safe-area-inset-bottom, 0px));
+      padding-left: max(32px, env(safe-area-inset-left, 0px));
+      padding-right: max(32px, env(safe-area-inset-right, 0px));
+    }
+    @media (max-width: 640px) {
+      .wrap {
+        padding: 24px 22px max(28px, env(safe-area-inset-bottom, 0px));
+        padding-left: max(22px, env(safe-area-inset-left, 0px));
+        padding-right: max(22px, env(safe-area-inset-right, 0px));
+      }
+    }
+    .skip {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+    }
+    .skip:focus {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      width: auto;
+      height: auto;
+      clip: auto;
+      clip-path: none;
+      overflow: visible;
+      z-index: 80;
+      padding: 10px 14px;
+      background: var(--paper);
+      color: var(--ink);
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      text-decoration: none;
+    }
+    .kicker {
+      font-size: 15px;
+      font-style: italic;
+      color: var(--muted);
+      margin: 0;
+    }
+    h1 {
+      font-weight: 400;
+      font-style: italic;
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1.12;
+      margin: 6px 0 10px;
+    }
+    p { max-width: 54ch; margin: 0 0 1.15em; }
+    a { color: var(--ink); text-underline-offset: 3px; }
+    label, legend { font-weight: 400; }
+    .hint {
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0 0 12px;
+    }
+    textarea, button, input {
+      font: inherit;
+      color: var(--ink);
+    }
+    textarea {
+      width: 100%;
+      min-height: 6.5rem;
+      padding: 12px 14px;
+      border: 1.8px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--field);
+      resize: vertical;
+    }
+    fieldset {
+      border: 1.8px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--field);
+      padding: 12px 14px 8px;
+      margin: 0 0 18px;
+    }
+    legend { padding: 0 6px; }
+    .choice {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      min-height: 44px;
+      padding: 8px 0;
+    }
+    .choice input { width: 1.15rem; height: 1.15rem; margin-top: 4px; flex: 0 0 auto; }
+    .acts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 12px;
+      margin: 8px 0 18px;
+    }
+    .act {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .act .hint { margin: 0; font-size: 14px; }
+    button {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 8px 14px;
+      border: 1.8px solid var(--ink);
+      border-radius: 10px;
+      background: var(--paper);
+      cursor: pointer;
+    }
+    button:hover { background: var(--ink); color: var(--paper); }
+    button[aria-pressed="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--ink);
+      outline-offset: 3px;
+    }
+    #out {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-family: var(--serif);
+      font-size: 18px;
+      line-height: 1.5;
+      background: var(--field);
+      border: 1.8px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      min-height: 8rem;
+      margin: 0 0 28px;
+    }
+    footer.site {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: flex-start;
+      color: var(--muted);
+      font-size: 14px;
+      font-style: italic;
+      position: relative;
+      min-height: 44px;
+    }
+    footer.site p { margin: 0 1.5em 10px 0; }
+    footer.site a { margin-right: 12px; }
+    .site-access {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-left: auto;
+    }
+    html.access-big { font-size: 22px; }
+    html.access-bigger { font-size: 26px; }
+    html.access-hi, html.access-hi body {
+      background: #fff;
+      color: #000;
+    }
+    html.access-hi textarea, html.access-hi fieldset, html.access-hi #out, html.access-hi button {
+      background: #fff;
+      color: #000;
+      border-color: #000;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+    @media (forced-colors: active) {
+      button, textarea, fieldset, #out { border: 2px solid CanvasText; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#letter">Skip to the letter</a>
+  <div class="wrap letter">
+    <header>
+      <p class="kicker">ChuuMind</p>
+      <h1>argubot</h1>
+    </header>
+    <main id="letter">
+      <p>Give it a thing. It argues yes and no. It will not pick.</p>
+      <p>This is a window on your computer. It does not call this website. Close the tab and what you typed is gone.</p>
+      <p>Turn the wifi off and use it anyway. The names of the four things that could send or keep anything are on <a href="https://chuumind.com/privacy/">Privacy proof</a>. This page has none of them.</p>
+      <form id="talk">
+        <label for="thing">The thing</label>
+        <p class="hint">Whatever you want argued. A claim, a plan, a topping.</p>
+        <textarea id="thing" name="thing" rows="3" autocomplete="off"></textarea>
+        <fieldset>
+          <legend>How it talks</legend>
+          <p class="hint">Same pairs either way. Only the wording changes.</p>
+          <label class="choice"><input type="radio" name="style" value="plain" checked> Plain. Everyday words. The default.</label>
+          <label class="choice"><input type="radio" name="style" value="classic"> Classic. Debate-club voice.</label>
+          <label class="choice"><input type="radio" name="style" value="civic"> Civic. Book voice. No long dashes. No invented credentials.</label>
+        </fieldset>
+        <div class="acts">
+          <div class="act">
+            <button type="submit" id="argue">Argue</button>
+            <p class="hint">Prints both sides. It will not pick a winner.</p>
+          </div>
+          <div class="act">
+            <button type="button" id="yes">Yes</button>
+            <p class="hint">Lean yes. The other side still talks first.</p>
+          </div>
+          <div class="act">
+            <button type="button" id="no">No</button>
+            <p class="hint">Lean no. The other side still talks first.</p>
+          </div>
+          <div class="act">
+            <button type="button" id="more">More</button>
+            <p class="hint">Another pair on the same thing.</p>
+          </div>
+          <div class="act">
+            <button type="button" id="done">Done</button>
+            <p class="hint">Leave. It still will not pick.</p>
+          </div>
+        </div>
+      </form>
+      <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="The argument"></pre>
+      <noscript>
+        <p>This page argues in the browser. It needs JavaScript on this machine. Nothing is sent. The same program is also argubot.js under Node.</p>
+      </noscript>
+    </main>
+    <footer class="site">
+      <p>Justichuu<br>31 August 2026</p>
+      <p>
+        <a href="https://chuumind.com/book/">Book</a>
+        <a href="https://chuumind.com/rights/">Your rights</a>
+        <a href="https://chuumind.com/privacy/">Privacy proof</a>
+        <a href="https://chuumind.com/attributions/">Attributions</a>
+      </p>
+      <p>A person is accountable for this page. A machine is not.</p>
+      <div class="site-access" role="region" aria-label="Access">
+        <button type="button" id="acc_type" aria-pressed="false" title="Type. Usual, larger, largest.">Type</button>
+        <button type="button" id="acc_hi" aria-pressed="false" title="Contrast. Usual or high.">Contrast</button>
+        <button type="button" id="acc_speak" aria-pressed="false" title="Speak. A voice on this machine. It will not hear you.">Speak</button>
+        <span id="acc_note" role="status" aria-live="polite"></span>
+      </div>
+      <p class="hint">Access. Larger type, contrast, and a voice on this machine. It will not hear you. None of that is stored.</p>
+    </footer>
+  </div>
+  <script type="module">
+    const out = document.getElementById('out');
+    const thing = document.getElementById('thing');
+    const root = document.documentElement;
+    const note = document.getElementById('acc_note');
+    const btnType = document.getElementById('acc_type');
+    const btnHi = document.getElementById('acc_hi');
+    const btnSpeak = document.getElementById('acc_speak');
+
+    let typeLevel = 0;
+    let speakOn = false;
+    let state;
+
+    function hint(msg) {
+      note.textContent = msg || '';
+    }
+
+    function silence() {
+      try {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      } catch (err) {}
+    }
+
+    function voice(msg) {
+      if (!speakOn || !window.speechSynthesis) return;
+      try {
+        silence();
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(String(msg || '')));
+      } catch (err) {}
+    }
+
+    function writeHash() {
+      const parts = [];
+      if (typeLevel === 1) parts.push('type');
+      if (typeLevel === 2) parts.push('type2');
+      if (root.classList.contains('access-hi')) parts.push('hi');
+      if (speakOn) parts.push('speak');
+      const hash = parts.length ? 'access=' + parts.join(',') : '';
+      try {
+        history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search);
+      } catch (err) {}
+    }
+
+    function applyType() {
+      root.classList.toggle('access-big', typeLevel === 1);
+      root.classList.toggle('access-bigger', typeLevel === 2);
+      btnType.setAttribute('aria-pressed', typeLevel > 0 ? 'true' : 'false');
+      btnType.textContent = typeLevel === 0 ? 'Type' : typeLevel === 1 ? 'Type +' : 'Type ++';
+    }
+
+    btnType.addEventListener('click', () => {
+      typeLevel = (typeLevel + 1) % 3;
+      applyType();
+      hint(typeLevel === 0 ? 'Usual type.' : typeLevel === 1 ? 'Larger type.' : 'Largest type.');
+      writeHash();
+    });
+    btnHi.addEventListener('click', () => {
+      const on = !root.classList.contains('access-hi');
+      root.classList.toggle('access-hi', on);
+      btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
+      hint(on ? 'High contrast.' : 'Usual contrast.');
+      writeHash();
+    });
+    btnSpeak.addEventListener('click', () => {
+      if (speakOn) {
+        speakOn = false;
+        btnSpeak.setAttribute('aria-pressed', 'false');
+        btnSpeak.textContent = 'Speak';
+        silence();
+        hint('Speak is off.');
+        writeHash();
+        return;
+      }
+      speakOn = true;
+      btnSpeak.setAttribute('aria-pressed', 'true');
+      btnSpeak.textContent = 'Stop speak';
+      const msg = 'Type, contrast, and speak on this page. This page will not hear you.';
+      hint(msg);
+      voice(msg);
+      writeHash();
+    });
+
+    const flags = ((location.hash || '').match(/access=([\w,]+)/) || [,''] )[1].split(',').filter(Boolean);
+    if (flags.includes('type2')) typeLevel = 2;
+    else if (flags.includes('type')) typeLevel = 1;
+    applyType();
+    if (flags.includes('hi')) {
+      root.classList.add('access-hi');
+      btnHi.setAttribute('aria-pressed', 'true');
+    }
+    if (flags.includes('speak')) {
+      speakOn = true;
+      btnSpeak.setAttribute('aria-pressed', 'true');
+      btnSpeak.textContent = 'Stop speak';
+    }
+
+    function styleNow() {
+      const picked = document.querySelector('input[name="style"]:checked');
+      return picked ? picked.value : 'plain';
+    }
+
+    function show(text) {
+      out.textContent = text;
+      voice(text);
+      try { out.focus(); } catch (err) {}
+    }
+
+    let bot;
+    try {
+      bot = await import('./argubot.js');
+    } catch (err) {
+      show('Keep index.html and argubot.js in the same folder. Open them from a site or a folder on this computer. This page does not call a network to argue.');
+      throw err;
+    }
+
+    state = bot.createTalkState({ style: styleNow() });
+    show(bot.openingLines().join('\n'));
+
+    function say(raw) {
+      state = { ...state, style: styleNow() };
+      const reply = bot.talkReply(state, raw);
+      state = reply.state;
+      show(reply.text);
+      if (reply.exit) state = bot.createTalkState({ style: styleNow() });
+    }
+
+    document.getElementById('talk').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const text = thing.value.trim();
+      say(text === '' ? '' : text);
+    });
+    document.getElementById('yes').addEventListener('click', () => say('yes'));
+    document.getElementById('no').addEventListener('click', () => say('no'));
+    document.getElementById('more').addEventListener('click', () => say('more'));
+    document.getElementById('done').addEventListener('click', () => say('done'));
+    for (const radio of document.querySelectorAll('input[name="style"]')) {
+      radio.addEventListener('change', () => {
+        state = { ...state, style: styleNow() };
+      });
+    }
+  </script>
+</body>
+</html>

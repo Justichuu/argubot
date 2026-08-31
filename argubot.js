@@ -1,11 +1,5 @@
 #!/usr/bin/env node
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createInterface } from 'node:readline';
 
-const ROOT = dirname(fileURLToPath(import.meta.url));
-const VERSION = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version;
 const capitalize = (text) => (text.length === 0 ? text : text[0].toUpperCase() + text.slice(1));
 
 // Deterministic PRNG so the same topic and seed always produce the same debate.
@@ -1326,7 +1320,8 @@ function talkReply(state, raw) {
 }
 
 // ponytail: queue incoming lines so stdin EOF cannot hang readline.question
-function createAsk(input, output) {
+async function createAsk(input, output) {
+  const { createInterface } = await import('node:readline');
   const rl = createInterface({ input, output, terminal: input.isTTY === true });
   const waiting = [];
   const queued = [];
@@ -1389,28 +1384,33 @@ async function runTalk(io, options = {}) {
 }
 
 const LONG_DASHES = ['\u2013', '\u2014'];
-const REQUIRED = ['README.md', 'LICENSE', 'package.json', 'argubot.js'];
+const REQUIRED = ['README.md', 'LICENSE', 'package.json', 'argubot.js', 'index.html'];
 const SECRET_SHAPES = [
   /-----BEGIN(?: [A-Z]+)? PRIVATE KEY-----/,
   /\b(?:ghp|github_pat|sk)-[A-Za-z0-9_]{16,}\b/,
   /\bAKIA[0-9A-Z]{16}\b/,
 ];
-function walk(dir, out = []) {
-  for (const name of readdirSync(dir)) {
-    if (name === '.git' || name === 'node_modules') continue;
-    const path = join(dir, name);
-    const info = statSync(path);
-    if (info.isDirectory()) walk(path, out);
-    else out.push(path);
-  }
-  return out;
-}
+const SENDS_OR_KEEPS = [/fetch\s*\(/, /XMLHttpRequest/, /localStorage/, /indexedDB/];
 
 function note(failures, path, rule) {
   failures.push(`${path}: ${rule}`);
 }
 
-function runValidate() {
+async function runValidate() {
+  const { readdirSync, readFileSync, statSync } = await import('node:fs');
+  const { dirname, join, relative } = await import('node:path');
+  const { fileURLToPath } = await import('node:url');
+  const ROOT = dirname(fileURLToPath(import.meta.url));
+  function walk(dir, out = []) {
+    for (const name of readdirSync(dir)) {
+      if (name === '.git' || name === 'node_modules') continue;
+      const path = join(dir, name);
+      const info = statSync(path);
+      if (info.isDirectory()) walk(path, out);
+      else out.push(path);
+    }
+    return out;
+  }
   const failures = [];
   for (const file of REQUIRED) {
     try {
@@ -1421,7 +1421,7 @@ function runValidate() {
   }
   for (const path of walk(ROOT)) {
     const rel = relative(ROOT, path).replaceAll('\\', '/');
-    if (!/\.(js|md|yml|json)$/.test(rel) && rel !== '.gitignore') continue;
+    if (!/\.(js|md|yml|json|html)$/.test(rel) && rel !== '.gitignore') continue;
     let text;
     try {
       text = readFileSync(path, 'utf8');
@@ -1431,6 +1431,18 @@ function runValidate() {
     }
     if (SECRET_SHAPES.some((shape) => shape.test(text))) {
       note(failures, rel, 'secret-shaped-value');
+    }
+    if (/\.html$/.test(rel) && LONG_DASHES.some((mark) => text.includes(mark))) {
+      note(failures, rel, 'long-dash-character');
+    }
+    if (rel === 'index.html') {
+      if (!/name="viewport"/.test(text)) note(failures, rel, 'viewport-missing');
+      if (!/Skip to the letter/.test(text) || !/id="letter"/.test(text)) {
+        note(failures, rel, 'skip-link-missing');
+      }
+      if (SENDS_OR_KEEPS.some((shape) => shape.test(text))) {
+        note(failures, rel, 'sends-or-keeps');
+      }
     }
   }
   if (STYLE_NAMES.length < 3) note(failures, 'argubot.js', 'fewer-than-three-styles');
@@ -1494,7 +1506,8 @@ are on, it flips a coin for who talks first.
   --talk      conversation, even with a topic
   -h          this help
 
-The program is one file: argubot.js. Node 18 or newer. Nothing to install.
+On a phone, open index.html. Keep it next to this file.
+Node 18 or newer. Nothing to install.
 `;
 
 async function topicFromStdin() {
@@ -1540,7 +1553,7 @@ function checkNumbers(options) {
 }
 
 async function startTalk(options, topic) {
-  const asker = createAsk(process.stdin, process.stdout);
+  const asker = await createAsk(process.stdin, process.stdout);
   try {
     await runTalk(
       {
@@ -1560,7 +1573,13 @@ async function dispatch(options) {
     return;
   }
   if (options.version || options.command === 'version') {
-    process.stdout.write(`argubot ${VERSION}\n`);
+    const { readFileSync } = await import('node:fs');
+    const { dirname, join } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const version = JSON.parse(
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'package.json'), 'utf8'),
+    ).version;
+    process.stdout.write(`argubot ${version}\n`);
     return;
   }
 
@@ -1586,8 +1605,12 @@ async function main() {
   await dispatch(options);
 }
 
-const invoked = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
-if (invoked) await main();
+if (typeof process !== 'undefined' && process.argv?.[1]) {
+  const { pathToFileURL } = await import('node:url');
+  const { resolve } = await import('node:path');
+  const invoked = import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+  if (invoked) await main();
+}
 
 export {
   STYLE_NAMES,

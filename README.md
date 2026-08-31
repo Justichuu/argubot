@@ -2,7 +2,8 @@
 
 Give it a thing. It argues yes and no. It will not pick.
 
-Needs Node 18. Nothing else. The whole program is `argubot.js`.
+On a phone, open `index.html`. Keep it next to `argubot.js`. It runs here.
+Nothing is sent.
 
 ```bash
 node argubot.js pineapple on pizza
