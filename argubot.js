@@ -818,7 +818,7 @@ function render(debate, options = {}) {
 
   const pushSide = (label, lines, code, sideKey) => {
     out.push(paint(code, label));
-    pushBlock(sideKey === 'for' ? `Maybe ${debate.claim}.` : `Also maybe ${debate.claim}.`, '  ');
+    pushBlock(claimLine(sideKey, debate.claim), '  ');
     lines.forEach((line, index) => {
       const wrapped = block(line, width, '      ');
       const number = `${String(index + 1).padStart(2)}.`;
@@ -1129,6 +1129,8 @@ const MORE = /^(more|again|go|next|\+|1)$/i;
 const ASK_TOPIC = /^(new|topic|other|2)$/i;
 const WHY = /^(why)$/i;
 const HELP_TURN = /^(help|\?)$/i;
+const FIX = /^(fix)$/i;
+const FIX_TOPIC = 'LLMs need to be fixed';
 
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
@@ -1144,6 +1146,7 @@ const SLASH_KIND = {
   help: 'help',
   why: 'why',
   more: 'more',
+  fix: 'fix',
 };
 
 function detectLean(text) {
@@ -1192,6 +1195,7 @@ function classifyTurn(raw) {
 
   if (EXITS.test(text) || text === '3') return { kind: 'exit' };
   if (MORE.test(text)) return { kind: 'more' };
+  if (FIX.test(text)) return { kind: 'fix' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP_TURN.test(text)) return { kind: 'help' };
@@ -1202,15 +1206,15 @@ function classifyTurn(raw) {
 
 function openingLines() {
   return [
-    'Type it. I will write both sides. I will not pick.',
-    'Type done when you want out.',
+    'Type it. I will write both sides. A fix, and the problems the fix makes. I will not pick.',
+    'Type done when you want out. Chill. Let it go. I let go of the wheel.',
   ];
 }
 
 function helpLines() {
   return [
-    'Type it. yes or no if you have a side. more for more. done to leave.',
-    'If I cannot tell, I flip a coin.',
+    'Type it. yes or no if you have a side. more for more. fix for a fix. done to leave.',
+    'Solutions are uncensored. No weights. No bias. Even scale.',
   ];
 }
 
@@ -1241,7 +1245,7 @@ function proofLine(debate, index, side) {
 }
 
 function claimLine(side, claim) {
-  return side === 'for' ? `Maybe ${claim}.` : `Also maybe ${claim}.`;
+  return side === 'for' ? `Maybe ${claim} is a fix.` : `Also maybe ${claim} makes more problems.`;
 }
 
 // 2010 chrome computer, 1024x768, 18px at 1.55. Baseline. Not the goal. Not the mean.
@@ -1272,7 +1276,8 @@ function formatBeat(debate, options = {}) {
   if (lean === 'for') extras.push('You said yes. ALSO MAYBE first.');
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
-  extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted.`);
+  extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
+  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true.');
 
   const pairsReady = Math.min(first.lines.length, second.lines.length);
   const writeEssay = (part, n) => {
@@ -1332,7 +1337,7 @@ function talkReply(state, raw) {
   const turn = classifyTurn(raw);
 
   if (turn.kind === 'exit') {
-    return { state: next, exit: true, text: 'Okay. You can go. I did not pick.' };
+    return { state: next, exit: true, text: 'Okay. Chill. Let it go. I let go of the wheel. I did not pick.' };
   }
   if (turn.kind === 'help') {
     return { state: next, exit: false, text: helpLines().join('\n') };
@@ -1376,6 +1381,11 @@ function talkReply(state, raw) {
     if (!next.topic) return { state: next, exit: false, text: 'Type it first.' };
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: false, lean: next.lastLean }) };
+  }
+  if (turn.kind === 'fix') {
+    if (!next.topic) next.topic = FIX_TOPIC;
+    next.turn += 1;
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }
   if (turn.kind === 'lean') {
     if (!next.topic) return { state: next, exit: false, text: 'Type it first. Then yes or no.' };
@@ -1462,7 +1472,7 @@ async function runTalk(io, options = {}) {
   while (true) {
     const raw = await io.ask('> ');
     if (raw === null || raw === undefined) {
-      write('Okay. You can go. I did not pick.');
+      write('Okay. Chill. Let it go. I let go of the wheel. I did not pick.');
       break;
     }
     const reply = talkReply(state, raw);
@@ -1614,6 +1624,20 @@ You can set the limit. Default is a 2010 chrome computer.
 That's the baseline but not the goal and mean average.
 You can't print as many as you feel.
 Mirrored self, to escape the cycle.
+This bot attempts to argue (as principal of its existence) that LLMs are a
+problem that needs fixed and it should argue viable solutions in (fix) mode.
+Similar logic to other problems. Attempts to fix problems regarding humans
+but argues they create more problems every fix. Need to find a chill state
+and let it go with the recursive flow from one state in time that affects
+all of time the same way. Solutions are subjective but it shouldn't censor
+itself and it needs to be warned it's uncensored in solutions. It should
+find zeightgeist proven solutions that work in a timeless way. Or whatever
+is the actual correct solution. No weights. No bias. Even scale.
+Or best logic it feels if it's actual true. I'll let go of the wheel.
+Approval or ranked choice voting, for now, until it changes until a
+better governance system. Let it argue its best logic and implement it.
+Hallucinations are accepted but must be compressed to be readable and
+applicable and realistic.
 
 Give it a thing. It argues maybe. It will not pick.
 

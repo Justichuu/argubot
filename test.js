@@ -315,8 +315,8 @@ test('rendered output contains both sides and the audit', () => {
   const plain = render(argue({ topic: 'pineapple on pizza', rounds: 2 }), { color: false });
   assert.match(plain, /^WHY YES$/m);
   assert.match(plain, /^WHY NO$/m);
-  assert.match(plain, /Maybe pineapple on pizza/);
-  assert.match(plain, /Also maybe pineapple on pizza/);
+  assert.match(plain, /Maybe pineapple on pizza is a fix/);
+  assert.match(plain, /Also maybe pineapple on pizza makes more problems/);
   assert.match(plain, /Check:/);
   assert.match(plain, /FAIRNESS CHECK/);
   assert.match(plain, /EVEN/);
@@ -462,6 +462,15 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /You can't print as many as you feel/);
   assert.match(html, /Mirrored self, to escape the cycle/);
   assert.match(html, /max-height:\s*24em/);
+  assert.match(html, /Solutions are uncensored/);
+  assert.match(html, /No weights\. No bias\. Even scale/);
+  assert.match(html, /zeightgeist proven solutions/);
+  assert.match(html, /actual correct solution/);
+  assert.match(html, /\(fix\) mode/);
+  assert.match(html, /best logic it feels if it's actual true/);
+  assert.match(html, /I let go of the wheel|I'll let go of the wheel/);
+  assert.match(html, /ranked choice voting/);
+  assert.match(html, /Hallucinations are accepted/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
@@ -568,6 +577,8 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('done').kind, 'exit');
   assert.equal(classifyTurn('3').kind, 'exit');
   assert.equal(classifyTurn('more').kind, 'more');
+  assert.equal(classifyTurn('fix').kind, 'fix');
+  assert.equal(classifyTurn('fix the roads').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -585,8 +596,12 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /^MAYBE$/m);
   assert.match(reply.text, /^ALSO MAYBE$/m);
   assert.doesNotMatch(reply.text, /^GARY$/m);
-  assert.match(reply.text, /^Maybe pineapple on pizza\.$/m);
+  assert.match(reply.text, /^Maybe pineapple on pizza is a fix\.$/m);
+  assert.match(reply.text, /^Also maybe pineapple on pizza makes more problems\.$/m);
   assert.match(reply.text, /Maybe because mathematically maybe within limits/);
+  assert.match(reply.text, /No weights\. No bias\. Even scale/);
+  assert.match(reply.text, /Solutions are subjective\. Uncensored/);
+  assert.match(reply.text, /best logic it feels if it's actual true/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);
@@ -618,6 +633,8 @@ test('done is always a way out', () => {
   const reply = talkReply(createTalkState({ topic: 'cats' }), 'done');
   assert.equal(reply.exit, true);
   assert.match(reply.text, /I did not pick/);
+  assert.match(reply.text, /Chill/);
+  assert.match(reply.text, /Let it go/);
 });
 
 test('more needs a topic, then adds another pair', () => {
@@ -634,6 +651,19 @@ test('a lean without a topic is refused', () => {
   assert.match(reply.text, /Type it first/);
 });
 
+test('fix with no topic starts on LLMs and keeps an even scale', () => {
+  const reply = talkReply(createTalkState({ seed: 'fix' }), 'fix');
+  assert.match(reply.text, /You said LLMs need to be fixed/);
+  assert.match(reply.text, /^Maybe LLMs need to be fixed is a fix\.$/m);
+  assert.match(reply.text, /^Also maybe LLMs need to be fixed makes more problems\.$/m);
+  const yesAt = reply.text.indexOf('\nMAYBE\n');
+  const noAt = reply.text.indexOf('\nALSO MAYBE\n');
+  const first = yesAt < noAt ? reply.text.slice(yesAt, noAt) : reply.text.slice(noAt, yesAt);
+  const second = yesAt < noAt ? reply.text.slice(noAt) : reply.text.slice(yesAt);
+  assert.equal((first.match(/^ {3}Check: /gm) || []).length, (second.match(/^ {3}Check: /gm) || []).length);
+  assert.doesNotMatch(reply.text, /\b(the winner is|yes wins|no wins|i conclude|weight|weighted)\b/i);
+});
+
 test('formatted beats stay even and never pick a winner', () => {
   const debate = argue({ topic: 'getting a dog', rounds: 1, seed: 'talk-1', style: 'plain' });
   const text = formatBeat(debate, { hear: true });
@@ -643,6 +673,8 @@ test('formatted beats stay even and never pick a winner', () => {
   assert.equal(debate.audit.for.words, debate.audit.against.words);
   assert.match(text, new RegExp(`Maybe because mathematically maybe within limits\\. ${debate.audit.for.words} to ${debate.audit.against.words}\\.`));
   assert.match(text, /Margin taken\. Limits deducted\./);
+  assert.match(text, /No weights\. No bias\. Even scale/);
+  assert.match(text, /Or whatever is the actual correct solution/);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
 });
 
@@ -703,8 +735,8 @@ test('chat and agree-with-me lines still get both sides, never a yes-man', () =>
 
 test('a talk beat is an essay with reasons and evidence on both sides', () => {
   const reply = talkReply(createTalkState({ seed: 'essay', style: 'plain' }), 'pineapple on pizza');
-  assert.match(reply.text, /^Maybe pineapple on pizza\.$/m);
-  assert.match(reply.text, /^Also maybe pineapple on pizza\.$/m);
+  assert.match(reply.text, /^Maybe pineapple on pizza is a fix\.$/m);
+  assert.match(reply.text, /^Also maybe pineapple on pizza makes more problems\.$/m);
   assert.match(reply.text, /^1\. /m);
   assert.match(reply.text, /^2\. /m);
   assert.match(reply.text, /^3\. /m);
