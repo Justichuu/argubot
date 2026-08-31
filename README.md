@@ -1,6 +1,6 @@
 # argubot
 
-argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic.
+argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem.
 
 Give it a thing. It argues yes and no. It will not pick.
 
