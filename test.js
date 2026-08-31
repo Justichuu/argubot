@@ -766,11 +766,21 @@ test('you can set the line limit and the default is the 2010 chrome baseline', (
 test('there is one demo', () => {
   const gif = readFileSync(new URL('./argubot_demo.gif', import.meta.url));
   const mp4 = readFileSync(new URL('./argubot_demo.mp4', import.meta.url));
+  const vtt = readFileSync(new URL('./argubot_demo.vtt', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
   const readme = readFileSync(new URL('./README.md', import.meta.url), 'utf8');
   assert.ok(gif.length > 0);
   assert.ok(mp4.length > 0);
+  assert.match(mp4.toString('latin1'), /mp4a/);
+  assert.match(vtt, /^WEBVTT/m);
+  assert.match(vtt, /Version 1\.5\.0/);
   assert.match(readme, /argubot_demo\.gif/);
   assert.match(readme, /argubot_demo\.mp4/);
+  assert.match(readme, /argubot_demo\.vtt/);
+  assert.match(html, /<video controls preload="none"/);
+  assert.match(html, /argubot_demo\.vtt/);
+  assert.match(html, /label="English captions" default/);
+  assert.doesNotMatch(html, /\sautoplay\b|\sloop\b/);
   assert.equal((gif.toString('latin1').match(/\x21\xf9\x04/g) || []).length > 1, true);
 });
 

@@ -171,8 +171,32 @@
     }
     html.access-hi body::after { display: none; }
     html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary { border-color: #000; }
+    h2 { font: italic 400 clamp(22px, 3.5vw, 30px)/1.2 var(--serif); margin: 1.2em 0 .4em; }
+    .film { margin: 1.4rem 0 1.8rem; }
+    .film video {
+      display: block; width: 100%; height: auto;
+      border-radius: var(--radius);
+      background: var(--ink);
+      border: 1.8px solid var(--ink);
+      aspect-ratio: 16 / 10;
+      object-fit: contain;
+    }
+    .film-meta {
+      display: flex; flex-wrap: wrap; gap: .3rem .8rem;
+      margin: .6rem 0 1rem; font-size: .9rem; color: var(--muted);
+    }
+    .film-transcript { border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field); }
+    .film-transcript summary {
+      cursor: pointer; padding: .8rem 1rem; font-weight: 700;
+      min-height: 44px; display: flex; align-items: center;
+    }
+    .film-transcript ol { margin: 0; padding: .2rem 1rem 1rem 3.5rem; }
+    .film-transcript li { padding: .42rem 0 .42rem .35rem; }
+    .film-transcript time { display: inline-block; min-width: 3.4rem; font: 700 .82rem var(--sans); color: var(--muted); }
+    html.access-big .film-transcript, html.access-big .film-meta { font-size: 19px; }
+    html.access-bigger .film-transcript, html.access-bigger .film-meta { font-size: 23px; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-    @media (forced-colors: active) { button, textarea, #out, summary { border: 2px solid CanvasText; } }
+    @media (forced-colors: active) { button, textarea, #out, summary, video { border: 2px solid CanvasText; } }
   </style>
 </head>
 <body>
@@ -202,6 +226,30 @@
       </details>
     </div>
     <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
+    <section class="film" aria-labelledby="film-argubot">
+      <h2 id="film-argubot">Demo film</h2>
+      <p><a href="#transcript-argubot">Skip this film and read its transcript</a></p>
+      <video controls preload="none" poster="./argubot_demo.jpg" aria-describedby="film-argubot-description">
+        <source src="./argubot_demo.mp4" type="video/mp4">
+        <track kind="captions" src="./argubot_demo.vtt" srclang="en" label="English captions" default>
+        Your browser cannot play this film. <a href="./argubot_demo.mp4">Open the MP4 file</a>.
+      </video>
+      <p id="film-argubot-description" class="film-meta"><b>argubot</b>
+        <span>Version 1.5.0</span>
+        <span>Filmed <time datetime="2026-08-31">2026-08-31</time></span>
+      </p>
+      <details class="film-transcript" id="transcript-argubot">
+        <summary>Read the transcript</summary>
+        <ol>
+          <li><time datetime="PT0S">0:00</time><span>argubot. Version 1.5.0. This stays here. Nothing is sent.</span></li>
+          <li><time datetime="PT9S">0:09</time><span>Type a thing.</span></li>
+          <li><time datetime="PT11S">0:11</time><span>Argue. It will not pick.</span></li>
+          <li><time datetime="PT14S">0:14</time><span>Maybe you asking how I am is redundant. Also maybe you asking how I am is not redundant.</span></li>
+          <li><time datetime="PT25S">0:25</time><span>More is more of the same thing.</span></li>
+          <li><time datetime="PT35S">0:35</time><span>Done. Okay. Chill. Let it go. It did not pick.</span></li>
+        </ol>
+      </details>
+    </section>
     <noscript>
       <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
     </noscript>
