@@ -8,6 +8,8 @@ Give it a thing. It argues maybe. It will not pick.
 
 ![argubot arguing maybe and also maybe of hey how are you](argubot_demo.gif)
 
+The same run as a video: [argubot_demo.mp4](argubot_demo.mp4).
+
 On a phone through ChuuMind, open `index.html`. Keep it next to `argubot.js`.
 The box is first. Type a thing. Press Argue. Nothing is sent.
 
