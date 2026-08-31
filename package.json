@@ -1,7 +1,7 @@
 {
   "name": "argubot",
   "version": "1.4.0",
-  "description": "A funny, aggressively nonbiased argument bot. It argues both sides of anything and refuses to pick one.",
+  "description": "Give it a thing. It argues yes and no and will not pick.",
   "type": "module",
   "bin": {
     "argubot": "./argubot.js"

@@ -30,7 +30,6 @@ import {
   generateName,
   makeRng,
   hashString,
-  burrito,
   classifyTurn,
   talkReply,
   createTalkState,
@@ -81,9 +80,9 @@ const TOPICS = [
   'renaming every street after Gary',
 ];
 
-test('there are at least three styles and classic is the default', () => {
+test('there are at least three styles and plain is the default', () => {
   assert.ok(STYLE_NAMES.length >= 3);
-  assert.equal(DEFAULT_STYLE, 'classic');
+  assert.equal(DEFAULT_STYLE, 'plain');
   assert.deepEqual([...STYLE_NAMES].sort(), ['civic', 'classic', 'plain']);
 });
 
@@ -183,7 +182,7 @@ for (const styleName of STYLE_NAMES) {
 
 test('rounds are clamped to the size of the chosen style', () => {
   assert.equal(argue({ topic: 'anything', rounds: 0 }).rounds, 1);
-  assert.equal(argue({ topic: 'anything', rounds: 999 }).rounds, maxRounds('classic'));
+  assert.equal(argue({ topic: 'anything', rounds: 999 }).rounds, maxRounds());
   assert.equal(argue({ topic: 'anything', rounds: 999, style: 'plain' }).rounds, maxRounds('plain'));
   assert.equal(argue({ topic: 'anything', rounds: 999, style: 'civic' }).rounds, maxRounds('civic'));
 });
@@ -236,17 +235,17 @@ test('turning dissent on does not reshuffle the sides', () => {
 });
 
 test('an empty topic falls back to arguing about itself', () => {
-  assert.equal(normalizeClaim(''), STYLES.classic.defaultTopic);
-  assert.equal(normalizeClaim('   '), STYLES.classic.defaultTopic);
-  assert.equal(normalizeClaim(undefined), STYLES.classic.defaultTopic);
-  assert.equal(normalizeClaim('', 'plain'), STYLES.plain.defaultTopic);
+  assert.equal(normalizeClaim(''), STYLES.plain.defaultTopic);
+  assert.equal(normalizeClaim('   '), STYLES.plain.defaultTopic);
+  assert.equal(normalizeClaim(undefined), STYLES.plain.defaultTopic);
+  assert.equal(normalizeClaim('', 'classic'), STYLES.classic.defaultTopic);
 });
 
 test('claims keep their own clause when they already have one', () => {
   assert.equal(normalizeClaim('whether birds are real'), 'whether birds are real');
   assert.equal(normalizeClaim('if the dress was blue'), 'if the dress was blue');
   assert.equal(normalizeClaim('that cereal is a soup'), 'that cereal is a soup');
-  assert.equal(normalizeClaim('pineapple on pizza???'), 'the matter of pineapple on pizza');
+  assert.equal(normalizeClaim('pineapple on pizza???'), 'pineapple on pizza');
 });
 
 test('measurement helpers count what they claim to count', () => {
@@ -308,19 +307,19 @@ test('the lineage catalog cites every Justichuu repo by name', () => {
 });
 
 test('rendered output contains both sides and the audit', () => {
-  const classic = render(argue({ topic: 'pineapple on pizza', rounds: 2 }), { color: false });
-  assert.match(classic, /^FOR$/m);
-  assert.match(classic, /^AGAINST$/m);
-  assert.match(classic, /BIAS AUDIT/);
-  assert.match(classic, /BALANCED/);
-  assert.match(classic, /VERDICT:/);
-
-  const plain = render(argue({ topic: 'pineapple on pizza', rounds: 2, style: 'plain' }), { color: false });
+  const plain = render(argue({ topic: 'pineapple on pizza', rounds: 2 }), { color: false });
   assert.match(plain, /^WHY YES$/m);
   assert.match(plain, /^WHY NO$/m);
   assert.match(plain, /FAIRNESS CHECK/);
   assert.match(plain, /EVEN/);
   assert.match(plain, /SO WHO WINS:/);
+
+  const classic = render(argue({ topic: 'pineapple on pizza', rounds: 2, style: 'classic' }), { color: false });
+  assert.match(classic, /^FOR$/m);
+  assert.match(classic, /^AGAINST$/m);
+  assert.match(classic, /BIAS AUDIT/);
+  assert.match(classic, /BALANCED/);
+  assert.match(classic, /VERDICT:/);
 
   const civic = render(argue({ topic: 'pineapple on pizza', rounds: 2, style: 'civic' }), { color: false });
   assert.match(civic, /^THE CASE FOR$/m);
@@ -337,9 +336,9 @@ test('rendering without color emits no escape codes', () => {
 
 test('the CLI prints a debate', async () => {
   const { stdout } = await run(['pineapple', 'on', 'pizza']);
-  assert.match(stdout, /THE QUESTION OF THE MATTER OF PINEAPPLE ON PIZZA/);
-  assert.match(stdout, /^FOR$/m);
-  assert.match(stdout, /^AGAINST$/m);
+  assert.match(stdout, /ARGUING ABOUT PINEAPPLE ON PIZZA/);
+  assert.match(stdout, /^WHY YES$/m);
+  assert.match(stdout, /^WHY NO$/m);
   assert.doesNotMatch(stdout, /^GARY/m);
 });
 
@@ -376,16 +375,7 @@ test('a positional topic wins over stdin', async () => {
     input: 'this should be ignored\n',
   });
   const debate = JSON.parse(stdout);
-  assert.equal(debate.claim, 'the matter of pineapple on pizza');
-});
-
-test('the CLI prints the lineage catalog', async () => {
-  const { stdout } = await run(['--lineage']);
-  assert.match(stdout, /argubot lineage/);
-  assert.match(stdout, /Justichuu\/pursuit-of-happiness-not-hubris/);
-  assert.match(stdout, /Justichuu\/private-directory-server/);
-  assert.match(stdout, /Justichuu\/asa-list/);
-  assert.match(stdout, /mirrored-pairs/);
+  assert.equal(debate.claim, 'pineapple on pizza');
 });
 
 test('the CLI emits valid JSON on request', async () => {
@@ -393,7 +383,7 @@ test('the CLI emits valid JSON on request', async () => {
   const debate = JSON.parse(stdout);
   assert.equal(debate.for.length, 4);
   assert.equal(debate.against.length, 4);
-  assert.equal(debate.style, 'classic');
+  assert.equal(debate.style, 'plain');
   assert.equal(debate.dissent, null);
   assert.equal(debate.audit.balanced, true);
 });
@@ -416,10 +406,10 @@ test('the CLI rejects nonsense options with exit code 2', async () => {
 test('the CLI has help and version', async () => {
   for (const flag of ['--help', '/help', 'help', '/']) {
     const help = await run([flag]);
-    assert.match(help.stdout, /nonbiased argument bot/, flag);
-    assert.match(help.stdout, /\/help/, flag);
-    assert.match(help.stdout, /\/burrito/, flag);
-    assert.match(help.stdout, /--dissent/, flag);
+    assert.match(help.stdout, /argubot/, flag);
+    assert.match(help.stdout, /pineapple on pizza/, flag);
+    assert.match(help.stdout, /done/, flag);
+    assert.doesNotMatch(help.stdout, /burrito|lineage|validate/, flag);
   }
   const version = await run(['/version']);
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
@@ -430,16 +420,6 @@ test('the validator reports a clean tree', () => {
   assert.deepEqual(failures, []);
 });
 
-test('the CLI lists commands and serves a burrito', async () => {
-  const list = await run(['/commands']);
-  assert.match(list.stdout, /\/talk/);
-  assert.match(list.stdout, /\/burrito/);
-  const plate = JSON.parse((await run(['/burrito', '--json', 'pineapple on pizza'])).stdout);
-  assert.equal(plate.kind, 'burrito');
-  assert.equal(plate.servings.length, 3);
-  assert.equal(plate.dissent, false);
-});
-
 test('the CLI can turn dissent on with a generated name', async () => {
   const debate = JSON.parse((await run(['pineapple', '--dissent', '--json'])).stdout);
   assert.equal(debate.dissent.statement, 'No.');
@@ -448,10 +428,10 @@ test('the CLI can turn dissent on with a generated name', async () => {
 });
 
 test('with no topic at all the bot argues about the request itself', async () => {
-  const classic = JSON.parse((await run(['--json'])).stdout);
-  assert.equal(classic.claim, STYLES.classic.defaultTopic);
-  const plain = JSON.parse((await run(['--json', '--plain'])).stdout);
+  const plain = JSON.parse((await run(['--json'])).stdout);
   assert.equal(plain.claim, STYLES.plain.defaultTopic);
+  const classic = JSON.parse((await run(['--json', '--classic'])).stdout);
+  assert.equal(classic.claim, STYLES.classic.defaultTopic);
   const civic = JSON.parse((await run(['--json', '--civic'])).stdout);
   assert.equal(civic.claim, STYLES.civic.defaultTopic);
 });
@@ -459,8 +439,7 @@ test('with no topic at all the bot argues about the request itself', async () =>
 test('slash and bare tokens resolve to the same commands', () => {
   assert.equal(resolveCommand('/talk'), 'talk');
   assert.equal(resolveCommand('talk'), 'talk');
-  assert.equal(resolveCommand('/burrito'), 'burrito');
-  assert.equal(resolveCommand('/all'), 'burrito');
+  assert.equal(resolveCommand('/help'), 'help');
   assert.equal(parseSlash('/style civic').command, 'style');
   assert.equal(parseSlash('/style civic').rest, 'civic');
 });
@@ -472,8 +451,8 @@ test('parseArgs accepts /commands and dashed flags together', () => {
   assert.equal(talk.topic, 'pineapple');
   assert.equal(talk.dissent, false);
 
-  const loaded = parseArgs(['/burrito', '--dissent', '--seed', 'monday', 'hot dogs']);
-  assert.equal(loaded.command, 'burrito');
+  const loaded = parseArgs(['/talk', '--dissent', '--seed', 'monday', 'hot dogs']);
+  assert.equal(loaded.command, 'talk');
   assert.equal(loaded.dissent, true);
   assert.equal(loaded.seed, 'monday');
   assert.equal(loaded.topic, 'hot dogs');
@@ -494,20 +473,6 @@ test('generated names are vowel-consonant speech and not a fixed person', () => 
   }
   assert.ok(seen.size >= 4);
   assert.equal(generateName(makeRng(hashString('same'))), generateName(makeRng(hashString('same'))));
-});
-
-test('a burrito serves every style and keeps dissent nameless when off', () => {
-  const plate = burrito({ topic: 'pineapple on pizza', rounds: 2 });
-  assert.equal(plate.servings.length, 3);
-  assert.equal(plate.dissent, false);
-  for (const serving of plate.servings) {
-    assert.equal(serving.dissent, null);
-    assert.equal(serving.for.length, 2);
-  }
-  const loud = burrito({ topic: 'pineapple on pizza', rounds: 2, dissent: true, seed: 'plate' });
-  const names = new Set(loud.servings.map((serving) => serving.dissent.name));
-  assert.equal(names.size, 1);
-  assert.notEqual([...names][0].toLowerCase(), 'gary');
 });
 
 test('talk slash commands drive dissent and exit', () => {
@@ -538,8 +503,8 @@ test('/help and a lone slash ask for help instead of a topic', () => {
 test('the command list is printable', () => {
   const list = formatCommandList();
   assert.match(list, /\/talk/);
-  assert.match(list, /\/burrito/);
-  assert.match(list, /\/validate/);
+  assert.match(list, /\/help/);
+  assert.doesNotMatch(list, /burrito|validate|lineage/);
 });
 
 test('lean words are not topics, and topics are not leans', () => {

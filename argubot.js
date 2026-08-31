@@ -602,7 +602,7 @@ const STYLES = {
 
 const STYLE_NAMES = Object.keys(STYLES);
 
-const DEFAULT_STYLE = 'classic';
+const DEFAULT_STYLE = 'plain';
 
 function getStyle(name) {
   return STYLES[name] ?? STYLES[DEFAULT_STYLE];
@@ -928,87 +928,13 @@ function formatLineage() {
   return `argubot lineage\n\nJustichuu repos this work is reading:\n${repos}\n\nNamed ideas you can check:\n${entries}\n`;
 }
 
-// Every style on one topic, then a word-count ledger.
-
-function burrito(options = {}) {
-  const styleName = STYLE_NAMES.includes(options.style) ? options.style : DEFAULT_STYLE;
-  const topic = options.topic ?? getStyle(styleName).defaultTopic;
-  const claim = normalizeClaim(topic, styleName);
-  const dissentName =
-    options.dissent === true
-      ? options.dissentName || generateName(makeRng(hashString(`burrito:${claim}:${options.seed ?? ''}`)))
-      : undefined;
-  const servings = STYLE_NAMES.map((style) =>
-    argue({
-      topic,
-      style,
-      rounds: options.rounds,
-      seed: options.seed,
-      dissent: options.dissent,
-      dissentName,
-      tolerance: options.tolerance,
-    }),
-  );
-
-  return {
-    kind: 'burrito',
-    claim,
-    topic: topic,
-    seed: servings[0]?.seed ?? 0,
-    dissent: options.dissent === true,
-    servings,
-    ledger: servings.map((serving) => ({
-      style: serving.style,
-      wordsFor: serving.audit.for.words,
-      wordsAgainst: serving.audit.against.words,
-      delta: serving.audit.wordDelta,
-      balanced: serving.audit.balanced,
-      dissent: serving.dissent ? serving.dissent.name : null,
-    })),
-  };
-}
-
-function renderBurrito(plate, options = {}) {
-  const width = options.width;
-  const color = options.color;
-  const parts = [
-    '',
-    'BURRITO',
-    `one topic, ${plate.servings.length} voices, both sides each, no winner`,
-    plate.dissent ? 'dissent is on' : 'dissent is off (no name)',
-    '',
-  ];
-
-  for (const serving of plate.servings) {
-    parts.push(render(serving, { color, width }).trimEnd());
-    parts.push('');
-  }
-
-  parts.push('LEDGER');
-  for (const row of plate.ledger) {
-    const dissent = row.dissent ? ` · ${row.dissent} said no` : '';
-    parts.push(
-      `  ${row.style}: ${row.wordsFor}/${row.wordsAgainst} words · gap ${row.delta} · ${
-        row.balanced ? 'even' : 'leaning'
-      }${dissent}`,
-    );
-  }
-  parts.push('');
-  return parts.join('\n');
-}
-
 // Read COMMANDS. Slash form, bare form, and dashed form are the same row.
 
 const COMMANDS = [
-  { name: 'argue', also: ['/argue'], summary: 'one debate (default)' },
-  { name: 'talk', also: ['/talk', 'i', '-i', '--talk'], summary: 'turn-taking conversation' },
-  { name: 'burrito', also: ['/burrito', '/all', 'all', 'full', '/full', '--burrito', '--all'], summary: 'every style, full audit, one plate' },
-  { name: 'help', also: ['/help', '/?', '?', '-h', '--help', '-?', '/'], summary: 'show help' },
+  { name: 'argue', also: ['/argue'], summary: 'print both sides' },
+  { name: 'talk', also: ['/talk', 'i', '-i', '--talk'], summary: 'have a conversation' },
+  { name: 'help', also: ['/help', '/?', '?', '-h', '--help', '-?', '/'], summary: 'show this' },
   { name: 'version', also: ['/version', '-v', '--version'], summary: 'show version' },
-  { name: 'lineage', also: ['/lineage', '--lineage'], summary: 'named catalog of borrowed ideas' },
-  { name: 'styles', also: ['/styles', '--styles'], summary: 'list voices' },
-  { name: 'commands', also: ['/commands', '--commands'], summary: 'list commands' },
-  { name: 'validate', also: ['/validate', '--validate'], summary: 'run structural checks' },
 ];
 
 const LOOKUP = new Map();
@@ -1148,7 +1074,7 @@ function parseArgs(argv) {
   }
 
   options.topic = words.join(' ');
-  if (options.style === undefined) options.style = 'classic';
+  if (options.style === undefined) options.style = DEFAULT_STYLE;
   return options;
 }
 
@@ -1181,11 +1107,6 @@ const SLASH_KIND = {
   help: 'help',
   why: 'why',
   more: 'more',
-  commands: 'commands',
-  burrito: 'burrito',
-  all: 'burrito',
-  full: 'burrito',
-  styles: 'styles',
 };
 
 function detectLean(text) {
@@ -1250,12 +1171,8 @@ function openingLines() {
 
 function helpLines() {
   return [
-    'Type a topic, or lean with yes or no, or say more.',
-    '/style plain  /civic  /classic   change voice',
-    '/dissent on   /dissent off       optional third voice, generated name',
-    '/burrito                         every voice on this topic',
-    '/commands                        the full list',
-    '/done                            leave. That always works.',
+    'Type a thing. yes or no to lean. more for another pair. done to leave.',
+    'If I cannot tell which side you are on, I flip a coin for who talks first.',
   ];
 }
 
@@ -1369,14 +1286,8 @@ function talkReply(state, raw) {
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: next.lastLean }) };
   }
-  if (turn.kind === 'commands') {
-    return { state: next, exit: false, text: formatCommandList() };
-  }
-  if (turn.kind === 'styles') {
-    return { state: next, exit: false, text: STYLE_NAMES.join('\n') };
-  }
   if (turn.kind === 'unknown-command') {
-    return { state: next, exit: false, text: `I do not know /${turn.command}. Try /commands.` };
+    return { state: next, exit: false, text: `I do not know /${turn.command}. Type help.` };
   }
   if (turn.kind === 'dissent') {
     next.dissent = turn.dissent;
@@ -1391,17 +1302,6 @@ function talkReply(state, raw) {
     next.dissent = true;
     next.dissentName = turn.name || dissentNameFor(next);
     return { state: next, exit: false, text: `Dissent is on. ${next.dissentName} says no.` };
-  }
-  if (turn.kind === 'burrito') {
-    if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
-    const plate = burrito({
-      topic: next.topic,
-      seed: next.seed,
-      dissent: next.dissent,
-      dissentName: next.dissentName,
-      tolerance: next.tolerance,
-    });
-    return { state: next, exit: false, text: renderBurrito(plate, { color: false }) };
   }
   if (turn.kind === 'empty') {
     if (!next.topic) return { state: next, exit: false, text: 'Say a thing, or type done.' };
@@ -1577,53 +1477,24 @@ function runValidate() {
   return failures;
 }
 
-const HELP = `argubot -- a funny, aggressively nonbiased argument bot
+const HELP = `argubot
 
-Usage:
-  argubot [topic...] [options]
-  argubot /command [topic...] [options]
-  argubot command [topic...] [options]
-  echo "a topic" | argubot [options]
+Give it a thing. It argues yes and no. It will not pick.
 
-Commands (slash or bare):
-${formatCommandList()}
+  node argubot.js
+  node argubot.js pineapple on pizza
 
-Options:
-  -r, --rounds <n>       arguments per side (default 3; max is the style's pair count)
-  -s, --seed <value>     mix a value into the seed for a different debate
-  -t, --tolerance <n>    allowed word-count gap between sides (default 2)
-  -w, --width <n>        wrap width for rendered text
-      --style <name>     ${STYLE_NAMES.join(' | ')} (default ${DEFAULT_STYLE})
-  -p, --plain            shorthand for --style plain
-      --civic            shorthand for --style civic
-      --classic          shorthand for --style classic
-  -i, --talk             same as /talk
-      --burrito          same as /burrito
-  -d, --dissent          add a third voice that only says no (off by default)
-      --no-dissent       keep the third voice out (default)
-      --name <word>      turn dissent on and set the name
-      --json             print structured output
-      --no-color         disable ANSI color
-  -h, --help             show this help
-  -v, --version          show version
+No topic starts a conversation. A topic prints both sides.
+Type done to leave. yes and no lean. If it cannot tell which side you
+are on, it flips a coin for who talks first.
 
-Styles:
-${STYLE_NAMES.map((name) => `  ${name.padEnd(8)} ${STYLES[name].description}`).join('\n')}
+  --plain     everyday words (default)
+  --classic   debate-club voice
+  --civic     book voice
+  --talk      conversation, even with a topic
+  -h          this help
 
-Round caps: ${STYLE_NAMES.map((name) => `${name} ${maxRounds(name)}`).join(' / ')}
-
-Examples:
-  argubot pineapple on pizza
-  argubot /talk --plain
-  argubot /burrito "whether hot dogs are sandwiches"
-  argubot pineapple --dissent
-  argubot /dissent pineapple --plain
-  echo "standing desks" | argubot --json
-
-The bot argues both sides from the same moves and will not pick a winner.
-Dissent is off unless you ask. When it is on, the name is generated from
-vowel sounds and consonants unless you pass --name. If dissent is off,
-there is no name.
+The program is one file: argubot.js. Node 18 or newer. Nothing to install.
 `;
 
 async function topicFromStdin() {
@@ -1668,6 +1539,21 @@ function checkNumbers(options) {
   }
 }
 
+async function startTalk(options, topic) {
+  const asker = createAsk(process.stdin, process.stdout);
+  try {
+    await runTalk(
+      {
+        output: process.stdout,
+        ask: (prompt) => asker.ask(prompt),
+      },
+      debateOptions(options, topic),
+    );
+  } finally {
+    asker.close();
+  }
+}
+
 async function dispatch(options) {
   if (options.help || options.command === 'help') {
     process.stdout.write(HELP);
@@ -1678,60 +1564,16 @@ async function dispatch(options) {
     return;
   }
 
-  switch (options.command) {
-    case 'commands':
-      process.stdout.write(`${formatCommandList()}\n`);
-      return;
-    case 'styles':
-      process.stdout.write(`${STYLE_NAMES.map((name) => `${name}  ${STYLES[name].description}`).join('\n')}\n`);
-      return;
-    case 'lineage':
-      process.stdout.write(formatLineage());
-      return;
-    case 'validate': {
-      const failures = runValidate();
-      if (failures.length > 0) {
-        process.stdout.write('argubot validation failed:\n');
-        for (const item of failures) process.stdout.write(`- ${item}\n`);
-        process.exit(1);
-      }
-      process.stdout.write(
-        `argubot validation passed (${STYLE_NAMES.length} styles, ${LINEAGE.length} lineage entries).\n`,
-      );
-      return;
-    }
-    default:
-      break;
-  }
-
   checkNumbers(options);
 
   if (options.command === 'talk') {
-    const asker = createAsk(process.stdin, process.stdout);
-    try {
-      await runTalk(
-        {
-          output: process.stdout,
-          ask: (prompt) => asker.ask(prompt),
-        },
-        debateOptions(options, options.topic),
-      );
-    } finally {
-      asker.close();
-    }
+    await startTalk(options, options.topic);
     return;
   }
 
   const topic = options.topic === '' ? await topicFromStdin() : options.topic;
-
-  if (options.command === 'burrito') {
-    const plate = burrito(debateOptions(options, topic));
-    if (options.json) {
-      process.stdout.write(`${JSON.stringify(plate, null, 2)}\n`);
-      return;
-    }
-    const color = options.color && process.stdout.isTTY === true && !process.env.NO_COLOR;
-    process.stdout.write(`${renderBurrito(plate, { color, width: options.width ?? process.stdout.columns ?? 88 })}\n`);
+  if (topic === '' && !options.json && process.stdin.isTTY === true) {
+    await startTalk(options, '');
     return;
   }
 
@@ -1774,7 +1616,6 @@ export {
   generateName,
   makeRng,
   hashString,
-  burrito,
   classifyTurn,
   talkReply,
   createTalkState,

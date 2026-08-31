@@ -21,6 +21,4 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: npm test
       - name: Argue about the build
-        run: node argubot.js "whether this build should have passed" --civic --no-color
-      - name: Show lineage
-        run: node argubot.js --lineage
+        run: node argubot.js "whether this build should have passed" --no-color

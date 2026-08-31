@@ -1,31 +1,16 @@
 # argubot
 
-A funny, aggressively nonbiased argument bot. You type a thing. It argues yes
-and no from the same moves, counts the words, and will not pick a winner.
+Give it a thing. It argues yes and no. It will not pick.
 
-No API keys, no network, no dependencies. Node 18 or newer. The program is
-`argubot.js`. The checks are `test.js`.
+Needs Node 18. Nothing else. The whole program is `argubot.js`.
 
 ```bash
 node argubot.js pineapple on pizza
-node argubot.js pineapple on pizza --plain
-node argubot.js pineapple on pizza --civic
-node argubot.js /talk pineapple
-node argubot.js /burrito "whether hot dogs are sandwiches"
-node argubot.js pineapple --dissent
-node argubot.js --lineage
+node argubot.js
 ```
 
-`--talk` restates what you said, then YES and NO speak as separate voices. If
-you lean yes, NO talks first. `done` always exits. Dissent is off unless you
-pass `--dissent`; then the name is generated, not fixed.
+The first one prints both sides. The second one talks. Type `done` to leave.
+`yes` and `no` lean. If it cannot tell which side you are on, it flips a coin
+for who talks first.
 
-`/commands` prints the list. Slash form and dashed form are the same row.
-
-An argument has to arrive with its opposite. A change arrives as a record
-somebody can review. `npm test` must already pass on the commit you send.
-Questions count. MIT.
-
-The civic voice is the book's public-draft cadence: no long dashes, no
-invented credentials, no universal recipe. Catalog: `node argubot.js --lineage`.
-Directed by a person, assisted by machines, both named.
+Read `argubot.js`. Checks are `test.js`. `npm test`. MIT.
