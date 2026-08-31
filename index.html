@@ -85,7 +85,7 @@
     }
     p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
     a { color: var(--ink); text-underline-offset: 3px; }
-    label, legend { font-weight: 400; }
+    label { font-weight: 400; }
     .hint {
       color: var(--muted);
       font-size: 16px;
@@ -104,23 +104,6 @@
       background: var(--field);
       resize: vertical;
     }
-    fieldset {
-      border: 1.8px solid var(--ink);
-      border-radius: var(--radius);
-      background: var(--field);
-      padding: 12px 14px 8px;
-      margin: 0 0 18px;
-    }
-    legend { padding: 0 6px; }
-    .choice {
-      display: flex;
-      gap: 10px;
-      align-items: flex-start;
-      min-height: 44px;
-      padding: 8px 0;
-      overflow-wrap: anywhere;
-    }
-    .choice input { width: 1.15rem; height: 1.15rem; margin-top: 4px; flex: 0 0 auto; }
     .acts {
       display: grid;
       grid-template-columns: 1fr;
@@ -194,7 +177,7 @@
       background: #fff;
       color: #000;
     }
-    html.access-hi textarea, html.access-hi fieldset, html.access-hi #out, html.access-hi button {
+    html.access-hi textarea, html.access-hi #out, html.access-hi button {
       background: #fff;
       color: #000;
       border-color: #000;
@@ -203,7 +186,7 @@
       * { transition: none !important; }
     }
     @media (forced-colors: active) {
-      button, textarea, fieldset, #out { border: 2px solid CanvasText; }
+      button, textarea, #out { border: 2px solid CanvasText; }
     }
   </style>
 </head>
@@ -215,40 +198,34 @@
       <h1>argubot</h1>
     </header>
     <main id="letter">
-      <p>Give it a thing. It argues yes and no. It will not pick.</p>
+      <p>Give it a thing. It writes yes and no. It will not pick.</p>
+      <p>Type a thing. Press Argue. Each side gets a claim, reasons, and evidence you can check. Same number on both sides.</p>
       <p>This is a window on your computer. It does not call this website. Close the tab and what you typed is gone.</p>
       <p>Turn the wifi off and use it anyway. The names of the four things that could send or keep anything are on <a href="https://chuumind.com/privacy/">Privacy proof</a>. This page has none of them.</p>
       <form id="talk">
         <label for="thing">The thing</label>
-        <p class="hint">Whatever you want argued. A claim, a plan, a topping.</p>
+        <p class="hint">Type what you want argued.</p>
         <textarea id="thing" name="thing" rows="3" autocomplete="off"></textarea>
-        <fieldset>
-          <legend>How it talks</legend>
-          <p class="hint">Same pairs either way. Only the wording changes.</p>
-          <label class="choice"><input type="radio" name="style" value="plain" checked> Plain. Everyday words. The default.</label>
-          <label class="choice"><input type="radio" name="style" value="classic"> Classic. Debate-club voice.</label>
-          <label class="choice"><input type="radio" name="style" value="civic"> Civic. Book voice. No long dashes. No invented credentials.</label>
-        </fieldset>
         <div class="acts">
           <div class="act">
             <button type="submit" id="argue">Argue</button>
-            <p class="hint">Prints both sides. It will not pick a winner.</p>
+            <p class="hint">Both sides. It will not pick.</p>
           </div>
           <div class="act">
             <button type="button" id="yes">Yes</button>
-            <p class="hint">Lean yes. The other side still talks first.</p>
+            <p class="hint">You are on yes. The other side talks first.</p>
           </div>
           <div class="act">
             <button type="button" id="no">No</button>
-            <p class="hint">Lean no. The other side still talks first.</p>
+            <p class="hint">You are on no. The other side talks first.</p>
           </div>
           <div class="act">
             <button type="button" id="more">More</button>
-            <p class="hint">Another pair on the same thing.</p>
+            <p class="hint">More reasons on the same thing.</p>
           </div>
           <div class="act">
             <button type="button" id="done">Done</button>
-            <p class="hint">Leave. It still will not pick.</p>
+            <p class="hint">Stop. It still will not pick.</p>
           </div>
         </div>
       </form>

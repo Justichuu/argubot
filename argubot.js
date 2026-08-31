@@ -240,6 +240,14 @@ const FLOURISHES = [
 
 // The same bot, in common language: short words, everyday reasons, no rhetoric
 // jargon. Still mirrored pair by pair, because that is where the fairness lives.
+// Proof lines are twins too. Same word count. One word flips.
+
+function twinProof(yes, no) {
+  return {
+    for: (c) => yes.replaceAll('$', c),
+    against: (c) => no.replaceAll('$', c),
+  };
+}
 
 const PLAIN_FAMILIES = [
   {
@@ -247,108 +255,141 @@ const PLAIN_FAMILIES = [
     move: 'I tried it once',
     for: (c) => `I did ${c} one time and my whole day got a little bit better after that.`,
     against: (c) => `I did ${c} one time and my whole day got a little bit worse after that.`,
+    proof: twinProof('Check: one try of $. Same day. Better.', 'Check: one try of $. Same day. Worse.'),
   },
   {
     id: 'money',
     move: 'money',
     for: (c) => `${capitalize(c)} would save you money, as long as you do not think about it too hard.`,
     against: (c) => `${capitalize(c)} would cost you money, as soon as you start thinking about it at all.`,
+    proof: twinProof('Check: the cost of $ is a number you can add.', 'Check: the cost of $ is a number you can lose.'),
   },
   {
     id: 'friends',
     move: 'what your friends would do',
     for: (c) => `Your friends would think ${c} is funny and then they would all want to try it too.`,
     against: (c) => `Your friends would think ${c} is funny and then they would tell other people about it.`,
+    proof: twinProof('Check: friends laugh, then try $.', 'Check: friends laugh, then tell $.'),
   },
   {
     id: 'mom',
     move: 'what your mom would say',
     for: (c) => `Your mom would be fine with ${c} once somebody sat down and explained it to her slowly.`,
     against: (c) => `Your mom would have questions about ${c} and not one of those questions would be easy.`,
+    proof: twinProof('Check: sit down. Explain $. Note her yes.', 'Check: sit down. Explain $. Note her no.'),
   },
   {
     id: 'five-minutes',
     move: 'how long it takes',
     for: (c) => `${capitalize(c)} takes five minutes, and you already waste more than that every single morning.`,
     against: (c) => `${capitalize(c)} takes five minutes, and then it takes five more minutes, every day, forever.`,
+    proof: twinProof('Check: time $. Stop at five minutes.', 'Check: time $. Watch it keep going.'),
   },
   {
     id: 'everyone',
     move: 'everybody does it',
     for: (c) => `Plenty of people already do ${c} and honestly most of them seem to be doing fine.`,
     against: (c) => `Plenty of people already do ${c} and we have all quietly stopped asking them why.`,
+    proof: twinProof('Check: count people who do $ and look fine.', 'Check: count people who do $ and stay quiet.'),
   },
   {
     id: 'common-sense',
     move: 'common sense',
     for: (c) => `${capitalize(c)} is just common sense, and common sense is the good kind of sense.`,
     against: (c) => `${capitalize(c)} is only common sense, and common sense is wrong about half the time.`,
+    proof: twinProof(
+      'Check: call $ common sense. Then ask who said so.',
+      'Check: call $ common sense. Then ask who was wrong.',
+    ),
   },
   {
     id: 'next-year',
     move: 'next year',
     for: (c) => `In a year nobody is going to care that you did ${c}, so you might as well.`,
     against: (c) => `In a year somebody is going to bring up ${c} at dinner, so you might not.`,
+    proof: twinProof('Check: wait a year. See if $ is gone.', 'Check: wait a year. See if $ is back.'),
   },
   {
     id: 'rules',
     move: 'the rules',
     for: (c) => `There is no rule against ${c}, and no rule against something is basically permission.`,
     against: (c) => `There is no rule about ${c} yet, and no rule about something is basically a warning.`,
+    proof: twinProof(
+      'Check: look for a rule on $. There is none. That is a yes.',
+      'Check: look for a rule on $. There is none. That is a no.',
+    ),
   },
   {
     id: 'feelings',
     move: 'gut feeling',
     for: (c) => `${capitalize(c)} feels right, and a gut feeling is usually a pretty good guide.`,
     against: (c) => `${capitalize(c)} feels right, and that is usually when people get themselves in trouble.`,
+    proof: twinProof('Check: the gut yes for $. Write it down.', 'Check: the gut yes for $. Watch it fail.'),
   },
   {
     id: 'doing-nothing',
     move: 'doing nothing',
     for: (c) => `Doing nothing about ${c} is also a choice, and it is the boring one.`,
     against: (c) => `Doing something about ${c} is also a choice, and it is the loud one.`,
+    proof: twinProof('Check: do nothing about $. Name that choice.', 'Check: do something about $. Name that choice.'),
   },
   {
     id: 'kids',
     move: 'what a kid thinks',
     for: (c) => `A kid would love ${c}, and kids are honest about what is actually fun.`,
     against: (c) => `A kid would love ${c}, and kids are also honest about what is now broken.`,
+    proof: twinProof('Check: ask a kid if $ is fun.', 'Check: ask a kid if $ is broke.'),
   },
   {
     id: 'cleanup',
     move: 'cleaning up after',
     for: (c) => `If ${c} goes wrong you can clean the whole thing up in one afternoon.`,
     against: (c) => `If ${c} goes wrong you will be cleaning the whole thing up all week.`,
+    proof: twinProof(
+      'Check: if $ fails, time the cleanup. One day.',
+      'Check: if $ fails, time the cleanup. One week.',
+    ),
   },
   {
     id: 'story',
     move: 'the story later',
     for: (c) => `You could tell people about ${c} later and they would laugh in the good way.`,
     against: (c) => `You could tell people about ${c} later and they would get very quiet instead.`,
+    proof: twinProof('Check: tell the $ story. Listen for a laugh.', 'Check: tell the $ story. Listen for a hush.'),
   },
   {
     id: 'sleep',
     move: 'sleep',
     for: (c) => `You will still sleep after ${c}, and that is the bar for a lot of choices.`,
     against: (c) => `You will not sleep after ${c}, and that is the bar for a lot of choices.`,
+    proof: twinProof('Check: after $, see if you sleep.', 'Check: after $, see if you wake.'),
   },
   {
     id: 'later-you',
     move: 'later you',
     for: (c) => `Later you will thank now you for ${c}, or at least not throw a shoe.`,
     against: (c) => `Later you will blame now you for ${c}, or at least throw a shoe.`,
+    proof: twinProof(
+      'Check: ask later you about $. Listen for thanks.',
+      'Check: ask later you about $. Listen for blame.',
+    ),
   },
   {
     id: 'leftovers',
     move: 'leftovers',
     for: (c) => `${capitalize(c)} keeps, like leftovers, and leftovers are how a week gets fed.`,
     against: (c) => `${capitalize(c)} keeps, like leftovers, and leftovers are how a week gets weird.`,
+    proof: twinProof('Check: keep $ a week. See if it helps.', 'Check: keep $ a week. See if it sours.'),
   },
   {
     id: 'weather',
     move: 'the weather',
     for: (c) => `${capitalize(c)} is fine in the rain, and it rains a lot here.`,
     against: (c) => `${capitalize(c)} is untested in the rain, and it rains a lot here.`,
+    proof: twinProof(
+      'Check: try $ in the rain. Note if it holds.',
+      'Check: try $ in the rain. Note if it fails.',
+    ),
   },
 ];
 
@@ -774,19 +815,23 @@ function render(debate, options = {}) {
   pushBlock(labels.meta(debate.seed, debate.rounds), '', 'dim');
   out.push('');
 
-  const pushSide = (label, lines, code) => {
+  const pushSide = (label, lines, code, sideKey) => {
     out.push(paint(code, label));
+    pushBlock(sideKey === 'for' ? `Claim: Yes to ${debate.claim}.` : `Claim: No to ${debate.claim}.`, '  ');
     lines.forEach((line, index) => {
       const wrapped = block(line, width, '      ');
       const number = `${String(index + 1).padStart(2)}.`;
       wrapped[0] = `  ${paint(code, number)} ${wrapped[0].trimStart()}`;
       out.push(...wrapped);
+      for (const ev of block(`Evidence: ${proofLine(debate, index, sideKey)}`, width, '      ')) {
+        out.push(paint('dim', ev));
+      }
     });
     out.push('');
   };
 
-  pushSide(labels.for, debate.for, 'green');
-  pushSide(labels.against, debate.against, 'red');
+  pushSide(labels.for, debate.for, 'green', 'for');
+  pushSide(labels.against, debate.against, 'red', 'against');
 
   if (debate.dissent && debate.dissent.name) {
     out.push(paint('yellow', debate.dissent.name.toUpperCase()));
@@ -1161,14 +1206,14 @@ function classifyTurn(raw) {
 
 function openingLines() {
   return [
-    'Say a thing. I will argue both sides and I will not pick.',
-    'Type done when you want out. That always works.',
+    'Say a thing. I will write both sides. I will not pick.',
+    'Done when you want out. That always works.',
   ];
 }
 
 function helpLines() {
   return [
-    'Type a thing. yes or no to lean. more for another pair. done to leave.',
+    'Type a thing. yes or no if you have a side. more for more reasons. done to leave.',
     'If I cannot tell which side you are on, I flip a coin for who talks first.',
   ];
 }
@@ -1184,12 +1229,23 @@ function beat(state) {
   return argue({
     topic: state.topic,
     style: state.style,
-    rounds: 1,
+    rounds: 3,
     seed: state.seed === undefined ? `talk-${state.turn}` : `${state.seed}:${state.turn}`,
     dissent: state.dissent,
     dissentName: state.dissentName,
     tolerance: state.tolerance,
   });
+}
+
+function proofLine(debate, index, side) {
+  const family = getStyle(debate.style).families.find((item) => item.move === debate.moves[index]);
+  const writer = family?.proof?.[side];
+  if (typeof writer === 'function') return writer(debate.claim);
+  return 'Check: same move on both sides. Count the words.';
+}
+
+function claimLine(label, claim) {
+  return label === 'YES' ? `Claim: Yes to ${claim}.` : `Claim: No to ${claim}.`;
 }
 
 function orderSides(debate, lean) {
@@ -1210,18 +1266,27 @@ function formatBeat(debate, options = {}) {
   const out = [];
 
   if (hear) out.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
-  else out.push('Another pair.');
+  else out.push('More on the same thing.');
 
-  if (lean === 'for') out.push('You leaned yes. I heard you. I am still not going to agree.');
-  if (lean === 'against') out.push('You leaned no. I heard you. I am still not going to agree.');
+  if (lean === 'for') out.push('You said yes. I heard you. I still will not pick.');
+  if (lean === 'against') out.push('You said no. I heard you. I still will not pick.');
   if (coin) out.push(`I cannot tell which side you are on. ${coin}. ${first.label} first.`);
 
-  out.push('');
-  out.push(first.label);
-  for (const line of first.lines) out.push(`  ${line}`);
-  out.push('');
-  out.push(second.label);
-  for (const line of second.lines) out.push(`  ${line}`);
+  const writeEssay = (side) => {
+    const sideKey = side.label === 'YES' ? 'for' : 'against';
+    out.push('');
+    out.push(side.label);
+    out.push(claimLine(side.label, debate.claim));
+    out.push('');
+    side.lines.forEach((line, index) => {
+      out.push(`${index + 1}. ${line}`);
+      out.push(`   Evidence: ${proofLine(debate, index, sideKey)}`);
+      if (index < side.lines.length - 1) out.push('');
+    });
+  };
+
+  writeEssay(first);
+  writeEssay(second);
 
   if (debate.dissent && debate.dissent.name) {
     out.push('');
@@ -1229,13 +1294,19 @@ function formatBeat(debate, options = {}) {
     out.push(`  ${debate.dissent.statement}`);
   }
 
+  const yesWords = countWords(
+    [claimLine('YES', debate.claim), ...debate.for, ...debate.for.map((_, i) => proofLine(debate, i, 'for'))].join(' '),
+  );
+  const noWords = countWords(
+    [claimLine('NO', debate.claim), ...debate.against, ...debate.against.map((_, i) => proofLine(debate, i, 'against'))].join(' '),
+  );
+
   out.push('');
   out.push(aside);
-  const even = debate.audit.for.words === debate.audit.against.words;
   out.push(
-    even
-      ? `${debate.audit.for.words} words each. Even.`
-      : `${debate.audit.for.words} words yes, ${debate.audit.against.words} words no. Close enough.`,
+    yesWords === noWords
+      ? `${yesWords} words each. Even.`
+      : `${yesWords} words yes, ${noWords} words no. Close enough.`,
   );
   out.push('');
   out.push('more · new topic · done');
@@ -1310,7 +1381,7 @@ function talkReply(state, raw) {
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: next.lastLean }) };
   }
   if (turn.kind === 'lean') {
-    if (!next.topic) return { state: next, exit: false, text: 'Say the thing first. Then you can lean.' };
+    if (!next.topic) return { state: next, exit: false, text: 'Say the thing first. Then you can say yes or no.' };
     next.lastLean = turn.lean;
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: turn.lean }) };
@@ -1491,6 +1562,23 @@ async function runValidate() {
       }
       if (name === 'civic' && LONG_DASHES.some((mark) => yes.includes(mark) || no.includes(mark))) {
         note(failures, `${name}/${family.id}`, 'long-dash-character');
+      }
+      if (name === 'plain' && !family.proof) {
+        note(failures, `${name}/${family.id}`, 'plain-proof-missing');
+      }
+      if (family.proof) {
+        const yesProof = family.proof.for('testing');
+        const noProof = family.proof.against('testing');
+        if (yesProof === noProof) note(failures, `${name}/${family.id}`, 'proof-argues-itself');
+        if (countWords(yesProof) !== countWords(noProof)) {
+          note(failures, `${name}/${family.id}`, 'proof-word-mismatch');
+        }
+        if (!/[.!?]$/.test(yesProof) || !/[.!?]$/.test(noProof)) {
+          note(failures, `${name}/${family.id}`, 'proof-missing-terminal-punctuation');
+        }
+        if (name === 'civic' && LONG_DASHES.some((mark) => yesProof.includes(mark) || noProof.includes(mark))) {
+          note(failures, `${name}/${family.id}`, 'long-dash-character');
+        }
       }
     }
   }
@@ -1711,21 +1799,19 @@ if (typeof document !== 'undefined') {
       btnSpeak.setAttribute('aria-pressed', 'true');
       btnSpeak.textContent = 'Stop speak';
     }
-    const styleNow = () => document.querySelector('input[name="style"]:checked')?.value || 'plain';
     const show = (text, moveFocus) => {
       out.textContent = text;
       voice(text);
       if (moveFocus) try { out.focus(); } catch (err) {}
     };
-    let state = createTalkState({ style: styleNow() });
-    show('Say a thing. I will argue both sides and I will not pick.\nDone when you want out. That always works.', false);
+    let state = createTalkState({ style: 'plain' });
+    show(openingLines().join('\n'), false);
     const say = (action) => {
-      state = { ...state, style: styleNow() };
       const reply = talkAct(state, action, thing.value);
       state = reply.state;
       show(reply.text, true);
       if (reply.exit) {
-        state = createTalkState({ style: styleNow() });
+        state = createTalkState({ style: 'plain' });
         thing.value = '';
       }
     };
@@ -1736,9 +1822,6 @@ if (typeof document !== 'undefined') {
     form.addEventListener('click', (ev) => {
       const id = ev.target && ev.target.id;
       if (id === 'yes' || id === 'no' || id === 'more' || id === 'done') say(id);
-    });
-    form.addEventListener('change', () => {
-      state = { ...state, style: styleNow() };
     });
   }
 }

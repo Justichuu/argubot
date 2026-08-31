@@ -11,7 +11,8 @@ node argubot.js
 ```
 
 The first one prints both sides. The second one talks. Type `done` to leave.
-`yes` and `no` lean. If it cannot tell which side you are on, it flips a coin
+Each side is a short essay: a claim, reasons, and evidence. `yes` and `no`
+say your side. If it cannot tell which side you are on, it flips a coin
 for who talks first.
 
 Read `argubot.js`. Checks are `test.js`. `npm test`. MIT.
