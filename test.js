@@ -438,9 +438,13 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /100svh/);
   assert.match(html, /safe-area-inset/);
   assert.match(html, /min-height:\s*44px/);
-  assert.match(html, /This stays here\. It does not call this website\. Nothing is sent\./);
-  assert.match(html, /<summary>Here<\/summary>/);
+  assert.match(html, /This stays here\./);
+  assert.match(html, /It does not call this website/);
+  assert.match(html, /Nothing is sent\./);
+  assert.match(html, /class="wip-stamp"/);
+  assert.match(html, /background:\s*var\(--accent\)/);
   assert.match(html, /<summary>Instructions<\/summary>/);
+  assert.doesNotMatch(html, /<summary>Here<\/summary>/);
   assert.doesNotMatch(html, /Type\. Argue\. Nothing is sent\./);
   assert.match(html, /chuumind.com\/book\//);
   assert.match(html, /chuumind.com\/rights\//);

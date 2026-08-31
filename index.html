@@ -20,6 +20,7 @@
       --cyan: #3ec6ff;
       --violet: #b44cff;
       --serif: Georgia, "Palatino Linotype", Palatino, "Times New Roman", serif;
+      --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
       --radius: 14px;
       --radius-sm: 10px;
     }
@@ -105,6 +106,25 @@
     p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
     a { color: var(--ink); text-underline-offset: 3px; }
     .lede { color: var(--muted); max-width: 54ch; margin: 0 0 1.15em; font-size: 17px; }
+    .wip-stamp {
+      margin: 0 0 1.15rem;
+      padding: .72rem 1rem .68rem;
+      border: 3px dashed var(--accent);
+      background: var(--accent);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+    .wip-stamp strong { letter-spacing: .1em; }
+    html.access-hi .wip-stamp { background: var(--paper); color: var(--ink); box-shadow: none; border-color: currentColor; }
+    html.access-big .wip-stamp { font-size: 18px; }
+    html.access-bigger .wip-stamp { font-size: 21px; }
+    @media print { .wip-stamp { box-shadow: none; break-inside: avoid; } }
     .notes { margin: 12px 0 16px; }
     .notes details { display: inline-block; margin: 0 8px 8px 0; vertical-align: top; max-width: 100%; }
     .notes summary {
@@ -174,11 +194,8 @@
         <button type="button" id="done">Done</button>
       </div>
     </form>
+    <p class="wip-stamp" role="status"><strong>This stays here.</strong> It does not call this website. Nothing is sent.</p>
     <div class="notes">
-      <details>
-        <summary>Here</summary>
-        <p>This stays here. It does not call this website. Nothing is sent.</p>
-      </details>
       <details>
         <summary>Instructions</summary>
         <p>The box is the thing. Argue. yes or no if you have a side. more for more. done to leave.</p>
