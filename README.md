@@ -2,6 +2,12 @@
 
 Give it a thing. It argues yes and no. It will not pick.
 
+## Demo
+
+![argubot arguing both sides of "hey how are you", "please just agree with me", and "I like you"](media/argubot_demo.gif)
+
+The same run as a downloadable clip: [media/argubot_demo.mp4](media/argubot_demo.mp4).
+
 On a phone, open `index.html`. Keep it next to `argubot.js`. Type a thing.
 Press Argue. Nothing is sent.
 
