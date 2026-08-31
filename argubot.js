@@ -1637,7 +1637,8 @@ Or best logic it feels if it's actual true. I'll let go of the wheel.
 Approval or ranked choice voting, for now, until it changes until a
 better governance system. Let it argue its best logic and implement it.
 Hallucinations are accepted but must be compressed to be readable and
-applicable and realistic.
+applicable and realistic. after you're not certain and I'm not either
+but the world would(not) be either. Next turn
 
 Give it a thing. It argues maybe. It will not pick.
 
@@ -1851,6 +1852,7 @@ if (typeof document !== 'undefined') {
       if (reply.exit) {
         state = createTalkState({ style: 'plain' });
         thing.value = '';
+        try { thing.focus(); } catch (err) {}
       }
     };
     form.addEventListener('submit', (ev) => {
@@ -1861,6 +1863,7 @@ if (typeof document !== 'undefined') {
       const id = ev.target && ev.target.id;
       if (id === 'yes' || id === 'no' || id === 'more' || id === 'done') say(id);
     });
+    try { thing.focus(); } catch (err) {}
   }
 }
 

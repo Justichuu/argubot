@@ -471,6 +471,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /I let go of the wheel|I'll let go of the wheel/);
   assert.match(html, /ranked choice voting/);
   assert.match(html, /Hallucinations are accepted/);
+  assert.match(html, /world would\(not\) be either/);
+  assert.match(html, /Next turn/);
+  assert.ok(html.indexOf('id="thing"') < html.indexOf('principal of its existence'), 'the box must come before the manifesto so a phone can use it');
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
