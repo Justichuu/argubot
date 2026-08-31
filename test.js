@@ -782,11 +782,17 @@ test('chat and agree-with-me lines still get both sides, never a yes-man', () =>
     assert.ok(yesAt > 0 && noAt > 0 && yesAt !== noAt, `${line} did not print two sides`);
   }
   const hello = talkReply(createTalkState({ style: 'plain', seed: 'hey' }), 'hey how are you').text;
-  assert.match(hello, /^Maybe hey how are you is redundant\.$/m);
-  assert.match(hello, /^Also maybe hey how are you is not redundant\.$/m);
-  assert.match(hello, /Check: count the new facts\. Zero\./);
-  assert.match(hello, /Check: count the new facts\. One\./);
-  assert.doesNotMatch(hello, /is a fix|makes more problems|Your mom would/i);
+  assert.match(hello, /^Maybe you asking how I am is redundant\.$/m);
+  assert.match(hello, /^Also maybe you asking how I am is not redundant\.$/m);
+  assert.match(hello, /You asked how I am\. You added no new claim\./);
+  assert.match(hello, /You asked how I am\. You still opened a claim\./);
+  assert.match(hello, /Check: you asked\. Then stopped\./);
+  assert.match(hello, /Check: you asked\. Then waited\./);
+  assert.doesNotMatch(hello, /is a fix|makes more problems|Your mom would|The line |count the new facts/i);
+  const hi = talkReply(createTalkState({ style: 'plain', seed: 'hi' }), 'hi').text;
+  assert.match(hi, /^Maybe you saying hi is redundant\.$/m);
+  assert.match(hi, /You said hi\. You added no new claim\./);
+  assert.doesNotMatch(hi, /you asking how I am|You asked how I am/);
 });
 
 test('a talk beat is an essay with reasons and evidence on both sides', () => {

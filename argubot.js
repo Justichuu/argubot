@@ -738,7 +738,7 @@ function argue(options = {}) {
 
   const rng = makeRng(seed);
   if (isRedundantTalk(claim)) {
-    const sides = redundantTalk();
+    const sides = redundantTalk(claim);
     return {
       claim,
       style: styleName,
@@ -1177,13 +1177,20 @@ function isRedundantTalk(claim) {
   return /^(hey(?: how are you)?|hi|hello|how are you)$/i.test(String(claim ?? '').trim());
 }
 
-function redundantTalk() {
+function redundantYou(claim) {
+  const line = String(claim ?? '').trim();
+  return /how are you/i.test(line) ? 'you asking how I am' : `you saying ${line}`;
+}
+
+function redundantTalk(claim) {
+  const asks = /how are you/i.test(String(claim ?? ''));
+  const what = asks ? 'You asked how I am.' : `You said ${String(claim ?? '').trim()}.`;
   return {
-    for: ['The line asks how you are. It adds no new claim.'],
-    against: ['The line asks how you are. It still opens a claim.'],
+    for: [`${what} You added no new claim.`],
+    against: [`${what} You still opened a claim.`],
     proofs: {
-      for: ['Check: count the new facts. Zero.'],
-      against: ['Check: count the new facts. One.'],
+      for: [asks ? 'Check: you asked. Then stopped.' : 'Check: you said it. Then stopped.'],
+      against: [asks ? 'Check: you asked. Then waited.' : 'Check: you said it. Then waited.'],
     },
   };
 }
@@ -1304,7 +1311,7 @@ function beat(state) {
 
 function proofLine(debate, index, side) {
   if (isRedundantTalk(debate.claim)) {
-    return redundantTalk().proofs[side][index] || 'Check: count the new facts.';
+    return redundantTalk(debate.claim).proofs[side][index] || 'Check: you.';
   }
   const family = getStyle(debate.style).families.find((item) => item.move === debate.moves[index]);
   const writer = family?.proof?.[side];
@@ -1315,7 +1322,8 @@ function proofLine(debate, index, side) {
 function claimLine(side, claim) {
   if (isMetaphorClaim(claim)) return metaphorLines()[side][0];
   if (isRedundantTalk(claim)) {
-    return side === 'for' ? `Maybe ${claim} is redundant.` : `Also maybe ${claim} is not redundant.`;
+    const you = redundantYou(claim);
+    return side === 'for' ? `Maybe ${you} is redundant.` : `Also maybe ${you} is not redundant.`;
   }
   return side === 'for' ? `Maybe ${claim} is a fix.` : `Also maybe ${claim} makes more problems.`;
 }
@@ -1348,8 +1356,10 @@ function formatBeat(debate, options = {}) {
   if (lean === 'for') extras.push('You said yes. ALSO MAYBE first.');
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
-  extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
+  if (!isRedundantTalk(debate.claim)) {
+    extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
+    extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
+  }
 
   const metaphor = isMetaphorClaim(debate.claim);
   const pairsReady = metaphor ? 0 : Math.min(first.lines.length, second.lines.length);
