@@ -1,7 +1,7 @@
 {
   "name": "argubot",
   "version": "1.5.0",
-  "description": "argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem.",
+  "description": "argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem. Or maybe it is a literal golem.",
   "type": "module",
   "bin": {
     "argubot": "./argubot.js"
