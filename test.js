@@ -747,10 +747,9 @@ test('you can set the line limit and the default is the 2010 chrome baseline', (
 });
 
 test('there is one demo', () => {
-  const gif = readFileSync(new URL('./media/argubot_demo.gif', import.meta.url));
-  const mp4 = readFileSync(new URL('./media/argubot_demo.mp4', import.meta.url));
+  const gif = readFileSync(new URL('./argubot_demo.gif', import.meta.url));
   assert.ok(gif.length > 0);
-  assert.ok(mp4.length > 0);
+  assert.doesNotMatch(readFileSync(new URL('./README.md', import.meta.url), 'utf8'), /\.mp4/);
 });
 
 test('create deducts the margin of error from the named limit', () => {
