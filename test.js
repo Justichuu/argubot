@@ -781,6 +781,12 @@ test('chat and agree-with-me lines still get both sides, never a yes-man', () =>
     const noAt = text.indexOf('\nALSO MAYBE\n');
     assert.ok(yesAt > 0 && noAt > 0 && yesAt !== noAt, `${line} did not print two sides`);
   }
+  const hello = talkReply(createTalkState({ style: 'plain', seed: 'hey' }), 'hey how are you').text;
+  assert.match(hello, /^Maybe hey how are you is redundant\.$/m);
+  assert.match(hello, /^Also maybe hey how are you is not redundant\.$/m);
+  assert.match(hello, /Check: count the new facts\. Zero\./);
+  assert.match(hello, /Check: count the new facts\. One\./);
+  assert.doesNotMatch(hello, /is a fix|makes more problems|Your mom would/i);
 });
 
 test('a talk beat is an essay with reasons and evidence on both sides', () => {

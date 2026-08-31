@@ -720,6 +720,7 @@ function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   const trimmed = String(topic ?? '').trim().replace(/[.!?]+$/, '');
   if (trimmed === '') return style.defaultTopic;
   if (isMetaphorClaim(trimmed)) return METAPHOR_TOPIC;
+  if (isRedundantTalk(trimmed)) return trimmed;
   const claim = style.shapeClaim(trimmed);
   return claim.trim() === '' ? style.defaultTopic : claim;
 }
@@ -736,6 +737,22 @@ function argue(options = {}) {
     options.seed === undefined ? hashString(`${styleName}:${claim}`) : hashString(`${styleName}:${claim}:${options.seed}`);
 
   const rng = makeRng(seed);
+  if (isRedundantTalk(claim)) {
+    const sides = redundantTalk();
+    return {
+      claim,
+      style: styleName,
+      seed,
+      rounds: 1,
+      moves: ['redundant talk'],
+      for: sides.for,
+      against: sides.against,
+      dissent: null,
+      moderator: pick(rng, style.moderatorLines),
+      verdict: pick(rng, style.verdictLines),
+      audit: auditDebate(sides.for, sides.against, tolerance),
+    };
+  }
   if (isMetaphorClaim(claim)) {
     const sides = metaphorLines();
     return {
@@ -1156,6 +1173,21 @@ function isMetaphorClaim(claim) {
   return /metaphor is a metaphor for metaphor/i.test(String(claim ?? ''));
 }
 
+function isRedundantTalk(claim) {
+  return /^(hey(?: how are you)?|hi|hello|how are you)$/i.test(String(claim ?? '').trim());
+}
+
+function redundantTalk() {
+  return {
+    for: ['The line asks how you are. It adds no new claim.'],
+    against: ['The line asks how you are. It still opens a claim.'],
+    proofs: {
+      for: ['Check: count the new facts. Zero.'],
+      against: ['Check: count the new facts. One.'],
+    },
+  };
+}
+
 function metaphorLines() {
   return {
     for: ['Maybe Metaphor is a metaphor for metaphor.'],
@@ -1271,6 +1303,9 @@ function beat(state) {
 }
 
 function proofLine(debate, index, side) {
+  if (isRedundantTalk(debate.claim)) {
+    return redundantTalk().proofs[side][index] || 'Check: count the new facts.';
+  }
   const family = getStyle(debate.style).families.find((item) => item.move === debate.moves[index]);
   const writer = family?.proof?.[side];
   if (typeof writer === 'function') return writer(debate.claim);
@@ -1279,6 +1314,9 @@ function proofLine(debate, index, side) {
 
 function claimLine(side, claim) {
   if (isMetaphorClaim(claim)) return metaphorLines()[side][0];
+  if (isRedundantTalk(claim)) {
+    return side === 'for' ? `Maybe ${claim} is redundant.` : `Also maybe ${claim} is not redundant.`;
+  }
   return side === 'for' ? `Maybe ${claim} is a fix.` : `Also maybe ${claim} makes more problems.`;
 }
 
