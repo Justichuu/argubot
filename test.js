@@ -635,6 +635,7 @@ test('done is always a way out', () => {
   assert.match(reply.text, /I did not pick/);
   assert.match(reply.text, /Chill/);
   assert.match(reply.text, /Let it go/);
+  assert.match(reply.text, /I let go of the wheel/);
 });
 
 test('more needs a topic, then adds another pair', () => {
