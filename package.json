@@ -4,16 +4,15 @@
   "description": "A funny, aggressively nonbiased argument bot. It argues both sides of anything and refuses to pick one.",
   "type": "module",
   "bin": {
-    "argubot": "./bin/argubot.js"
+    "argubot": "./argubot.js"
   },
-  "main": "./src/argubot.js",
+  "main": "./argubot.js",
   "exports": {
-    ".": "./src/argubot.js"
+    ".": "./argubot.js"
   },
   "scripts": {
-    "test": "node --test && node scripts/validate.js",
-    "validate": "node scripts/validate.js",
-    "start": "node bin/argubot.js"
+    "test": "node --test test.js",
+    "start": "node argubot.js"
   },
   "engines": {
     "node": ">=18"
@@ -22,9 +21,7 @@
     "cli",
     "debate",
     "argument",
-    "nonbiased",
-    "civic",
-    "talk"
+    "nonbiased"
   ],
   "license": "MIT",
   "private": true

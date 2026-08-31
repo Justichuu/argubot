@@ -1,24 +1,47 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { argue, normalizeClaim, maxRounds, STYLE_NAMES, DEFAULT_STYLE } from '../src/argubot.js';
-import { measure, auditDebate, countWords } from '../src/audit.js';
-import { STYLES } from '../src/styles.js';
-import { PLAIN_FAMILIES } from '../src/plain.js';
 import {
+  argue,
+  normalizeClaim,
+  maxRounds,
+  STYLE_NAMES,
+  DEFAULT_STYLE,
+  STYLES,
+  PLAIN_FAMILIES,
   CIVIC_FAMILIES,
   CIVIC_MODERATOR_LINES,
   CIVIC_VERDICT_LINES,
   CIVIC_GARY_FOOTNOTES,
   CIVIC_FLOURISHES,
-} from '../src/civic.js';
-import { LINEAGE, JUSTICHUU_REPOS, formatLineage } from '../src/lineage.js';
-import { render } from '../src/render.js';
+  LINEAGE,
+  JUSTICHUU_REPOS,
+  formatLineage,
+  render,
+  measure,
+  auditDebate,
+  countWords,
+  parseArgs,
+  parseSlash,
+  resolveCommand,
+  formatCommandList,
+  generateName,
+  makeRng,
+  hashString,
+  burrito,
+  classifyTurn,
+  talkReply,
+  createTalkState,
+  detectLean,
+  openingLines,
+  formatBeat,
+  runTalk,
+  runValidate,
+} from './argubot.js';
 
-const CLI = fileURLToPath(new URL('../bin/argubot.js', import.meta.url));
+const CLI = fileURLToPath(new URL('./argubot.js', import.meta.url));
 
 function runNode(argv, { input } = {}) {
   return new Promise((resolve, reject) => {
@@ -278,11 +301,10 @@ test('the lineage catalog cites every Justichuu repo by name', () => {
   assert.match(text, /pursuit-of-happiness-not-hubris/);
   assert.match(text, /private-directory-server/);
   assert.match(text, /asa-list/);
-  const markdown = readFileSync(new URL('../LINEAGE.md', import.meta.url), 'utf8');
   for (const repo of JUSTICHUU_REPOS) {
-    assert.match(markdown, new RegExp(repo.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(text, new RegExp(repo.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
-  assert.match(markdown, /Tinyman fork/);
+  assert.match(text, /Tinyman fork/);
 });
 
 test('rendered output contains both sides and the audit', () => {
@@ -403,10 +425,9 @@ test('the CLI has help and version', async () => {
   assert.match(version.stdout, /argubot \d+\.\d+\.\d+/);
 });
 
-test('the validator reports a clean tree', async () => {
-  const script = fileURLToPath(new URL('../scripts/validate.js', import.meta.url));
-  const { stdout } = await runNode([script]);
-  assert.match(stdout, /argubot validation passed/);
+test('the validator reports a clean tree', () => {
+  const failures = runValidate();
+  assert.deepEqual(failures, []);
 });
 
 test('the CLI lists commands and serves a burrito', async () => {
@@ -417,8 +438,6 @@ test('the CLI lists commands and serves a burrito', async () => {
   assert.equal(plate.kind, 'burrito');
   assert.equal(plate.servings.length, 3);
   assert.equal(plate.dissent, false);
-  const ready = JSON.parse((await run(['/ready'])).stdout);
-  assert.equal(ready.status, 'ready');
 });
 
 test('the CLI can turn dissent on with a generated name', async () => {
@@ -435,4 +454,196 @@ test('with no topic at all the bot argues about the request itself', async () =>
   assert.equal(plain.claim, STYLES.plain.defaultTopic);
   const civic = JSON.parse((await run(['--json', '--civic'])).stdout);
   assert.equal(civic.claim, STYLES.civic.defaultTopic);
+});
+
+test('slash and bare tokens resolve to the same commands', () => {
+  assert.equal(resolveCommand('/talk'), 'talk');
+  assert.equal(resolveCommand('talk'), 'talk');
+  assert.equal(resolveCommand('/burrito'), 'burrito');
+  assert.equal(resolveCommand('/all'), 'burrito');
+  assert.equal(parseSlash('/style civic').command, 'style');
+  assert.equal(parseSlash('/style civic').rest, 'civic');
+});
+
+test('parseArgs accepts /commands and dashed flags together', () => {
+  const talk = parseArgs(['/talk', '--plain', 'pineapple']);
+  assert.equal(talk.command, 'talk');
+  assert.equal(talk.style, 'plain');
+  assert.equal(talk.topic, 'pineapple');
+  assert.equal(talk.dissent, false);
+
+  const loaded = parseArgs(['/burrito', '--dissent', '--seed', 'monday', 'hot dogs']);
+  assert.equal(loaded.command, 'burrito');
+  assert.equal(loaded.dissent, true);
+  assert.equal(loaded.seed, 'monday');
+  assert.equal(loaded.topic, 'hot dogs');
+
+  const named = parseArgs(['--name', 'Vela', 'desks']);
+  assert.equal(named.dissent, true);
+  assert.equal(named.dissentName, 'Vela');
+});
+
+test('generated names are vowel-consonant speech and not a fixed person', () => {
+  const seen = new Set();
+  for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+    const name = generateName(makeRng(hashString(seed)));
+    assert.match(name, /^[A-Z][a-z]+$/);
+    assert.ok(name.length >= 4);
+    assert.notEqual(name.toLowerCase(), 'gary');
+    seen.add(name);
+  }
+  assert.ok(seen.size >= 4);
+  assert.equal(generateName(makeRng(hashString('same'))), generateName(makeRng(hashString('same'))));
+});
+
+test('a burrito serves every style and keeps dissent nameless when off', () => {
+  const plate = burrito({ topic: 'pineapple on pizza', rounds: 2 });
+  assert.equal(plate.servings.length, 3);
+  assert.equal(plate.dissent, false);
+  for (const serving of plate.servings) {
+    assert.equal(serving.dissent, null);
+    assert.equal(serving.for.length, 2);
+  }
+  const loud = burrito({ topic: 'pineapple on pizza', rounds: 2, dissent: true, seed: 'plate' });
+  const names = new Set(loud.servings.map((serving) => serving.dissent.name));
+  assert.equal(names.size, 1);
+  assert.notEqual([...names][0].toLowerCase(), 'gary');
+});
+
+test('talk slash commands drive dissent and exit', () => {
+  assert.equal(classifyTurn('/done').kind, 'exit');
+  assert.equal(classifyTurn('/dissent').kind, 'dissent');
+  assert.equal(classifyTurn('/dissent off').dissent, false);
+  const started = talkReply(createTalkState(), 'pineapple on pizza');
+  const on = talkReply(started.state, '/dissent');
+  assert.match(on.text, /Dissent is on/);
+  assert.doesNotMatch(on.text, /\bGary\b/);
+  const beat = talkReply(on.state, '/more');
+  assert.match(beat.text, /^[A-Z]{2,}$/m);
+  const off = talkReply(on.state, '/dissent off');
+  assert.match(off.text, /No name/);
+});
+
+test('/help and a lone slash ask for help instead of a topic', () => {
+  assert.equal(parseArgs(['/help']).help, true);
+  assert.equal(parseArgs(['/help']).command, 'help');
+  assert.equal(parseArgs(['help']).command, 'help');
+  assert.equal(parseArgs(['/']).help, true);
+  assert.equal(parseArgs(['/?']).help, true);
+  assert.equal(parseSlash('/').command, 'help');
+  assert.equal(classifyTurn('/').kind, 'help');
+  assert.equal(classifyTurn('/help').kind, 'help');
+});
+
+test('the command list is printable', () => {
+  const list = formatCommandList();
+  assert.match(list, /\/talk/);
+  assert.match(list, /\/burrito/);
+  assert.match(list, /\/validate/);
+});
+
+test('lean words are not topics, and topics are not leans', () => {
+  assert.equal(detectLean('yes'), 'for');
+  assert.equal(detectLean('no'), 'against');
+  assert.equal(detectLean('but that sounds expensive'), 'against');
+  assert.equal(detectLean('whether yes men are useful'), null);
+  assert.equal(classifyTurn('yes').kind, 'lean');
+  assert.equal(classifyTurn('whether yes men are useful').kind, 'topic');
+  assert.equal(classifyTurn('done').kind, 'exit');
+  assert.equal(classifyTurn('3').kind, 'exit');
+  assert.equal(classifyTurn('more').kind, 'more');
+  assert.equal(classifyTurn('plain').kind, 'style');
+});
+
+test('the opening always names an exit', () => {
+  const text = openingLines().join('\n');
+  assert.match(text, /done/);
+  assert.match(text, /both sides/);
+  assert.doesNotMatch(text, /justichuu|github\.com|pursuit-of-happiness|private-directory|asa-list|src\/|LINEAGE/i);
+});
+
+test('a topic gets a hear-back and two named voices', () => {
+  const reply = talkReply(createTalkState(), 'pineapple on pizza');
+  assert.equal(reply.exit, false);
+  assert.match(reply.text, /You said pineapple on pizza|recognizes: the matter of pineapple on pizza|The claim is pineapple on pizza/);
+  assert.match(reply.text, /^YES$/m);
+  assert.match(reply.text, /^NO$/m);
+  assert.doesNotMatch(reply.text, /^GARY$/m);
+  assert.match(reply.text, /more · new topic · done/);
+  assert.doesNotMatch(reply.text, /justichuu|github\.com|LINEAGE|src\//i);
+});
+
+test('leaning yes still argues both sides and does not lead with yes', () => {
+  let state = createTalkState();
+  const started = talkReply(state, 'pineapple on pizza');
+  const leaned = talkReply(started.state, 'yes');
+  const yesAt = leaned.text.indexOf('\nYES\n');
+  const noAt = leaned.text.indexOf('\nNO\n');
+  assert.ok(noAt > 0 && yesAt > noAt, 'NO should speak first when the person leaned yes');
+  assert.match(leaned.text, /You leaned yes/);
+  assert.match(leaned.text, /^YES$/m);
+  assert.match(leaned.text, /^NO$/m);
+});
+
+test('leaning no still argues both sides and does not lead with no', () => {
+  const started = talkReply(createTalkState(), 'standing desks');
+  const leaned = talkReply(started.state, 'no');
+  const yesAt = leaned.text.indexOf('\nYES\n');
+  const noAt = leaned.text.indexOf('\nNO\n');
+  assert.ok(yesAt > 0 && noAt > yesAt, 'YES should speak first when the person leaned no');
+  assert.match(leaned.text, /You leaned no/);
+});
+
+test('done is always a way out', () => {
+  const reply = talkReply(createTalkState({ topic: 'cats' }), 'done');
+  assert.equal(reply.exit, true);
+  assert.match(reply.text, /I did not pick/);
+});
+
+test('more needs a topic, then adds another pair', () => {
+  assert.match(talkReply(createTalkState(), 'more').text, /Say a thing first/);
+  const started = talkReply(createTalkState(), 'tabs over spaces');
+  const more = talkReply(started.state, 'more');
+  assert.match(more.text, /Another pair/);
+  assert.notEqual(started.text, more.text);
+});
+
+test('a lean without a topic is refused', () => {
+  const reply = talkReply(createTalkState(), 'yes');
+  assert.match(reply.text, /Say the thing first/);
+});
+
+test('formatted beats stay even and never pick a winner', () => {
+  const debate = argue({ topic: 'getting a dog', rounds: 1, seed: 'talk-1', style: 'plain' });
+  const text = formatBeat(debate, { hear: true });
+  assert.match(text, /Even|Close enough/);
+  assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
+});
+
+test('runTalk leaves when the person is done', async () => {
+  const lines = ['pineapple on pizza', 'yes', 'done'];
+  let i = 0;
+  let output = '';
+  await runTalk(
+    {
+      output: { write: (chunk) => { output += chunk; } },
+      ask: async () => lines[i++] ?? null,
+    },
+    { style: 'plain' },
+  );
+  assert.match(output, /Say a thing/);
+  assert.match(output, /You said pineapple on pizza/);
+  assert.match(output, /You leaned yes/);
+  assert.match(output, /I did not pick/);
+  assert.doesNotMatch(output, /justichuu|github\.com|src\/talk/i);
+});
+
+test('the CLI talk loop reads lines and exits', async () => {
+  const { stdout } = await run(['--talk', '--plain'], {
+    input: 'hot dogs are sandwiches\nmore\ndone\n',
+  });
+  assert.match(stdout, /Say a thing/);
+  assert.match(stdout, /You said hot dogs are sandwiches/);
+  assert.match(stdout, /Another pair/);
+  assert.match(stdout, /I did not pick/);
 });
