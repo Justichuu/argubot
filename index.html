@@ -105,7 +105,17 @@
     p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
     a { color: var(--ink); text-underline-offset: 3px; }
     .lede { color: var(--muted); max-width: 54ch; margin: 0 0 1.15em; font-size: 17px; }
-    .hint { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
+    .notes { margin: 12px 0 16px; }
+    .notes details { display: inline-block; margin: 0 8px 8px 0; vertical-align: top; max-width: 100%; }
+    .notes summary {
+      list-style: none;
+      min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
+      border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
+      display: inline-flex; align-items: center;
+    }
+    .notes summary::-webkit-details-marker { display: none; }
+    .notes details[open] summary { background: var(--ink); color: var(--paper); }
+    .notes details p { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     textarea, button { font: inherit; color: var(--ink); }
     textarea {
       width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
@@ -118,7 +128,7 @@
       border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
     }
     button:hover, button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-    a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+    a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
     #out {
       white-space: pre-wrap; overflow-wrap: anywhere; font: 18px/1.5 var(--serif);
       background: var(--field); border: 1.8px solid var(--ink); border-radius: var(--radius);
@@ -136,13 +146,13 @@
     html.access-big { font-size: 22px; }
     html.access-bigger { font-size: 26px; }
     html.access-hi { --paper: #fff; --ink: #000; --muted: #000; --field: #fff; }
-    html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button {
+    html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary {
       background: #fff; color: #000;
     }
     html.access-hi body::after { display: none; }
-    html.access-hi textarea, html.access-hi #out, html.access-hi button { border-color: #000; }
+    html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary { border-color: #000; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-    @media (forced-colors: active) { button, textarea, #out { border: 2px solid CanvasText; } }
+    @media (forced-colors: active) { button, textarea, #out, summary { border: 2px solid CanvasText; } }
   </style>
 </head>
 <body>
@@ -164,12 +174,20 @@
         <button type="button" id="done">Done</button>
       </div>
     </form>
-    <p class="hint">Type. Argue. Nothing is sent.</p>
+    <div class="notes">
+      <details>
+        <summary>Here</summary>
+        <p>This stays here. It does not call this website. Nothing is sent.</p>
+      </details>
+      <details>
+        <summary>Instructions</summary>
+        <p>The box is the thing. Argue. yes or no if you have a side. more for more. done to leave.</p>
+      </details>
+    </div>
     <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
     <noscript>
       <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
     </noscript>
-    <p>This stays here. It does not call this website.</p>
     <p class="sign">Justichuu<br><time datetime="2026-08-31">31 August 2026</time></p>
     <footer class="site">
       <p>
