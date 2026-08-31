@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>argubot</title>
-  <meta name="description" content="Give it a thing. It argues yes and no. It will not pick. Runs on this computer. Nothing is sent.">
+  <meta name="description" content="Type it. You get yes and no. It will not pick. Nothing is sent.">
   <style>
     :root {
       --paper: #f7d6e8;
@@ -191,7 +191,7 @@
     </header>
     <main id="letter">
       <form id="talk">
-        <textarea id="thing" name="thing" rows="3" autocomplete="off" aria-label="What to argue"></textarea>
+        <textarea id="thing" name="thing" rows="3" autocomplete="off" aria-label="Type here"></textarea>
         <div class="acts">
           <button type="submit" id="argue">Argue</button>
           <button type="button" id="yes">Yes</button>
@@ -200,13 +200,13 @@
           <button type="button" id="done">Done</button>
         </div>
       </form>
-      <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="The argument"></pre>
+      <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Yes and no"></pre>
       <noscript>
-        <p>This page needs JavaScript on this machine. Nothing is sent. Keep argubot.js next to this file.</p>
+        <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
       </noscript>
     </main>
     <footer class="site">
-      <p>This is a window on your computer. It does not call this website.</p>
+      <p>This stays here. It does not call this website.</p>
       <p>Justichuu<br>31 August 2026</p>
       <p>
         <a href="https://chuumind.com/book/">Book</a>
@@ -214,11 +214,11 @@
         <a href="https://chuumind.com/privacy/">Privacy proof</a>
         <a href="https://chuumind.com/attributions/">Attributions</a>
       </p>
-      <p>A person is accountable for this page. A machine is not.</p>
+      <p>A person made this page. A machine did not.</p>
       <div class="site-access" role="region" aria-label="Access">
-        <button type="button" id="acc_type" aria-pressed="false" title="Type. Usual, larger, largest.">Type</button>
-        <button type="button" id="acc_hi" aria-pressed="false" title="Contrast. Usual or high.">Contrast</button>
-        <button type="button" id="acc_speak" aria-pressed="false" title="Speak. A voice on this machine. It will not hear you.">Speak</button>
+        <button type="button" id="acc_type" aria-pressed="false" title="Type. Normal, big, bigger.">Type</button>
+        <button type="button" id="acc_hi" aria-pressed="false" title="Light or dark.">Contrast</button>
+        <button type="button" id="acc_speak" aria-pressed="false" title="A voice. It will not hear you.">Speak</button>
         <span id="acc_note" role="status" aria-live="polite"></span>
       </div>
     </footer>

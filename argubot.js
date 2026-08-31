@@ -817,13 +817,13 @@ function render(debate, options = {}) {
 
   const pushSide = (label, lines, code, sideKey) => {
     out.push(paint(code, label));
-    pushBlock(sideKey === 'for' ? `Claim: Yes to ${debate.claim}.` : `Claim: No to ${debate.claim}.`, '  ');
+    pushBlock(sideKey === 'for' ? `Yes to ${debate.claim}.` : `No to ${debate.claim}.`, '  ');
     lines.forEach((line, index) => {
       const wrapped = block(line, width, '      ');
       const number = `${String(index + 1).padStart(2)}.`;
       wrapped[0] = `  ${paint(code, number)} ${wrapped[0].trimStart()}`;
       out.push(...wrapped);
-      for (const ev of block(`Evidence: ${proofLine(debate, index, sideKey)}`, width, '      ')) {
+      for (const ev of block(proofLine(debate, index, sideKey), width, '      ')) {
         out.push(paint('dim', ev));
       }
     });
@@ -1199,15 +1199,15 @@ function classifyTurn(raw) {
 
 function openingLines() {
   return [
-    'Say a thing. I will write both sides. I will not pick.',
-    'Type done when you want out. That always works.',
+    'Type it. I will write both sides. I will not pick.',
+    'Type done when you want out.',
   ];
 }
 
 function helpLines() {
   return [
-    'Type a thing. yes or no if you have a side. more for more reasons. done to leave.',
-    'If I cannot tell which side you are on, I flip a coin for who talks first.',
+    'Type it. yes or no if you have a side. more for more. done to leave.',
+    'If I cannot tell, I flip a coin.',
   ];
 }
 
@@ -1238,7 +1238,7 @@ function proofLine(debate, index, side) {
 }
 
 function claimLine(label, claim) {
-  return label === 'YES' ? `Claim: Yes to ${claim}.` : `Claim: No to ${claim}.`;
+  return label === 'YES' ? `Yes to ${claim}.` : `No to ${claim}.`;
 }
 
 function orderSides(debate, lean) {
@@ -1269,7 +1269,7 @@ function formatBeat(debate, options = {}) {
     out.push(claimLine(side.label, debate.claim));
     side.lines.forEach((line, index) => {
       out.push(`${index + 1}. ${line}`);
-      out.push(`   Evidence: ${proofLine(debate, index, sideKey)}`);
+      out.push(`   ${proofLine(debate, index, sideKey)}`);
     });
   };
 
@@ -1316,12 +1316,12 @@ function talkReply(state, raw) {
     return { state: next, exit: false, text: whyLines().join('\n') };
   }
   if (turn.kind === 'ask-topic') {
-    return { state: next, exit: false, text: 'Okay. What is the thing?' };
+    return { state: next, exit: false, text: 'Type it.' };
   }
   if (turn.kind === 'style') {
     next.style = turn.style;
     if (!next.topic) {
-      return { state: next, exit: false, text: `I will talk ${turn.style} when you give me a thing.` };
+      return { state: next, exit: false, text: 'Type it first.' };
     }
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: next.lastLean }) };
@@ -1344,16 +1344,16 @@ function talkReply(state, raw) {
     return { state: next, exit: false, text: `Dissent is on. ${next.dissentName} says no.` };
   }
   if (turn.kind === 'empty') {
-    if (!next.topic) return { state: next, exit: false, text: 'Say a thing, or type done.' };
+    if (!next.topic) return { state: next, exit: false, text: 'Type it, or type done.' };
     return talkReply(next, 'more');
   }
   if (turn.kind === 'more') {
-    if (!next.topic) return { state: next, exit: false, text: 'Say a thing first.' };
+    if (!next.topic) return { state: next, exit: false, text: 'Type it first.' };
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: next.lastLean }) };
   }
   if (turn.kind === 'lean') {
-    if (!next.topic) return { state: next, exit: false, text: 'Say the thing first. Then you can say yes or no.' };
+    if (!next.topic) return { state: next, exit: false, text: 'Type it first. Then yes or no.' };
     next.lastLean = turn.lean;
     next.turn += 1;
     return { state: next, exit: false, text: formatBeat(beat(next), { hear: false, lean: turn.lean }) };
@@ -1731,14 +1731,14 @@ if (typeof document !== 'undefined') {
     btnType?.addEventListener('click', () => {
       typeLevel = (typeLevel + 1) % 3;
       applyType();
-      hint(['Usual type.', 'Larger type.', 'Largest type.'][typeLevel]);
+      hint(['Normal type.', 'Big type.', 'Bigger type.'][typeLevel]);
       writeHash();
     });
     btnHi?.addEventListener('click', () => {
       const on = !root.classList.contains('access-hi');
       root.classList.toggle('access-hi', on);
       btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
-      hint(on ? 'High contrast.' : 'Usual contrast.');
+      hint(on ? 'Dark on light.' : 'Normal colors.');
       writeHash();
     });
     btnSpeak?.addEventListener('click', () => {
@@ -1752,7 +1752,7 @@ if (typeof document !== 'undefined') {
         speakOn = true;
         btnSpeak.setAttribute('aria-pressed', 'true');
         btnSpeak.textContent = 'Stop speak';
-        const msg = 'Type, contrast, and speak on this page. This page will not hear you.';
+        const msg = 'A voice. It will not hear you.';
         hint(msg);
         voice(msg);
       }

@@ -314,9 +314,9 @@ test('rendered output contains both sides and the audit', () => {
   const plain = render(argue({ topic: 'pineapple on pizza', rounds: 2 }), { color: false });
   assert.match(plain, /^WHY YES$/m);
   assert.match(plain, /^WHY NO$/m);
-  assert.match(plain, /Claim: Yes to pineapple on pizza/);
-  assert.match(plain, /Claim: No to pineapple on pizza/);
-  assert.match(plain, /Evidence:/);
+  assert.match(plain, /Yes to pineapple on pizza/);
+  assert.match(plain, /No to pineapple on pizza/);
+  assert.match(plain, /Check:/);
   assert.match(plain, /FAIRNESS CHECK/);
   assert.match(plain, /EVEN/);
   assert.match(plain, /SO WHO WINS:/);
@@ -568,8 +568,8 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /^YES$/m);
   assert.match(reply.text, /^NO$/m);
   assert.doesNotMatch(reply.text, /^GARY$/m);
-  assert.match(reply.text, /^Claim: Yes to pineapple on pizza\.$/m);
-  assert.match(reply.text, /Evidence:/);
+  assert.match(reply.text, /^Yes to pineapple on pizza\.$/m);
+  assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /justichuu|github\.com|LINEAGE|src\//i);
 });
 
@@ -601,7 +601,7 @@ test('done is always a way out', () => {
 });
 
 test('more needs a topic, then adds another pair', () => {
-  assert.match(talkReply(createTalkState(), 'more').text, /Say a thing first/);
+  assert.match(talkReply(createTalkState(), 'more').text, /Type it first/);
   const started = talkReply(createTalkState(), 'tabs over spaces');
   const more = talkReply(started.state, 'more');
   assert.match(more.text, /^YES$/m);
@@ -611,7 +611,7 @@ test('more needs a topic, then adds another pair', () => {
 
 test('a lean without a topic is refused', () => {
   const reply = talkReply(createTalkState(), 'yes');
-  assert.match(reply.text, /Say the thing first/);
+  assert.match(reply.text, /Type it first/);
 });
 
 test('formatted beats stay even and never pick a winner', () => {
@@ -624,12 +624,12 @@ test('formatted beats stay even and never pick a winner', () => {
 
 test('a talk beat is an essay with reasons and evidence on both sides', () => {
   const reply = talkReply(createTalkState({ seed: 'essay', style: 'plain' }), 'pineapple on pizza');
-  assert.match(reply.text, /^Claim: Yes to pineapple on pizza\.$/m);
-  assert.match(reply.text, /^Claim: No to pineapple on pizza\.$/m);
+  assert.match(reply.text, /^Yes to pineapple on pizza\.$/m);
+  assert.match(reply.text, /^No to pineapple on pizza\.$/m);
   assert.match(reply.text, /^1\. /m);
   assert.match(reply.text, /^2\. /m);
   assert.match(reply.text, /^3\. /m);
-  const evidence = reply.text.match(/^ {3}Evidence: /gm);
+  const evidence = reply.text.match(/^ {3}Check: /gm);
   assert.equal(evidence?.length, 6);
   const yesAt = reply.text.indexOf('\nYES\n');
   const noAt = reply.text.indexOf('\nNO\n');
@@ -640,8 +640,8 @@ test('a talk beat is an essay with reasons and evidence on both sides', () => {
   const secondBlock = first === 'YES'
     ? reply.text.slice(noAt)
     : reply.text.slice(yesAt);
-  assert.equal((firstBlock.match(/^ {3}Evidence: /gm) || []).length, 3);
-  assert.equal((secondBlock.match(/^ {3}Evidence: /gm) || []).length, 3);
+  assert.equal((firstBlock.match(/^ {3}Check: /gm) || []).length, 3);
+  assert.equal((secondBlock.match(/^ {3}Check: /gm) || []).length, 3);
   assert.doesNotMatch(reply.text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
 });
 
@@ -681,7 +681,7 @@ test('arguing the same thing again is another pair, not a reset', () => {
   const again = talkAct(first.state, 'argue', 'getting a dog');
   assert.match(first.text, /You said getting a dog/);
   assert.match(again.text, /^YES$/m);
-  assert.match(again.text, /Evidence:/);
+  assert.match(again.text, /Check:/);
   assert.doesNotMatch(again.text, /You said getting a dog/);
 });
 
@@ -711,7 +711,7 @@ test('runTalk leaves when the person is done', async () => {
     },
     { style: 'plain' },
   );
-  assert.match(output, /Say a thing/);
+  assert.match(output, /Type it/);
   assert.match(output, /You said pineapple on pizza/);
   assert.match(output, /You said yes/);
   assert.match(output, /I did not pick/);
@@ -722,8 +722,8 @@ test('the CLI talk loop reads lines and exits', async () => {
   const { stdout } = await run(['--talk', '--plain'], {
     input: 'hot dogs are sandwiches\nmore\ndone\n',
   });
-  assert.match(stdout, /Say a thing/);
+  assert.match(stdout, /Type it/);
   assert.match(stdout, /You said hot dogs are sandwiches/);
-  assert.match(stdout, /Evidence:/);
+  assert.match(stdout, /Check:/);
   assert.match(stdout, /I did not pick/);
 });
