@@ -10,47 +10,121 @@
       --paper: #f7d6e8;
       --ink: #120c14;
       --muted: #5a3d55;
+      --rule: #2a1828;
+      --verified: #1f8a62;
       --field: rgba(255, 248, 252, .82);
-      --serif: Georgia, Palatino, "Times New Roman", serif;
+      --accent: #ff4d2e;
+      --accent-ink: #b42312;
+      --halo: #ffd84a;
+      --mint: #3dffb0;
+      --cyan: #3ec6ff;
+      --violet: #b44cff;
+      --serif: Georgia, "Palatino Linotype", Palatino, "Times New Roman", serif;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+    html.lamp {
+      --paper: #160e18;
+      --ink: #f7e9f2;
+      --muted: #c9a3be;
+      --rule: #5a3d55;
+      --field: rgba(28, 18, 32, .9);
+      --accent: #ffd84a;
+      --accent-ink: #ffd84a;
+      --verified: #5dffb0;
     }
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100vh; min-height: 100svh; }
-    body { color: var(--ink); font: 18px/1.55 var(--serif); background: #f4cfe4; }
+    html, body { margin: 0; padding: 0; min-height: 100vh; min-height: 100svh; }
+    html { overflow-x: hidden; }
+    body {
+      color: var(--ink);
+      font: 18px/1.55 var(--serif);
+      background-color: #f4cfe4;
+    }
+    html.lamp body { background-color: var(--paper); }
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100lvh;
+      z-index: -1;
+      pointer-events: none;
+      background-repeat: no-repeat;
+      background-image:
+        radial-gradient(circle 62vmax at 50% 4%, #ffe27a 0%, rgba(255, 226, 122, 0) 62%),
+        radial-gradient(circle 58vmax at 6% 96%, #7af0ff 0%, rgba(122, 240, 255, 0) 64%),
+        radial-gradient(circle 54vmax at 98% 72%, #c9a0ff 0%, rgba(201, 160, 255, 0) 66%);
+    }
+    html.lamp body::after {
+      background-image: radial-gradient(circle 56vmax at 50% 0%, #4a2048 0%, rgba(74, 32, 72, 0) 58%);
+    }
     .wrap {
-      max-width: 40rem;
+      max-width: 840px;
+      width: 100%;
       margin: 0 auto;
       padding: 24px max(22px, env(safe-area-inset-left, 0px)) max(28px, env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-right, 0px));
+    }
+    @media (min-width: 901px) {
+      .wrap.letter {
+        max-width: min(960px, calc(100% - 64px));
+        background: var(--field);
+        border: 1.8px solid var(--ink);
+        border-radius: var(--radius);
+        box-shadow: 8px 8px 0 rgba(18, 12, 20, .12);
+        margin-top: 48px;
+        margin-bottom: 64px;
+        padding: 48px 52px 64px;
+      }
     }
     .skip { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
     .skip:focus {
       position: fixed; left: 12px; top: 12px; width: auto; height: auto; clip: auto;
       z-index: 80; padding: 10px 14px; background: var(--paper); color: var(--ink);
-      border: 2px solid var(--ink); border-radius: 10px; text-decoration: none;
+      border: 2px solid var(--ink); border-radius: var(--radius-sm); text-decoration: none;
     }
+    .masthead { padding: 0 0 12px; margin: 0; }
     .kicker { font-size: 15px; font-style: italic; color: var(--muted); margin: 0; }
+    .kicker a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--ink); }
     h1 { font: italic 400 clamp(28px, 5vw, 42px)/1.12 var(--serif); margin: 6px 0 8px; }
+    .squiggle {
+      display: block;
+      width: 8.4em;
+      max-width: 100%;
+      height: 1.05em;
+      margin: 0.2em 0 1.1em;
+      background: linear-gradient(90deg, var(--accent), var(--halo), var(--mint), var(--cyan), var(--violet));
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 12'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' d='M1 7c18-6 28 5 46 1 16-4 22 6 40 2 18-4 32 4 52-2'/%3E%3C/svg%3E");
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 12'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' d='M1 7c18-6 28 5 46 1 16-4 22 6 40 2 18-4 32 4 52-2'/%3E%3C/svg%3E");
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+    }
     p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
     a { color: var(--ink); text-underline-offset: 3px; }
     .hint { color: var(--muted); font-size: 14px; margin: 0 0 8px; }
     textarea, button { font: inherit; color: var(--ink); }
     textarea {
       width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
-      border: 1.8px solid var(--ink); border-radius: 14px; background: var(--field);
+      border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field);
     }
     .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin: 12px 0 16px; }
     #done { grid-column: 1 / -1; }
     button {
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
-      border: 1.8px solid var(--ink); border-radius: 10px; background: var(--paper);
+      border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
     }
     button:hover, button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
     a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
     #out {
       white-space: pre-wrap; overflow-wrap: anywhere; font: 18px/1.5 var(--serif);
-      background: var(--field); border: 1.8px solid var(--ink); border-radius: 14px;
+      background: var(--field); border: 1.8px solid var(--ink); border-radius: var(--radius);
       padding: 16px 18px; min-height: 8rem; max-height: 24em; overflow: auto; margin: 0 0 28px;
     }
     #out:empty { display: none; }
+    .sign { margin: 28px 0 12px; font-style: italic; font-size: 17px; line-height: 1.5; }
     footer.site {
       display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start;
       color: var(--muted); font-size: 14px; font-style: italic; min-height: 44px;
@@ -60,9 +134,11 @@
     .site-access { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
     html.access-big { font-size: 22px; }
     html.access-bigger { font-size: 26px; }
+    html.access-hi { --paper: #fff; --ink: #000; --muted: #000; --field: #fff; }
     html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button {
       background: #fff; color: #000;
     }
+    html.access-hi body::after { display: none; }
     html.access-hi textarea, html.access-hi #out, html.access-hi button { border-color: #000; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     @media (forced-colors: active) { button, textarea, #out { border: 2px solid CanvasText; } }
@@ -70,31 +146,30 @@
 </head>
 <body>
   <a class="skip" href="#letter">Skip to the letter</a>
-  <div class="wrap">
-    <header>
-      <p class="kicker">ChuuMind</p>
+  <div class="wrap letter" id="letter">
+    <header class="masthead">
+      <div class="kicker"><a href="https://chuumind.com/">ChuuMind</a> · argubot</div>
       <h1>argubot</h1>
+      <div class="squiggle" aria-hidden="true"></div>
     </header>
-    <main id="letter">
-      <form id="talk">
-        <textarea id="thing" name="thing" rows="3" autocomplete="off" enterkeyhint="go" autocapitalize="sentences" aria-label="Type here"></textarea>
-        <div class="acts">
-          <button type="submit" id="argue">Argue</button>
-          <button type="button" id="yes">Yes</button>
-          <button type="button" id="no">No</button>
-          <button type="button" id="more">More</button>
-          <button type="button" id="done">Done</button>
-        </div>
-      </form>
-      <p class="hint">Type. Argue. Nothing is sent.</p>
-      <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
-      <noscript>
-        <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
-      </noscript>
-    </main>
+    <form id="talk">
+      <textarea id="thing" name="thing" rows="3" autocomplete="off" enterkeyhint="go" autocapitalize="sentences" aria-label="Type here"></textarea>
+      <div class="acts">
+        <button type="submit" id="argue">Argue</button>
+        <button type="button" id="yes">Yes</button>
+        <button type="button" id="no">No</button>
+        <button type="button" id="more">More</button>
+        <button type="button" id="done">Done</button>
+      </div>
+    </form>
+    <p class="hint">Type. Argue. Nothing is sent.</p>
+    <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
+    <noscript>
+      <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
+    </noscript>
+    <p>This stays here. It does not call this website.</p>
+    <p class="sign">Justichuu<br><time datetime="2026-08-31">31 August 2026</time></p>
     <footer class="site">
-      <p>This stays here. It does not call this website.</p>
-      <p>Justichuu<br>31 August 2026</p>
       <p>
         <a href="https://chuumind.com/book/">Book</a>
         <a href="https://chuumind.com/rights/">Your rights</a>

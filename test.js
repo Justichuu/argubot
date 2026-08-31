@@ -500,6 +500,14 @@ test('the html page can sit on chuumind.com', () => {
   assert.doesNotMatch(html, /localStorage/);
   assert.doesNotMatch(html, /indexedDB/);
   assert.doesNotMatch(html, /captcha|recaptcha|biometric/i);
+  assert.match(html, /--accent:\s*#ff4d2e/);
+  assert.match(html, /--halo:\s*#ffd84a/);
+  assert.match(html, /--mint:\s*#3dffb0/);
+  assert.match(html, /--cyan:\s*#3ec6ff/);
+  assert.match(html, /--violet:\s*#b44cff/);
+  assert.match(html, /wrap letter/);
+  assert.match(html, /class="squiggle"/);
+  assert.doesNotMatch(html, /chuumind\.com\/styles\.css|chuumind\.com\/access\.js/);
 });
 
 test('the CLI can turn dissent on with a generated name', async () => {
