@@ -602,6 +602,8 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /No weights\. No bias\. Even scale/);
   assert.match(reply.text, /Solutions are subjective\. Uncensored/);
   assert.match(reply.text, /best logic it feels if it's actual true/);
+  assert.match(reply.text, /Approval or ranked choice voting, for now/);
+  assert.match(reply.text, /Hallucinations compressed/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);

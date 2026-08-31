@@ -1277,7 +1277,7 @@ function formatBeat(debate, options = {}) {
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
   extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true.');
+  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic.');
 
   const pairsReady = Math.min(first.lines.length, second.lines.length);
   const writeEssay = (part, n) => {
