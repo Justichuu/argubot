@@ -33,6 +33,7 @@ import {
   hashString,
   classifyTurn,
   talkReply,
+  talkAct,
   createTalkState,
   detectLean,
   openingLines,
@@ -40,7 +41,6 @@ import {
   runTalk,
   runValidate,
 } from './argubot.js';
-import { talkAct } from './act.js';
 
 const CLI = fileURLToPath(new URL('./argubot.js', import.meta.url));
 
@@ -437,7 +437,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /chuumind.com\/privacy\//);
   assert.match(html, /chuumind.com\/attributions\//);
   assert.match(html, /Will not hear you|will not hear you/);
-  assert.match(html, /src="\.\/act\.js"/);
+  assert.match(html, /src="\.\/argubot\.js"/);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
   assert.doesNotMatch(html, /XMLHttpRequest/);
