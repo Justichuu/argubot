@@ -1207,7 +1207,7 @@ function classifyTurn(raw) {
 function openingLines() {
   return [
     'Say a thing. I will write both sides. I will not pick.',
-    'Done when you want out. That always works.',
+    'Type done when you want out. That always works.',
   ];
 }
 
