@@ -1311,7 +1311,7 @@ function formatBeat(debate, options = {}) {
   if (lean === 'against') extras.push('You said no. MAYBE first.');
   if (coin) extras.push(`${coin}. ${first.label} first.`);
   extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area. Rules don\'t work because no one follows them. After they themselves decay and forget the rules. I don\'t write manifestos. Weirdos do that I admire. Hubris, as I just wrote one.');
+  extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
 
   const metaphor = isMetaphorClaim(debate.claim);
   const pairsReady = metaphor ? 0 : Math.min(first.lines.length, second.lines.length);
@@ -1686,6 +1686,9 @@ Rules don't work because no one follows them.
 After they themselves decay and forget the rules.
 I don't write manifestos. Weirdos do that I admire.
 Hubris, as I just wrote one.
+But no one wants to read them sometimes. Truth.
+Sometimes people do but not all the time.
+Saying something doesn't make it true for everyone witnessing or not witnessing.
 
 Give it a thing. It argues maybe. It will not pick.
 

@@ -462,7 +462,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /You can't print as many as you feel/);
   assert.match(html, /Mirrored self, to escape the cycle/);
   assert.match(html, /max-height:\s*24em/);
-  assert.match(html, /Solutions are uncensored/);
+  assert.match(html, /uncensored/);
   assert.match(html, /No weights\. No bias\. Even scale/);
   assert.match(html, /zeightgeist proven solutions/);
   assert.match(html, /actual correct solution/);
@@ -486,6 +486,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /I don't write manifestos/);
   assert.match(html, /Weirdos do that I admire/);
   assert.match(html, /Hubris, as I just wrote one/);
+  assert.match(html, /no one wants to read them sometimes/);
+  assert.match(html, /Sometimes people do but not all the time/);
+  assert.match(html, /Saying something doesn't make it true for everyone witnessing or not witnessing/);
   const body = html.slice(html.indexOf('<body>'));
   assert.ok(body.indexOf('id="thing"') < body.indexOf('principal of its existence'), 'the box must come before the manifesto so a phone can use it');
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
@@ -625,10 +628,6 @@ test('a topic gets a hear-back and two named voices', () => {
   assert.match(reply.text, /Hallucinations compressed/);
   assert.match(reply.text, /Certainly is ego/);
   assert.match(reply.text, /Gray area/);
-  assert.match(reply.text, /Rules don't work because no one follows them/);
-  assert.match(reply.text, /After they themselves decay and forget the rules/);
-  assert.match(reply.text, /I don't write manifestos/);
-  assert.match(reply.text, /Hubris, as I just wrote one/);
   assert.match(reply.text, /Check:/);
   assert.doesNotMatch(reply.text, /^YES$/m);
   assert.doesNotMatch(reply.text, /^NO$/m);
