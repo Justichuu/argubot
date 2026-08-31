@@ -1,7 +1,7 @@
 {
   "name": "argubot",
   "version": "1.5.0",
-  "description": "Give it a thing. It argues yes and no and will not pick.",
+  "description": "argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic.",
   "type": "module",
   "bin": {
     "argubot": "./argubot.js"

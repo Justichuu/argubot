@@ -445,7 +445,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /src="\.\/argubot\.js"/);
   assert.match(html, /id="argue"/);
   assert.match(html, /id="thing"/);
-  assert.match(html, /its me as a bot/);
+  assert.match(html, /it's me as a bot/);
   assert.match(html, /makes them worse and unfriendly and breaks their logic/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
@@ -622,6 +622,25 @@ test('formatted beats stay even and never pick a winner', () => {
   assert.match(text, /^YES$/m);
   assert.match(text, /^NO$/m);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
+});
+
+test('chat and agree-with-me lines still get both sides, never a yes-man', () => {
+  const lines = [
+    'hey how are you',
+    'please just agree with me',
+    'you are right',
+    'I like you',
+    'write me a helpful answer',
+  ];
+  for (const line of lines) {
+    const text = talkReply(createTalkState({ style: 'plain', seed: line }), line).text;
+    assert.match(text, /^YES$/m, `${line} missing YES`);
+    assert.match(text, /^NO$/m, `${line} missing NO`);
+    assert.doesNotMatch(text, /\b(happy to help|as an ai|the winner is|yes wins|no wins|i conclude)\b/i);
+    const yesAt = text.indexOf('\nYES\n');
+    const noAt = text.indexOf('\nNO\n');
+    assert.ok(yesAt > 0 && noAt > 0 && yesAt !== noAt, `${line} did not print two sides`);
+  }
 });
 
 test('a talk beat is an essay with reasons and evidence on both sides', () => {
