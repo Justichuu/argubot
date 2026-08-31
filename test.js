@@ -445,6 +445,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /src="\.\/argubot\.js"/);
   assert.match(html, /id="argue"/);
   assert.match(html, /id="thing"/);
+  assert.match(html, /its me as a bot/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
