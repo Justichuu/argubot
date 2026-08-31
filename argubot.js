@@ -419,8 +419,10 @@ const CIVIC_FAMILIES = [
   {
     id: 'agency',
     move: 'range of choices',
-    for: (c) => `Doing ${c} gives you more ways to choose later, and more ways to choose is the actual prize.`,
-    against: (c) => `Doing ${c} takes away ways to choose later, and fewer ways to choose is the actual cost.`,
+    for: (c) =>
+      `${/^(whether|if|that)\b/i.test(c) ? `Acting on ${c}` : `Doing ${c}`} gives you more ways to choose later, and more ways to choose is the actual prize.`,
+    against: (c) =>
+      `${/^(whether|if|that)\b/i.test(c) ? `Acting on ${c}` : `Doing ${c}`} takes away ways to choose later, and fewer ways to choose is the actual cost.`,
   },
   {
     id: 'leverage',
@@ -1110,7 +1112,8 @@ function detectLean(text) {
   if (/^(no|nah|nope|disagree|wrong)\b/i.test(raw)) return 'against';
   if (/^i (don't|dont|do not)\b/i.test(raw)) return 'against';
   if (/^(yes|yeah|yep|yup|agree|true)\b/i.test(raw)) return 'for';
-  if (/^i (agree|like it|want)\b/i.test(raw)) return 'for';
+  if (/^i (agree|like it)\b/i.test(raw)) return 'for';
+  if (/^i want\b/i.test(raw) && raw.split(/\s+/).length <= 4) return 'for';
   return null;
 }
 
@@ -1317,6 +1320,37 @@ function talkReply(state, raw) {
   next.lastLean = turn.lean;
   next.turn += 1;
   return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean: turn.lean }) };
+}
+
+// The box is the thing. Buttons act on what is in it, not only on leftover state.
+function talkAct(state, action, box = '') {
+  const text = String(box ?? '').trim();
+  const current = { ...state };
+  const boxIsNew = text !== '' && text !== current.topic;
+
+  if (action === 'done') return talkReply(current, 'done');
+
+  if (action === 'argue') {
+    if (text === '') return talkReply(current, '');
+    if (current.topic && text === current.topic) return talkReply(current, 'more');
+    return talkReply(current, text);
+  }
+
+  if (action === 'more') {
+    if (boxIsNew || (!current.topic && text)) return talkReply(current, text);
+    return talkReply(current, 'more');
+  }
+
+  if (action === 'yes' || action === 'no') {
+    if (boxIsNew || (!current.topic && text)) {
+      const lean = action === 'yes' ? 'for' : 'against';
+      const next = { ...current, topic: text, lastLean: lean, turn: current.turn + 1 };
+      return { state: next, exit: false, text: formatBeat(beat(next), { hear: true, lean }) };
+    }
+    return talkReply(current, action);
+  }
+
+  return talkReply(current, String(action ?? ''));
 }
 
 // ponytail: queue incoming lines so stdin EOF cannot hang readline.question
@@ -1641,6 +1675,7 @@ export {
   hashString,
   classifyTurn,
   talkReply,
+  talkAct,
   createTalkState,
   detectLean,
   openingLines,

@@ -33,6 +33,7 @@ import {
   hashString,
   classifyTurn,
   talkReply,
+  talkAct,
   createTalkState,
   detectLean,
   openingLines,
@@ -608,6 +609,33 @@ test('formatted beats stay even and never pick a winner', () => {
   const text = formatBeat(debate, { hear: true });
   assert.match(text, /Even|Close enough/);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
+});
+
+test('a sentence that starts with I want is a topic, not a yes lean', () => {
+  assert.equal(detectLean('I want a four day week'), null);
+  assert.equal(classifyTurn('I want a four day week').kind, 'topic');
+  assert.equal(classifyTurn('I want a four day week').lean, null);
+  const reply = talkReply(createTalkState(), 'I want a four day week');
+  assert.match(reply.text, /You said I want a four day week/);
+  assert.match(reply.text, /Heads|Tails/);
+  assert.doesNotMatch(reply.text, /You leaned yes/);
+});
+
+test('the page treats the box as the thing even if you tap yes first', () => {
+  const reply = talkAct(createTalkState(), 'yes', 'pineapple on pizza');
+  assert.match(reply.text, /You said pineapple on pizza/);
+  assert.match(reply.text, /You leaned yes/);
+  const yesAt = reply.text.indexOf('\nYES\n');
+  const noAt = reply.text.indexOf('\nNO\n');
+  assert.ok(noAt > 0 && yesAt > noAt);
+});
+
+test('arguing the same thing again is another pair, not a reset', () => {
+  const first = talkAct(createTalkState({ seed: 'same' }), 'argue', 'getting a dog');
+  const again = talkAct(first.state, 'argue', 'getting a dog');
+  assert.match(first.text, /You said getting a dog/);
+  assert.match(again.text, /Another pair/);
+  assert.doesNotMatch(again.text, /You said getting a dog/);
 });
 
 test('unknown lean flips a coin for who speaks first', () => {

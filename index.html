@@ -393,20 +393,22 @@
     }
 
     state = bot.createTalkState({ style: styleNow() });
-    show(bot.openingLines().join('\n'), false);
+    show('Say a thing. I will argue both sides and I will not pick.\nDone when you want out. That always works.', false);
 
-    function say(raw) {
+    function say(action) {
       state = { ...state, style: styleNow() };
-      const reply = bot.talkReply(state, raw);
+      const reply = bot.talkAct(state, action, thing.value);
       state = reply.state;
       show(reply.text, true);
-      if (reply.exit) state = bot.createTalkState({ style: styleNow() });
+      if (reply.exit) {
+        state = bot.createTalkState({ style: styleNow() });
+        thing.value = '';
+      }
     }
 
     document.getElementById('talk').addEventListener('submit', (ev) => {
       ev.preventDefault();
-      const text = thing.value.trim();
-      say(text === '' ? '' : text);
+      say('argue');
     });
     document.getElementById('yes').addEventListener('click', () => say('yes'));
     document.getElementById('no').addEventListener('click', () => say('no'));
