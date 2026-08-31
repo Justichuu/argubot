@@ -83,7 +83,7 @@
       line-height: 1.12;
       margin: 6px 0 10px;
     }
-    p { max-width: 54ch; margin: 0 0 1.15em; }
+    p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
     a { color: var(--ink); text-underline-offset: 3px; }
     label, legend { font-weight: 400; }
     .hint {
@@ -118,13 +118,17 @@
       align-items: flex-start;
       min-height: 44px;
       padding: 8px 0;
+      overflow-wrap: anywhere;
     }
     .choice input { width: 1.15rem; height: 1.15rem; margin-top: 4px; flex: 0 0 auto; }
     .acts {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;
       gap: 10px 12px;
       margin: 8px 0 18px;
+    }
+    @media (min-width: 520px) {
+      .acts { grid-template-columns: 1fr 1fr; }
     }
     .act {
       display: flex;
@@ -372,28 +376,30 @@
       return picked ? picked.value : 'plain';
     }
 
-    function show(text) {
+    function show(text, moveFocus) {
       out.textContent = text;
       voice(text);
-      try { out.focus(); } catch (err) {}
+      if (moveFocus) {
+        try { out.focus(); } catch (err) {}
+      }
     }
 
     let bot;
     try {
       bot = await import('./argubot.js');
     } catch (err) {
-      show('Keep index.html and argubot.js in the same folder. Open them from a site or a folder on this computer. This page does not call a network to argue.');
+      show('Keep index.html and argubot.js in the same folder. Open them from a site or a folder on this computer. This page does not call a network to argue.', false);
       throw err;
     }
 
     state = bot.createTalkState({ style: styleNow() });
-    show(bot.openingLines().join('\n'));
+    show(bot.openingLines().join('\n'), false);
 
     function say(raw) {
       state = { ...state, style: styleNow() };
       const reply = bot.talkReply(state, raw);
       state = reply.state;
-      show(reply.text);
+      show(reply.text, true);
       if (reply.exit) state = bot.createTalkState({ style: styleNow() });
     }
 
