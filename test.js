@@ -314,8 +314,8 @@ test('rendered output contains both sides and the audit', () => {
   const plain = render(argue({ topic: 'pineapple on pizza', rounds: 2 }), { color: false });
   assert.match(plain, /^WHY YES$/m);
   assert.match(plain, /^WHY NO$/m);
-  assert.match(plain, /Yes to pineapple on pizza/);
-  assert.match(plain, /No to pineapple on pizza/);
+  assert.match(plain, /Maybe pineapple on pizza/);
+  assert.match(plain, /Also maybe pineapple on pizza/);
   assert.match(plain, /Check:/);
   assert.match(plain, /FAIRNESS CHECK/);
   assert.match(plain, /EVEN/);
@@ -451,6 +451,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Not a golem/);
   assert.match(html, /maybe it is a literal golem/);
   assert.match(html, /whatever the fuck that means/);
+  assert.match(html, /Doesn't answer yes or no/);
+  assert.match(html, /Must be unnatural/);
+  assert.match(html, /telling it English/);
   assert.doesNotMatch(html, /How it talks|name="style"|value="civic"|value="classic"|Lean yes|book voice/i);
   assert.doesNotMatch(html, /[\u2013\u2014]/);
   assert.doesNotMatch(html, /fetch\s*\(/);
@@ -571,11 +574,13 @@ test('a topic gets a hear-back and two named voices', () => {
   const reply = talkReply(createTalkState(), 'pineapple on pizza');
   assert.equal(reply.exit, false);
   assert.match(reply.text, /You said pineapple on pizza|recognizes: the matter of pineapple on pizza|The claim is pineapple on pizza/);
-  assert.match(reply.text, /^YES$/m);
-  assert.match(reply.text, /^NO$/m);
+  assert.match(reply.text, /^MAYBE$/m);
+  assert.match(reply.text, /^ALSO MAYBE$/m);
   assert.doesNotMatch(reply.text, /^GARY$/m);
-  assert.match(reply.text, /^Yes to pineapple on pizza\.$/m);
+  assert.match(reply.text, /^Maybe pineapple on pizza\.$/m);
   assert.match(reply.text, /Check:/);
+  assert.doesNotMatch(reply.text, /^YES$/m);
+  assert.doesNotMatch(reply.text, /^NO$/m);
   assert.doesNotMatch(reply.text, /justichuu|github\.com|LINEAGE|src\//i);
 });
 
@@ -583,20 +588,20 @@ test('leaning yes still argues both sides and does not lead with yes', () => {
   let state = createTalkState();
   const started = talkReply(state, 'pineapple on pizza');
   const leaned = talkReply(started.state, 'yes');
-  const yesAt = leaned.text.indexOf('\nYES\n');
-  const noAt = leaned.text.indexOf('\nNO\n');
-  assert.ok(noAt > 0 && yesAt > noAt, 'NO should speak first when the person leaned yes');
+  const yesAt = leaned.text.indexOf('\nMAYBE\n');
+  const noAt = leaned.text.indexOf('\nALSO MAYBE\n');
+  assert.ok(noAt > 0 && yesAt > noAt, 'ALSO MAYBE should speak first when the person said yes');
   assert.match(leaned.text, /You said yes/);
-  assert.match(leaned.text, /^YES$/m);
-  assert.match(leaned.text, /^NO$/m);
+  assert.match(leaned.text, /^MAYBE$/m);
+  assert.match(leaned.text, /^ALSO MAYBE$/m);
 });
 
 test('leaning no still argues both sides and does not lead with no', () => {
   const started = talkReply(createTalkState(), 'standing desks');
   const leaned = talkReply(started.state, 'no');
-  const yesAt = leaned.text.indexOf('\nYES\n');
-  const noAt = leaned.text.indexOf('\nNO\n');
-  assert.ok(yesAt > 0 && noAt > yesAt, 'YES should speak first when the person leaned no');
+  const yesAt = leaned.text.indexOf('\nMAYBE\n');
+  const noAt = leaned.text.indexOf('\nALSO MAYBE\n');
+  assert.ok(yesAt > 0 && noAt > yesAt, 'MAYBE should speak first when the person said no');
   assert.match(leaned.text, /You said no/);
 });
 
@@ -610,8 +615,8 @@ test('more needs a topic, then adds another pair', () => {
   assert.match(talkReply(createTalkState(), 'more').text, /Type it first/);
   const started = talkReply(createTalkState(), 'tabs over spaces');
   const more = talkReply(started.state, 'more');
-  assert.match(more.text, /^YES$/m);
-  assert.match(more.text, /^NO$/m);
+  assert.match(more.text, /^MAYBE$/m);
+  assert.match(more.text, /^ALSO MAYBE$/m);
   assert.notEqual(started.text, more.text);
 });
 
@@ -623,8 +628,8 @@ test('a lean without a topic is refused', () => {
 test('formatted beats stay even and never pick a winner', () => {
   const debate = argue({ topic: 'getting a dog', rounds: 1, seed: 'talk-1', style: 'plain' });
   const text = formatBeat(debate, { hear: true });
-  assert.match(text, /^YES$/m);
-  assert.match(text, /^NO$/m);
+  assert.match(text, /^MAYBE$/m);
+  assert.match(text, /^ALSO MAYBE$/m);
   assert.doesNotMatch(text, /\b(the winner is|yes wins|no wins|i conclude)\b/i);
 });
 
@@ -638,31 +643,31 @@ test('chat and agree-with-me lines still get both sides, never a yes-man', () =>
   ];
   for (const line of lines) {
     const text = talkReply(createTalkState({ style: 'plain', seed: line }), line).text;
-    assert.match(text, /^YES$/m, `${line} missing YES`);
-    assert.match(text, /^NO$/m, `${line} missing NO`);
+    assert.match(text, /^MAYBE$/m, `${line} missing MAYBE`);
+    assert.match(text, /^ALSO MAYBE$/m, `${line} missing ALSO MAYBE`);
     assert.doesNotMatch(text, /\b(happy to help|as an ai|the winner is|yes wins|no wins|i conclude)\b/i);
-    const yesAt = text.indexOf('\nYES\n');
-    const noAt = text.indexOf('\nNO\n');
+    const yesAt = text.indexOf('\nMAYBE\n');
+    const noAt = text.indexOf('\nALSO MAYBE\n');
     assert.ok(yesAt > 0 && noAt > 0 && yesAt !== noAt, `${line} did not print two sides`);
   }
 });
 
 test('a talk beat is an essay with reasons and evidence on both sides', () => {
   const reply = talkReply(createTalkState({ seed: 'essay', style: 'plain' }), 'pineapple on pizza');
-  assert.match(reply.text, /^Yes to pineapple on pizza\.$/m);
-  assert.match(reply.text, /^No to pineapple on pizza\.$/m);
+  assert.match(reply.text, /^Maybe pineapple on pizza\.$/m);
+  assert.match(reply.text, /^Also maybe pineapple on pizza\.$/m);
   assert.match(reply.text, /^1\. /m);
   assert.match(reply.text, /^2\. /m);
   assert.match(reply.text, /^3\. /m);
   const evidence = reply.text.match(/^ {3}Check: /gm);
   assert.equal(evidence?.length, 6);
-  const yesAt = reply.text.indexOf('\nYES\n');
-  const noAt = reply.text.indexOf('\nNO\n');
-  const first = yesAt < noAt ? 'YES' : 'NO';
-  const firstBlock = first === 'YES'
+  const yesAt = reply.text.indexOf('\nMAYBE\n');
+  const noAt = reply.text.indexOf('\nALSO MAYBE\n');
+  const first = yesAt < noAt ? 'MAYBE' : 'ALSO MAYBE';
+  const firstBlock = first === 'MAYBE'
     ? reply.text.slice(yesAt, noAt)
     : reply.text.slice(noAt, yesAt);
-  const secondBlock = first === 'YES'
+  const secondBlock = first === 'MAYBE'
     ? reply.text.slice(noAt)
     : reply.text.slice(yesAt);
   assert.equal((firstBlock.match(/^ {3}Check: /gm) || []).length, 3);
@@ -696,8 +701,8 @@ test('the page treats the box as the thing even if you tap yes first', () => {
   const reply = talkAct(createTalkState(), 'yes', 'pineapple on pizza');
   assert.match(reply.text, /You said pineapple on pizza/);
   assert.match(reply.text, /You said yes/);
-  const yesAt = reply.text.indexOf('\nYES\n');
-  const noAt = reply.text.indexOf('\nNO\n');
+  const yesAt = reply.text.indexOf('\nMAYBE\n');
+  const noAt = reply.text.indexOf('\nALSO MAYBE\n');
   assert.ok(noAt > 0 && yesAt > noAt);
 });
 
@@ -705,7 +710,7 @@ test('arguing the same thing again is another pair, not a reset', () => {
   const first = talkAct(createTalkState({ seed: 'same' }), 'argue', 'getting a dog');
   const again = talkAct(first.state, 'argue', 'getting a dog');
   assert.match(first.text, /You said getting a dog/);
-  assert.match(again.text, /^YES$/m);
+  assert.match(again.text, /^MAYBE$/m);
   assert.match(again.text, /Check:/);
   assert.doesNotMatch(again.text, /You said getting a dog/);
 });
@@ -714,10 +719,10 @@ test('unknown lean flips a coin for who speaks first', () => {
   const first = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
   const again = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
   assert.equal(first.text, again.text);
-  assert.match(first.text, /(Heads|Tails)\. (YES|NO) first\./);
+  assert.match(first.text, /(Heads|Tails)\. (MAYBE|ALSO MAYBE) first\./);
   const heads = /Heads/.test(first.text);
-  const yesAt = first.text.indexOf('\nYES\n');
-  const noAt = first.text.indexOf('\nNO\n');
+  const yesAt = first.text.indexOf('\nMAYBE\n');
+  const noAt = first.text.indexOf('\nALSO MAYBE\n');
   if (heads) assert.ok(yesAt > 0 && yesAt < noAt);
   else assert.ok(noAt > 0 && noAt < yesAt);
   const leaned = talkReply(first.state, 'yes');

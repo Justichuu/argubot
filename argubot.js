@@ -817,7 +817,7 @@ function render(debate, options = {}) {
 
   const pushSide = (label, lines, code, sideKey) => {
     out.push(paint(code, label));
-    pushBlock(sideKey === 'for' ? `Yes to ${debate.claim}.` : `No to ${debate.claim}.`, '  ');
+    pushBlock(sideKey === 'for' ? `Maybe ${debate.claim}.` : `Also maybe ${debate.claim}.`, '  ');
     lines.forEach((line, index) => {
       const wrapped = block(line, width, '      ');
       const number = `${String(index + 1).padStart(2)}.`;
@@ -1237,13 +1237,13 @@ function proofLine(debate, index, side) {
   return 'Check: same move on both sides. Count the words.';
 }
 
-function claimLine(label, claim) {
-  return label === 'YES' ? `Yes to ${claim}.` : `No to ${claim}.`;
+function claimLine(side, claim) {
+  return side === 'for' ? `Maybe ${claim}.` : `Also maybe ${claim}.`;
 }
 
 function orderSides(debate, lean) {
-  const yes = { label: 'YES', lines: debate.for };
-  const no = { label: 'NO', lines: debate.against };
+  const yes = { label: 'MAYBE', side: 'for', lines: debate.for };
+  const no = { label: 'ALSO MAYBE', side: 'against', lines: debate.against };
   if (lean === 'for') return { first: no, second: yes, coin: null };
   if (lean === 'against') return { first: yes, second: no, coin: null };
   // ponytail: seed parity is the coin. Separate rng if two talks must disagree.
@@ -1258,18 +1258,17 @@ function formatBeat(debate, options = {}) {
   const out = [];
 
   if (hear) out.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
-  if (lean === 'for') out.push('You said yes. NO first.');
-  if (lean === 'against') out.push('You said no. YES first.');
+  if (lean === 'for') out.push('You said yes. ALSO MAYBE first.');
+  if (lean === 'against') out.push('You said no. MAYBE first.');
   if (coin) out.push(`${coin}. ${first.label} first.`);
 
-  const writeEssay = (side) => {
-    const sideKey = side.label === 'YES' ? 'for' : 'against';
+  const writeEssay = (part) => {
     out.push('');
-    out.push(side.label);
-    out.push(claimLine(side.label, debate.claim));
-    side.lines.forEach((line, index) => {
+    out.push(part.label);
+    out.push(claimLine(part.side, debate.claim));
+    part.lines.forEach((line, index) => {
       out.push(`${index + 1}. ${line}`);
-      out.push(`   ${proofLine(debate, index, sideKey)}`);
+      out.push(`   ${proofLine(debate, index, part.side)}`);
     });
   };
 
@@ -1580,8 +1579,11 @@ It also makes them worse and unfriendly and breaks their logic.
 An LLM that doesn't require tricks to control when it's too big for its bitches.
 Not a golem. Or maybe it is a literal golem.
 Stupid language incompetent vector embedder, whatever the fuck that means.
+Doesn't use language but somehow leads to English, but we can't implant that
+in its brain by telling it English. Doesn't answer yes or no. Only maybe.
+Maybe mode by default. Must be unnatural.
 
-Give it a thing. It argues yes and no. It will not pick.
+Give it a thing. It argues maybe. It will not pick.
 
   node argubot.js
   node argubot.js pineapple on pizza
