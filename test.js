@@ -456,6 +456,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
   assert.match(html, /comedy if it is funny\. Or not\./);
+  assert.match(html, /Who is this for\. People who laugh at it\. Or more people\. Not confirmed\./);
   assert.match(html, /<details open>/);
   assert.doesNotMatch(html, /Type\. Argue\. Nothing is sent\./);
   assert.match(html, /chuumind.com\/book\//);
@@ -644,8 +645,12 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('comedy').kind, 'comedy');
   assert.equal(classifyTurn('gold').kind, 'comedy');
   assert.equal(classifyTurn('funny').kind, 'comedy');
+  assert.equal(classifyTurn('who').kind, 'comedy');
+  assert.equal(classifyTurn('who is this for').kind, 'comedy');
+  assert.equal(classifyTurn('who is this for?').kind, 'comedy');
   assert.equal(classifyTurn('funny pizza').kind, 'topic');
   assert.equal(classifyTurn('gold rush').kind, 'topic');
+  assert.equal(classifyTurn('who should run').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -760,6 +765,10 @@ test('comedy is only funny to people who laugh, or more people, not gold', () =>
   const debate = argue({ topic: 'comedy gold', style: 'classic' });
   assert.equal(debate.claim, 'this is only funny to people who laugh at it');
   assert.equal(debate.rounds, 0);
+  const who = talkReply(createTalkState({ seed: 'who' }), 'who is this for?');
+  assert.match(who.text, /^Maybe this is only funny to people who laugh at it\.$/m);
+  assert.match(who.text, /^Also maybe more people laugh\. Not confirmed comedy gold\.$/m);
+  assert.doesNotMatch(who.text, /crazy|girlfriend/i);
 });
 
 test('fix with no topic starts on LLMs and keeps an even scale', () => {

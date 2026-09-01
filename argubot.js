@@ -1254,7 +1254,7 @@ const FIX = /^(fix)$/i;
 const FIX_TOPIC = 'LLMs need to be fixed';
 const METAPHOR = /^(metaphor)$/i;
 const METAPHOR_TOPIC = 'Metaphor is a metaphor for metaphor';
-const COMEDY = /^(comedy|gold|funny)$/i;
+const COMEDY = /^(comedy|gold|funny|who|who is this for)[.?]*$/i;
 const COMEDY_TOPIC = 'this is only funny to people who laugh at it';
 
 function isMetaphorClaim(claim) {
@@ -1263,7 +1263,7 @@ function isMetaphorClaim(claim) {
 
 function isComedyClaim(claim) {
   const line = String(claim ?? '').trim().replace(/[.!?]+$/, '');
-  return /^(this is only funny to people who laugh at it|not confirmed comedy gold|comedy gold)$/i.test(line);
+  return /^(this is only funny to people who laugh at it|not confirmed comedy gold|comedy gold|who is this for)$/i.test(line);
 }
 
 function isRedundantTalk(claim) {
@@ -1321,6 +1321,7 @@ const SLASH_KIND = {
   comedy: 'comedy',
   gold: 'comedy',
   funny: 'comedy',
+  who: 'comedy',
 };
 
 function detectLean(text) {
@@ -1389,7 +1390,7 @@ function openingLines() {
 
 function helpLines() {
   return [
-    'Type it. yes or no if you have a side. more for more. fix for a fix. metaphor for a metaphor. comedy if it is funny. Or not. done to leave.',
+    'Type it. yes or no if you have a side. more for more. fix for a fix. metaphor for a metaphor. comedy if it is funny. Or not. who is this for. done to leave.',
     'Solutions are uncensored. No weights. No bias. Even scale.',
   ];
 }
