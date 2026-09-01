@@ -504,6 +504,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /id="argue"[^>]*title="Both sides\."/);
   assert.match(html, /id="yes"[^>]*title="Your side\."/);
   assert.match(html, /id="no"[^>]*title="Your side\."/);
+  assert.match(html, /id="maybe"[^>]*title="Gray\."/);
   assert.match(html, /id="more"[^>]*title="More\."/);
   assert.match(html, /id="done"[^>]*title="Out\."/);
   assert.match(html, /content: attr\(title\)/);
@@ -617,9 +618,12 @@ test('the html page can sit on chuumind.com', () => {
   assert.doesNotMatch(src, /await wait\(28\)/);
   assert.match(src, /embedVec/);
   assert.match(src, /vec coin/);
+  assert.match(src, /id === 'maybe'/);
   assert.match(src, /speakLine/);
   assert.match(html, /#out \.vec/);
   assert.match(html, /@keyframes coin-spin/);
+  assert.doesNotMatch(html, /rotateY/);
+  assert.match(html, /#out \.vec\.coin \{/);
   assert.match(html, /@keyframes think-draw/);
   assert.match(html, /@keyframes vec-draw/);
   assert.match(html, /prefers-reduced-motion: reduce/);
@@ -719,9 +723,13 @@ test('the command list is printable', () => {
 test('lean words are not topics, and topics are not leans', () => {
   assert.equal(detectLean('yes'), 'for');
   assert.equal(detectLean('no'), 'against');
+  assert.equal(detectLean('maybe'), 'maybe');
   assert.equal(detectLean('but that sounds expensive'), 'against');
   assert.equal(detectLean('whether yes men are useful'), null);
+  assert.equal(detectLean('maybe we should get a dog'), null);
   assert.equal(classifyTurn('yes').kind, 'lean');
+  assert.equal(classifyTurn('maybe').kind, 'lean');
+  assert.equal(classifyTurn('maybe we should get a dog').kind, 'topic');
   assert.equal(classifyTurn('whether yes men are useful').kind, 'topic');
   assert.equal(classifyTurn('done').kind, 'exit');
   assert.equal(classifyTurn('3').kind, 'exit');
@@ -810,6 +818,17 @@ test('leaning no still argues both sides and does not lead with no', () => {
   const noAt = leaned.text.indexOf('\nNO\n');
   assert.ok(yesAt > 0 && noAt > yesAt, 'YES should speak first when the person said no');
   assert.match(leaned.text, /You said no\. YES first\./);
+});
+
+test('leaning maybe leads with maybe and does not flip a coin', () => {
+  const started = talkReply(createTalkState(), 'standing desks');
+  const leaned = talkReply(started.state, 'maybe');
+  const maybeAt = leaned.text.search(/^MAYBE$/m);
+  const yesAt = leaned.text.search(/^YES$/m);
+  const noAt = leaned.text.search(/^NO$/m);
+  assert.ok(maybeAt >= 0 && maybeAt < yesAt && yesAt < noAt);
+  assert.match(leaned.text, /You said maybe\. MAYBE first\./);
+  assert.doesNotMatch(leaned.text, /bot flips coin|bot lands on/);
 });
 
 test('done is always a way out', () => {
@@ -1261,6 +1280,17 @@ test('the page treats the box as the thing even if you tap yes first', () => {
   const yesAt = reply.text.indexOf('\nYES\n');
   const noAt = reply.text.indexOf('\nNO\n');
   assert.ok(noAt > 0 && yesAt > noAt);
+});
+
+test('the page treats the box as the thing even if you tap maybe first', () => {
+  const reply = talkAct(createTalkState(), 'maybe', 'pineapple on pizza');
+  assert.match(reply.text, /You said pineapple on pizza/);
+  assert.match(reply.text, /You said maybe\. MAYBE first\./);
+  const maybeAt = reply.text.search(/^MAYBE$/m);
+  const yesAt = reply.text.search(/^YES$/m);
+  const noAt = reply.text.search(/^NO$/m);
+  assert.ok(maybeAt >= 0 && maybeAt < yesAt && yesAt < noAt);
+  assert.doesNotMatch(reply.text, /bot flips coin|bot lands on/);
 });
 
 test('arguing the same thing again is another pair, not a reset', () => {

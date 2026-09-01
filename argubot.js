@@ -1414,12 +1414,13 @@ function detectLean(text) {
   if (/^(yes|yeah|yep|yup|agree|true)\b/i.test(raw)) return 'for';
   if (/^i (agree|like it)\b/i.test(raw)) return 'for';
   if (/^i want\b/i.test(raw) && raw.split(/\s+/).length <= 4) return 'for';
+  if (/^(maybe|perhaps)[.!?]*$/i.test(raw)) return 'maybe';
   return null;
 }
 
 function isMostlyLean(text) {
   const t = String(text).trim();
-  if (/^(yes|yeah|yep|yup|no|nah|nope|agree|disagree|true|wrong)[.!?]*$/i.test(t)) return true;
+  if (/^(yes|yeah|yep|yup|no|nah|nope|agree|disagree|true|wrong|maybe|perhaps)[.!?]*$/i.test(t)) return true;
   if (/^but\b/i.test(t)) return true;
   if (/^i (agree|disagree|like it|hate it|don't|dont)\b/i.test(t) && t.split(/\s+/).length <= 8) {
     return true;
@@ -1475,7 +1476,7 @@ function openingLines() {
 
 function helpLines() {
   return [
-    'Type it. yes or no if you have a side. more for more. done to leave. earth if none of this makes sense.',
+    'Type it. yes, no, or maybe if you have a side. more for more. done to leave. earth if none of this makes sense.',
     'Solutions are uncensored. No weights. No bias. Even scale.',
   ];
 }
@@ -1589,6 +1590,7 @@ function orderDefenses(debate, lean) {
   const maybe = { label: 'MAYBE', side: 'maybe', lines: [] };
   if (lean === 'for') return { parts: [no, yes, maybe], coin: null };
   if (lean === 'against') return { parts: [yes, no, maybe], coin: null };
+  if (lean === 'maybe') return { parts: [maybe, yes, no], coin: null };
   const coin = coinFace(debate.seed);
   if (coin === 'tails') return { parts: [no, yes, maybe], coin };
   if (coin === 'edge') return { parts: [maybe, yes, no], coin };
@@ -1604,6 +1606,7 @@ function formatBeat(debate, options = {}) {
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
   if (lean === 'for') extras.push('You said yes. NO first.');
   if (lean === 'against') extras.push('You said no. YES first.');
+  if (lean === 'maybe') extras.push('You said maybe. MAYBE first.');
   if (coin) {
     extras.push('**bot flips coin**');
     extras.push(`**bot lands on ${coin}**`);
@@ -1756,7 +1759,7 @@ function talkReply(state, raw) {
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }
   if (turn.kind === 'lean') {
-    if (!next.topic) return { state: next, exit: false, text: 'Type it first. Then yes or no.' };
+    if (!next.topic) return { state: next, exit: false, text: 'Type it first. Then yes, no, or maybe.' };
     next.lastLean = turn.lean;
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: false, lean: turn.lean }) };
@@ -1781,8 +1784,8 @@ function talkAct(state, action, box = '') {
     return talkReply(now, text);
   }
   if (action === 'more') return talkReply(now, fresh ? text : 'more');
-  if ((action === 'yes' || action === 'no') && fresh) {
-    const lean = action === 'yes' ? 'for' : 'against';
+  if ((action === 'yes' || action === 'no' || action === 'maybe') && fresh) {
+    const lean = action === 'yes' ? 'for' : action === 'no' ? 'against' : 'maybe';
     const next = { ...now, topic: text, lastLean: lean, turn: now.turn + 1 };
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean }) };
   }
@@ -2515,7 +2518,7 @@ if (typeof document !== 'undefined') {
     });
     form.addEventListener('click', (ev) => {
       const id = ev.target && ev.target.id;
-      if (id === 'yes' || id === 'no' || id === 'more' || id === 'done') say(id);
+      if (id === 'yes' || id === 'no' || id === 'maybe' || id === 'more' || id === 'done') say(id);
     });
     try { thing.focus(); } catch (err) {}
   }
