@@ -456,7 +456,8 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
   assert.match(html, /comedy if it is funny\. Or not\./);
-  assert.match(html, /Who is this for\. People who laugh at it\. Or more people\. Not confirmed\./);
+  assert.match(html, /human if technology takes away\. Or not\./);
+  assert.match(html, /Who is this for\. People who laugh at it\. A feature you could add\. Or a normal thing for normal people\. Not confirmed\./);
   assert.match(html, /<details open>/);
   assert.doesNotMatch(html, /Type\. Argue\. Nothing is sent\./);
   assert.match(html, /chuumind.com\/book\//);
@@ -648,9 +649,18 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('who').kind, 'comedy');
   assert.equal(classifyTurn('who is this for').kind, 'comedy');
   assert.equal(classifyTurn('who is this for?').kind, 'comedy');
+  assert.equal(classifyTurn('feature').kind, 'comedy');
+  assert.equal(classifyTurn('normal').kind, 'comedy');
+  assert.equal(classifyTurn('customize').kind, 'comedy');
+  assert.equal(classifyTurn('human').kind, 'human');
+  assert.equal(classifyTurn('tech').kind, 'human');
+  assert.equal(classifyTurn('technology').kind, 'human');
   assert.equal(classifyTurn('funny pizza').kind, 'topic');
   assert.equal(classifyTurn('gold rush').kind, 'topic');
   assert.equal(classifyTurn('who should run').kind, 'topic');
+  assert.equal(classifyTurn('human rights').kind, 'topic');
+  assert.equal(classifyTurn('tech support').kind, 'topic');
+  assert.equal(classifyTurn('feature pizza').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -751,24 +761,49 @@ test('comedy is only funny to people who laugh, or more people, not gold', () =>
   assert.equal(classifyTurn('/funny').kind, 'comedy');
   const reply = talkReply(createTalkState({ seed: 'comedy' }), 'comedy');
   assert.match(reply.text, /You said this is only funny to people who laugh at it/);
-  assert.match(reply.text, /^Maybe this is only funny to people who laugh at it\.$/m);
-  assert.match(reply.text, /^Also maybe more people laugh\. Not confirmed comedy gold\.$/m);
+  assert.match(reply.text, /^Maybe this is only funny to people who laugh at it\. A feature you could add\.$/m);
+  assert.match(reply.text, /^Also maybe this is a normal thing for normal people\. Not confirmed comedy gold\.$/m);
   assert.doesNotMatch(reply.text, /^1\. /m);
   assert.doesNotMatch(reply.text, /crazy|girlfriend|Your mom would|ancestors|0\.4%|I did this is only funny/i);
   const gold = talkReply(createTalkState({ seed: 'gold' }), 'gold');
-  assert.match(gold.text, /^Maybe this is only funny to people who laugh at it\.$/m);
+  assert.match(gold.text, /^Maybe this is only funny to people who laugh at it\. A feature you could add\.$/m);
   const named = talkReply(talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza').state, 'funny');
-  assert.match(named.text, /^Maybe this is only funny to people who laugh at it\.$/m);
+  assert.match(named.text, /^Maybe this is only funny to people who laugh at it\. A feature you could add\.$/m);
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
   const typed = talkReply(createTalkState({ seed: 'typed' }), 'not confirmed comedy gold');
-  assert.match(typed.text, /^Also maybe more people laugh\. Not confirmed comedy gold\.$/m);
+  assert.match(typed.text, /^Also maybe this is a normal thing for normal people\. Not confirmed comedy gold\.$/m);
   const debate = argue({ topic: 'comedy gold', style: 'classic' });
   assert.equal(debate.claim, 'this is only funny to people who laugh at it');
   assert.equal(debate.rounds, 0);
   const who = talkReply(createTalkState({ seed: 'who' }), 'who is this for?');
-  assert.match(who.text, /^Maybe this is only funny to people who laugh at it\.$/m);
-  assert.match(who.text, /^Also maybe more people laugh\. Not confirmed comedy gold\.$/m);
+  assert.match(who.text, /^Maybe this is only funny to people who laugh at it\. A feature you could add\.$/m);
+  assert.match(who.text, /^Also maybe this is a normal thing for normal people\. Not confirmed comedy gold\.$/m);
   assert.doesNotMatch(who.text, /crazy|girlfriend/i);
+  const feature = talkReply(createTalkState({ seed: 'feature' }), 'feature');
+  assert.match(feature.text, /^Also maybe this is a normal thing for normal people\. Not confirmed comedy gold\.$/m);
+  const normal = talkReply(createTalkState({ seed: 'normal' }), 'normal');
+  assert.match(normal.text, /^Maybe this is only funny to people who laugh at it\. A feature you could add\.$/m);
+});
+
+test('human is technology taking away, or a normal thing you could add', () => {
+  assert.equal(classifyTurn('/human').kind, 'human');
+  assert.equal(classifyTurn('/tech').kind, 'human');
+  assert.equal(classifyTurn('/technology').kind, 'human');
+  const reply = talkReply(createTalkState({ seed: 'human' }), 'human');
+  assert.match(reply.text, /You said Using technology takes away from the human experience in general/);
+  assert.match(reply.text, /^Maybe using technology takes away from the human experience in general\.$/m);
+  assert.match(reply.text, /^Also maybe technology is a normal thing for normal people\. Or a feature you could add\.$/m);
+  assert.doesNotMatch(reply.text, /^1\. /m);
+  assert.doesNotMatch(reply.text, /crazy|girlfriend|Your mom would|ancestors|0\.4%/i);
+  const typed = talkReply(createTalkState({ seed: 'typed' }), 'Using technology takes away from the human experience in general.');
+  assert.match(typed.text, /^Maybe using technology takes away from the human experience in general\.$/m);
+  const debate = argue({ topic: 'Using technology takes away from the human experience in general', style: 'classic' });
+  assert.equal(debate.claim, 'Using technology takes away from the human experience in general');
+  assert.equal(debate.rounds, 0);
+  const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
+  const named = talkReply(started.state, 'tech');
+  assert.match(named.text, /^Maybe using technology takes away from the human experience in general\.$/m);
+  assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
 });
 
 test('fix with no topic starts on LLMs and keeps an even scale', () => {
