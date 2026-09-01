@@ -1551,13 +1551,42 @@ function lineLimit(value) {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : LINE_LIMIT_BASELINE;
 }
 
+// A real coin is a cylinder. Nickel: 21.21mm across, 1.95mm thick.
+// Not a weight. The band is geometry.
+const COIN_D = 1;
+const COIN_H = 1.95 / 21.21;
+const COIN_BAND = COIN_H / Math.hypot(COIN_H, COIN_D);
+
+function entropyWord() {
+  const buf = new Uint32Array(1);
+  const web = globalThis.crypto;
+  if (web && typeof web.getRandomValues === 'function') {
+    web.getRandomValues(buf);
+    return buf[0] >>> 0;
+  }
+  return hashString(`t:${Date.now()}`) >>> 0;
+}
+
+function tossWord(seed) {
+  if (seed === undefined || seed === null || seed === '') return entropyWord();
+  return hashString(String(seed)) >>> 0;
+}
+
+// Archimedes: height on a sphere is uniform on [-1, 1]. That is the proof.
+function landFromZ(z, band = COIN_BAND) {
+  if (z >= band) return 'heads';
+  if (z <= -band) return 'tails';
+  return 'edge';
+}
+
+function coinToss(seed) {
+  const word = tossWord(seed);
+  const z = 2 * ((word + 0.5) / 4294967296) - 1;
+  return { face: landFromZ(z), z, word, band: COIN_BAND };
+}
+
 function coinFace(seed) {
-  const n = Number(seed) >>> 0;
-  // Two faces. Edge is rare, like nature. Not a third of the table.
-  // Steal from neither face: the rare roll ignores the face bit.
-  const rare = Math.imul((n >>> 1) ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
-  if (rare % LINE_LIMIT_BASELINE === 0) return 'edge';
-  return (n & 1) === 0 ? 'heads' : 'tails';
+  return coinToss(seed).face;
 }
 
 function battleName(coin) {
@@ -1589,11 +1618,15 @@ const THINK_SHARDS = [
   'Δ',
 ];
 
-function thinkLines(debate, coin) {
-  const rng = makeRng(hashString(`think:${debate.seed}:${coin}`));
+function thinkLines(debate, toss) {
+  const coin = toss.face;
+  const rng = makeRng(hashString(`think:${debate.seed}:${coin}:${toss.word}`));
   const n = coin === 'edge' ? 6 : 3;
   const lines = [];
   for (let i = 0; i < n; i += 1) lines.push(`\u200b${pick(rng, THINK_SHARDS)}`);
+  lines.push(`\u200b${toss.word.toString(16).padStart(8, '0')}`);
+  lines.push(`\u200b${toss.z.toFixed(3)}`);
+  lines.push(`\u200b±${toss.band.toFixed(3)}`);
   if (coin === 'edge') {
     lines.push('\u200bthe coin stands on its edge');
     lines.push('\u200bevil must not tip the scale');
@@ -1603,24 +1636,25 @@ function thinkLines(debate, coin) {
   return lines;
 }
 
-function orderDefenses(debate, lean) {
+function orderDefenses(debate, lean, tossSeed) {
   const yes = { label: 'YES', side: 'for', lines: debate.for };
   const no = { label: 'NO', side: 'against', lines: debate.against };
   const maybe = { label: 'MAYBE', side: 'maybe', lines: [] };
-  if (lean === 'for') return { parts: [no, yes, maybe], coin: null };
-  if (lean === 'against') return { parts: [yes, no, maybe], coin: null };
-  if (lean === 'maybe') return { parts: [maybe, yes, no], coin: null };
-  const coin = coinFace(debate.seed);
-  if (coin === 'tails') return { parts: [no, yes, maybe], coin };
-  if (coin === 'edge') return { parts: [maybe, yes, no], coin };
-  return { parts: [yes, no, maybe], coin };
+  if (lean === 'for') return { parts: [no, yes, maybe], coin: null, toss: null };
+  if (lean === 'against') return { parts: [yes, no, maybe], coin: null, toss: null };
+  if (lean === 'maybe') return { parts: [maybe, yes, no], coin: null, toss: null };
+  const toss = coinToss(tossSeed ?? debate.seed);
+  const coin = toss.face;
+  if (coin === 'tails') return { parts: [no, yes, maybe], coin, toss };
+  if (coin === 'edge') return { parts: [maybe, yes, no], coin, toss };
+  return { parts: [yes, no, maybe], coin, toss };
 }
 
 function formatBeat(debate, options = {}) {
   const lean = options.lean ?? null;
   const hear = options.hear !== false;
-  const { parts, coin } = orderDefenses(debate, lean);
-  const think = coin ? thinkLines(debate, coin) : [];
+  const { parts, coin, toss } = orderDefenses(debate, lean, options.tossSeed);
+  const think = coin ? thinkLines(debate, toss) : [];
   const extras = [];
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
   if (lean === 'for') extras.push('You said yes. NO first.');
@@ -1671,6 +1705,7 @@ function speakBeat(state, options = {}) {
     hear: options.hear,
     lean: options.lean ?? state.lastLean,
     limit: state.limit,
+    tossSeed: state.live ? entropyWord() : undefined,
   });
 }
 
@@ -1682,6 +1717,7 @@ function createTalkState(options = {}) {
     dissentName: options.dissentName,
     tolerance: Math.max(0, options.tolerance ?? 2),
     seed: options.seed,
+    live: options.live === true,
     turn: 0,
     lastLean: null,
     limit: lineLimit(options.limit),
@@ -2404,18 +2440,44 @@ if (typeof document !== 'undefined') {
       Object.keys(attrs).forEach((key) => el.setAttribute(key, attrs[key]));
       return el;
     };
-    const embedVec = (kind, face) => {
+    const embedVec = (kind, face, z, band) => {
+      if (kind === 'axis') {
+        const svg = svgEl('svg', {
+          class: 'vec axis',
+          viewBox: '0 0 24 24',
+          'aria-hidden': 'true',
+        });
+        const r = 9;
+        const b = Math.max(0, Math.min(1, Number(band) || 0));
+        const zz = Math.max(-1, Math.min(1, Number(z) || 0));
+        const w = r * Math.sqrt(Math.max(0, 1 - b * b));
+        const y1 = (12 - r * b).toFixed(2);
+        const y2 = (12 + r * b).toFixed(2);
+        svg.append(svgEl('path', {
+          class: 'band',
+          d: `M ${12 - w} ${y1} L ${12 + w} ${y1} L ${12 + w} ${y2} L ${12 - w} ${y2} Z`,
+        }));
+        svg.append(svgEl('circle', { class: 'sphere', cx: '12', cy: '12', r: String(r) }));
+        svg.append(svgEl('circle', {
+          class: 'dot',
+          cx: '12',
+          cy: String(12 - r * zz),
+          r: '1.35',
+        }));
+        return svg;
+      }
       const svg = svgEl('svg', {
         class: kind === 'coin' ? `vec coin ${face || 'spin'}` : 'vec think-mark',
         viewBox: '0 0 24 24',
         'aria-hidden': 'true',
       });
       if (kind === 'coin') {
+        const tilt = face === 'edge' ? Math.max(0.12, Math.abs(Number(z) || 0)) : Math.max(0.55, Math.abs(Number(z) || 1));
         svg.append(svgEl('ellipse', {
           class: 'face',
           cx: '12',
           cy: '12',
-          rx: face === 'edge' ? '2.2' : '8',
+          rx: face === 'edge' ? String(Math.max(2.2, 8 * (Number(band) || 0.09))) : String(8 * Math.min(1, tilt)),
           ry: '8',
         }));
       } else {
@@ -2475,6 +2537,8 @@ if (typeof document !== 'undefined') {
       };
       const lines = String(text || '').split('\n');
       const run = async () => {
+        let lastZ = 1;
+        let lastBand = 0.092;
         for (let i = 0; i < lines.length; i += 1) {
           if (my !== streamTok) return;
           if (i > 0) out.insertBefore(document.createTextNode('\n'), caret);
@@ -2482,9 +2546,17 @@ if (typeof document !== 'undefined') {
           const fill = wrap.cloneNode(false);
           out.insertBefore(fill, caret);
           const isThink = wrap.className === 'think';
-          const land = lines[i].match(/\*\*bot lands on (heads|tails|edge)\*\*/);
-          const flip = /\*\*bot flips coin\*\*/.test(lines[i]);
-          if (isThink) fill.append(embedVec('think'));
+          const rawLine = String(lines[i] || '');
+          const body = rawLine.charCodeAt(0) === 0x200b ? rawLine.slice(1) : rawLine;
+          const zHit = isThink && /^(-?\d+\.\d{3})$/.test(body) ? Number(body) : null;
+          const bandHit = isThink ? body.match(/^±(\d+\.\d{3})$/) : null;
+          const hexHit = isThink && /^[0-9a-f]{8}$/.test(body);
+          const land = rawLine.match(/\*\*bot lands on (heads|tails|edge)\*\*/);
+          const flip = /\*\*bot flips coin\*\*/.test(rawLine);
+          if (zHit !== null) lastZ = zHit;
+          if (bandHit) lastBand = Number(bandHit[1]);
+          if (isThink && !hexHit && zHit === null && !bandHit) fill.append(embedVec('think'));
+          if (bandHit) fill.append(embedVec('axis', 'axis', lastZ, lastBand));
           follow();
           const parts = [...wrap.childNodes];
           if (parts.length === 0) await wait(PACE.line);
@@ -2509,7 +2581,7 @@ if (typeof document !== 'undefined') {
             await wait(PACE.land);
           }
           if (land) {
-            fill.append(embedVec('coin', land[1]));
+            fill.append(embedVec('coin', land[1], lastZ, lastBand));
             follow();
             await wait(PACE.land);
           }
@@ -2524,13 +2596,13 @@ if (typeof document !== 'undefined') {
       };
       run();
     };
-    let state = createTalkState({ style: 'plain' });
+    let state = createTalkState({ style: 'plain', live: true });
     const say = (action) => {
       const reply = talkAct(state, action, thing.value);
       state = reply.state;
       show(reply.text, true);
       if (reply.exit) {
-        state = createTalkState({ style: 'plain' });
+        state = createTalkState({ style: 'plain', live: true });
         thing.value = '';
         try { thing.focus(); } catch (err) {}
       }
@@ -2589,7 +2661,12 @@ export {
   openingLines,
   formatBeat,
   coinFace,
+  coinToss,
+  landFromZ,
   battleName,
+  COIN_H,
+  COIN_D,
+  COIN_BAND,
   LINE_LIMIT_BASELINE,
   lineLimit,
   runTalk,

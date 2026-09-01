@@ -38,8 +38,13 @@ import {
   detectLean,
   openingLines,
   coinFace,
+  coinToss,
+  landFromZ,
   battleName,
   formatBeat,
+  COIN_H,
+  COIN_D,
+  COIN_BAND,
   LINE_LIMIT_BASELINE,
   runTalk,
   runValidate,
@@ -618,9 +623,15 @@ test('the html page can sit on chuumind.com', () => {
   assert.doesNotMatch(src, /await wait\(28\)/);
   assert.match(src, /embedVec/);
   assert.match(src, /vec coin/);
+  assert.match(src, /vec axis/);
+  assert.match(src, /getRandomValues/);
+  assert.match(src, /Math\.hypot/);
+  assert.match(src, /live: true/);
+  assert.doesNotMatch(src, /rare % LINE_LIMIT|LINE_LIMIT_BASELINE === 0/);
   assert.match(src, /id === 'maybe'/);
   assert.match(src, /speakLine/);
   assert.match(html, /#out \.vec/);
+  assert.match(html, /#out \.vec\.axis/);
   assert.match(html, /@keyframes coin-spin/);
   assert.doesNotMatch(html, /rotateY/);
   assert.match(html, /#out \.vec\.coin \{/);
@@ -1357,14 +1368,6 @@ test('heads and tails are faces; MAYBE is only the edge', () => {
   assert.equal(battleName('tails'), 'evod');
   assert.equal(battleName('edge'), 'livvil');
   assert.equal('livvil'.split('').reverse().join(''), 'livvil');
-  const tally = { heads: 0, tails: 0, edge: 0 };
-  for (let n = 0; n < 4096; n += 1) tally[coinFace(n)] += 1;
-  assert.equal(tally.heads + tally.tails + tally.edge, 4096);
-  assert.ok(tally.edge > 0, 'nature still happens');
-  assert.ok(tally.edge < 4096 / 8, 'edge must not be a third of the table');
-  assert.ok(tally.heads > tally.edge && tally.tails > tally.edge);
-  const gap = Math.abs(tally.heads - tally.tails);
-  assert.ok(gap <= tally.edge + 2, 'evil must not tip the scale; leftover is nature');
   const byFace = {};
   for (let i = 0; i < 256; i += 1) {
     const text = talkReply(createTalkState({ seed: `face-${i}` }), 'cars').text;
@@ -1394,6 +1397,43 @@ test('heads and tails are faces; MAYBE is only the edge', () => {
   assert.match(byFace.edge, /^YES$/m);
   assert.match(byFace.edge, /^NO$/m);
   assert.match(formatBeat(argue({ topic: 'cars', seed: 'think-zwsp', rounds: 1 }), { limit: 80 }), /\u200b/);
+});
+
+test('a coin is a cylinder; z is uniform; edge is the band', () => {
+  assert.equal(COIN_BAND, COIN_H / Math.hypot(COIN_H, COIN_D));
+  assert.ok(COIN_BAND > 0 && COIN_BAND < 1 / 8);
+  const N = 4096;
+  const grid = { heads: 0, tails: 0, edge: 0 };
+  for (let i = 0; i < N; i += 1) {
+    const z = 2 * ((i + 0.5) / N) - 1;
+    const face = landFromZ(z);
+    grid[face] += 1;
+    assert.equal(face, z >= COIN_BAND ? 'heads' : z <= -COIN_BAND ? 'tails' : 'edge');
+  }
+  assert.equal(grid.heads, grid.tails);
+  assert.equal(grid.heads + grid.tails + grid.edge, N);
+  assert.ok(Math.abs(grid.edge / N - COIN_BAND) < 2 / N);
+  const hashed = { heads: 0, tails: 0, edge: 0 };
+  for (let n = 0; n < N; n += 1) hashed[coinFace(n)] += 1;
+  assert.equal(hashed.heads + hashed.tails + hashed.edge, N);
+  assert.ok(hashed.edge > 0, 'nature still happens');
+  assert.ok(hashed.heads > hashed.edge && hashed.tails > hashed.edge);
+  assert.ok(Math.abs(hashed.edge / N - COIN_BAND) < 0.03);
+  assert.ok(Math.abs(hashed.heads - hashed.tails) < 200, 'evil must not tip the scale');
+  const once = coinToss('same-toss');
+  const again = coinToss('same-toss');
+  assert.equal(once.face, again.face);
+  assert.equal(once.z, again.z);
+  assert.equal(once.word, again.word);
+  assert.equal(landFromZ(once.z), once.face);
+  const live = createTalkState({ live: true });
+  const a = talkReply(live, 'cars').text.match(/\*\*bot lands on (heads|tails|edge)\*\*/)[1];
+  const b = talkReply(createTalkState({ live: true }), 'cars').text.match(/\*\*bot lands on (heads|tails|edge)\*\*/)[1];
+  assert.match(talkReply(createTalkState({ seed: 'proof' }), 'cars').text, /\u200b[0-9a-f]{8}/);
+  assert.match(talkReply(createTalkState({ seed: 'proof' }), 'cars').text, /\u200b-?\d+\.\d{3}/);
+  assert.match(talkReply(createTalkState({ seed: 'proof' }), 'cars').text, /\u200b±\d+\.\d{3}/);
+  assert.ok(a === 'heads' || a === 'tails' || a === 'edge');
+  assert.ok(b === 'heads' || b === 'tails' || b === 'edge');
 });
 
 test('runTalk leaves when the person is done', async () => {
