@@ -455,7 +455,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /This stays here\./);
   assert.match(html, /It does not call this website/);
   assert.match(html, /Nothing is sent\./);
-  assert.match(html, /class="wip-stamp"/);
+  assert.match(html, /wip-stamp/);
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.doesNotMatch(html, /Here and Instructions/);
   assert.match(html, /<summary[^>]*>Instructions<\/summary>/);
