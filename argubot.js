@@ -2238,15 +2238,20 @@ if (typeof document !== 'undefined') {
     };
     film?.addEventListener('play', wireFilmAudio);
     const silence = () => { try { window.speechSynthesis?.cancel(); } catch (err) {} };
-    const voice = (msg) => {
+    const speakLine = (msg) => {
       if (!speakOn || !window.speechSynthesis) return;
+      const text = String(msg || '').replace(/\u200b/g, '').replace(/\*\*/g, '').trim();
+      if (!text) return;
       try {
-        silence();
-        const utter = new SpeechSynthesisUtterance(String(msg || ''));
+        const utter = new SpeechSynthesisUtterance(text);
         utter.pitch = audio.speakPitch;
-        utter.rate = audio.speakRate;
+        utter.rate = Math.min(1.05, Math.max(0.85, Number(audio.speakRate) || 1));
         window.speechSynthesis.speak(utter);
       } catch (err) {}
+    };
+    const voice = (msg) => {
+      silence();
+      speakLine(msg);
     };
     const writeHash = () => {
       const parts = [
@@ -2365,6 +2370,33 @@ if (typeof document !== 'undefined') {
     if (flags.includes('head') && filmWrap) filmWrap.open = true;
     let streamTok = 0;
     const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+    // Human paced always. About talking speed, not a dump.
+    const PACE = { word: 320, think: 96, line: 260, land: 720 };
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const svgEl = (name, attrs) => {
+      const el = document.createElementNS(SVG_NS, name);
+      Object.keys(attrs).forEach((key) => el.setAttribute(key, attrs[key]));
+      return el;
+    };
+    const embedVec = (kind, face) => {
+      const svg = svgEl('svg', {
+        class: kind === 'coin' ? `vec coin ${face || 'spin'}` : 'vec think-mark',
+        viewBox: '0 0 24 24',
+        'aria-hidden': 'true',
+      });
+      if (kind === 'coin') {
+        svg.append(svgEl('ellipse', {
+          class: 'face',
+          cx: '12',
+          cy: '12',
+          rx: face === 'edge' ? '2.2' : '8',
+          ry: '8',
+        }));
+      } else {
+        svg.append(svgEl('path', { d: 'M4 16 L10 8 L14 13 L20 5' }));
+      }
+      return svg;
+    };
     const paintLine = (line) => {
       const wrap = document.createElement('span');
       const raw = String(line || '');
@@ -2387,12 +2419,33 @@ if (typeof document !== 'undefined') {
       const my = ++streamTok;
       out.replaceChildren();
       out.setAttribute('aria-busy', 'true');
+      silence();
       const caret = document.createElement('span');
       caret.className = 'caret';
       caret.setAttribute('aria-hidden', 'true');
       out.append(caret);
       const follow = () => {
         try { caret.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (err) {}
+      };
+      const writeSlow = async (dest, raw, isThink) => {
+        if (isThink) {
+          for (const ch of raw) {
+            if (my !== streamTok) return;
+            dest.textContent += ch;
+            follow();
+            await wait(PACE.think);
+          }
+          return;
+        }
+        const words = String(raw || '').split(/(\s+)/);
+        for (const word of words) {
+          if (my !== streamTok) return;
+          dest.textContent += word;
+          if (word.trim()) {
+            follow();
+            await wait(PACE.word);
+          }
+        }
       };
       const lines = String(text || '').split('\n');
       const run = async () => {
@@ -2403,42 +2456,44 @@ if (typeof document !== 'undefined') {
           const fill = wrap.cloneNode(false);
           out.insertBefore(fill, caret);
           const isThink = wrap.className === 'think';
-          if (/\*\*bot lands on /.test(lines[i])) await wait(240);
+          const land = lines[i].match(/\*\*bot lands on (heads|tails|edge)\*\*/);
+          const flip = /\*\*bot flips coin\*\*/.test(lines[i]);
+          if (isThink) fill.append(embedVec('think'));
           follow();
           const parts = [...wrap.childNodes];
+          if (parts.length === 0) await wait(PACE.line);
           for (const node of parts) {
             if (my !== streamTok) return;
             if (node.nodeType === 3) {
               const dest = document.createTextNode('');
               fill.append(dest);
-              if (isThink) {
-                for (const ch of node.textContent) {
-                  if (my !== streamTok) return;
-                  dest.textContent += ch;
-                  await wait(28);
-                }
-              } else {
-                const words = node.textContent.split(/(\s+)/);
-                for (const word of words) {
-                  if (my !== streamTok) return;
-                  dest.textContent += word;
-                  if (word.trim()) await wait(18);
-                }
-              }
+              await writeSlow(dest, node.textContent, isThink);
             } else {
-              fill.append(node);
-              await wait(/\*\*bot /.test(lines[i]) ? 90 : 40);
+              const el = node.cloneNode(false);
+              fill.append(el);
+              const dest = document.createTextNode('');
+              el.append(dest);
+              await writeSlow(dest, node.textContent || '', false);
             }
             follow();
           }
-          if (isThink) await wait(70);
+          if (flip) {
+            fill.append(embedVec('coin', 'spin'));
+            follow();
+            await wait(PACE.land);
+          }
+          if (land) {
+            fill.append(embedVec('coin', land[1]));
+            follow();
+            await wait(PACE.land);
+          }
+          if (!isThink) speakLine(String(lines[i] || '').replace(/\*\*/g, ''));
+          await wait(PACE.line);
           follow();
         }
         if (my !== streamTok) return;
         caret.remove();
         out.setAttribute('aria-busy', 'false');
-        const heard = String(text || '').replace(/\u200b/g, '').replace(/\*\*/g, '');
-        voice(heard);
         if (moveFocus) try { out.focus(); } catch (err) {}
       };
       run();
