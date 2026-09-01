@@ -1232,11 +1232,16 @@ test('unknown lean flips a coin for who speaks first', () => {
 });
 
 test('heads and tails are faces; MAYBE is only the edge', () => {
-  assert.equal(coinFace(0), 'heads');
-  assert.equal(coinFace(1), 'tails');
-  assert.equal(coinFace(2), 'edge');
+  const tally = { heads: 0, tails: 0, edge: 0 };
+  for (let n = 0; n < 4096; n += 1) tally[coinFace(n)] += 1;
+  assert.equal(tally.heads + tally.tails + tally.edge, 4096);
+  assert.ok(tally.edge > 0, 'nature still happens');
+  assert.ok(tally.edge < 4096 / 8, 'edge must not be a third of the table');
+  assert.ok(tally.heads > tally.edge && tally.tails > tally.edge);
+  const gap = Math.abs(tally.heads - tally.tails);
+  assert.ok(gap <= tally.edge + 2, 'evil must not tip the scale; leftover is nature');
   const byFace = {};
-  for (let i = 0; i < 48; i += 1) {
+  for (let i = 0; i < 256; i += 1) {
     const text = talkReply(createTalkState({ seed: `face-${i}` }), 'cars').text;
     const hit = text.match(/\*\*bot lands on (heads|tails|edge)\*\*/);
     assert.ok(hit, `face-${i} did not land`);
@@ -1251,6 +1256,8 @@ test('heads and tails are faces; MAYBE is only the edge', () => {
   assert.ok(byFace.tails.indexOf('\nNO\n') < byFace.tails.indexOf('\nYES\n'));
   assert.match(byFace.edge, /^MAYBE$/m);
   assert.match(byFace.edge, /the coin stands on its edge/);
+  assert.match(byFace.edge, /evil must not tip the scale/);
+  assert.match(byFace.edge, /it happens anyway in nature/);
   assert.doesNotMatch(byFace.edge, /^YES first\.$/m);
   assert.doesNotMatch(byFace.edge, /^NO first\.$/m);
   assert.match(byFace.edge, /^YES$/m);

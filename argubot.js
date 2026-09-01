@@ -1563,10 +1563,12 @@ function lineLimit(value) {
 }
 
 function coinFace(seed) {
-  const n = (Number(seed) >>> 0) % 3;
-  if (n === 0) return 'heads';
-  if (n === 1) return 'tails';
-  return 'edge';
+  const n = Number(seed) >>> 0;
+  // Two faces. Edge is rare, like nature. Not a third of the table.
+  // Steal from neither face: the rare roll ignores the face bit.
+  const rare = Math.imul((n >>> 1) ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
+  if (rare % LINE_LIMIT_BASELINE === 0) return 'edge';
+  return (n & 1) === 0 ? 'heads' : 'tails';
 }
 
 const THINK_SHARDS = [
@@ -1597,7 +1599,11 @@ function thinkLines(debate, coin) {
   const n = coin === 'edge' ? 6 : 3;
   const lines = [];
   for (let i = 0; i < n; i += 1) lines.push(`\u200b${pick(rng, THINK_SHARDS)}`);
-  if (coin === 'edge') lines.push('\u200bthe coin stands on its edge');
+  if (coin === 'edge') {
+    lines.push('\u200bthe coin stands on its edge');
+    lines.push('\u200bevil must not tip the scale');
+    lines.push('\u200bit happens anyway in nature');
+  }
   return lines;
 }
 
@@ -2038,7 +2044,7 @@ Give it a thing. It argues maybe. It will not pick.
 No topic starts a conversation. A topic prints both sides.
 Type done to leave. yes and no lean. If it cannot tell which side you
 are on, it flips a coin. Heads is YES first. Tails is NO first.
-A coin has two faces. Edge is MAYBE.
+A coin has two faces. Edge is rare. MAYBE. Nature, not a weight.
 
   --plain     everyday words (default)
   --classic   debate-club voice
