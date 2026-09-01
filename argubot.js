@@ -1567,22 +1567,66 @@ function entropyWord() {
   return hashString(`t:${Date.now()}`) >>> 0;
 }
 
+function mix32(a, b) {
+  return (Math.imul((a >>> 0) ^ (b >>> 0), 0x9e3779b9) + ((a >>> 16) ^ (b << 5))) >>> 0;
+}
+
+function unit32(word) {
+  return ((word >>> 0) + 0.5) / 4294967296;
+}
+
+// Who flips. Spin, jitter, wobble. A still hand is not a wild hand.
+function handFromWord(word) {
+  const w = word >>> 0;
+  const u = unit32(w);
+  const v = unit32(Math.imul(w, 0x85ebca6b) >>> 0);
+  const q = unit32(Math.imul(w, 0xc2b2ae35) >>> 0);
+  return {
+    word: w,
+    spin: 10 + u * 38,
+    jitter: 0.08 + v * 0.7,
+    wobble: 0.03 + q * 0.25,
+  };
+}
+
+function tossWithHand(hand, throwWord) {
+  const word = throwWord >>> 0;
+  const u = unit32(word);
+  const v = unit32(Math.imul(word, 0x27d4eb2d) >>> 0);
+  const start = (word & 1) === 0 ? 1 : -1;
+  const turns = hand.spin * (1 + (u - 0.5) * 2 * hand.jitter);
+  const phase = turns - Math.floor(turns);
+  const spun = start * Math.cos(2 * Math.PI * phase);
+  const z = Math.max(-1, Math.min(1, (1 - hand.wobble) * spun + hand.wobble * (2 * v - 1)));
+  return {
+    face: landFromZ(z),
+    z,
+    word,
+    start: start === 1 ? 'heads' : 'tails',
+    turns,
+    spin: hand.spin,
+    wobble: hand.wobble,
+    band: COIN_BAND,
+    hand: hand.word,
+  };
+}
+
 function tossWord(seed) {
   if (seed === undefined || seed === null || seed === '') return entropyWord();
   return hashString(String(seed)) >>> 0;
 }
 
-// Archimedes: height on a sphere is uniform on [-1, 1]. That is the proof.
+// Rest geometry. Who flips is tossWithHand. This is only the cylinder.
 function landFromZ(z, band = COIN_BAND) {
   if (z >= band) return 'heads';
   if (z <= -band) return 'tails';
   return 'edge';
 }
 
-function coinToss(seed) {
-  const word = tossWord(seed);
-  const z = 2 * ((word + 0.5) / 4294967296) - 1;
-  return { face: landFromZ(z), z, word, band: COIN_BAND };
+function coinToss(seed, handSeed) {
+  const throwWord = tossWord(seed);
+  const hand = handFromWord(tossWord(handSeed != null ? handSeed : `hand:${String(seed)}`));
+  return tossWithHand(hand, throwWord);
 }
 
 function coinFace(seed) {
@@ -1624,6 +1668,9 @@ function thinkLines(debate, toss) {
   const n = coin === 'edge' ? 6 : 3;
   const lines = [];
   for (let i = 0; i < n; i += 1) lines.push(`\u200b${pick(rng, THINK_SHARDS)}`);
+  lines.push(`\u200bh${toss.hand.toString(16).padStart(8, '0')}`);
+  lines.push(`\u200b${toss.spin.toFixed(1)}`);
+  lines.push(`\u200b${toss.wobble.toFixed(2)}`);
   lines.push(`\u200b${toss.word.toString(16).padStart(8, '0')}`);
   lines.push(`\u200b${toss.z.toFixed(3)}`);
   lines.push(`\u200b±${toss.band.toFixed(3)}`);
@@ -1636,14 +1683,14 @@ function thinkLines(debate, toss) {
   return lines;
 }
 
-function orderDefenses(debate, lean, tossSeed) {
+function orderDefenses(debate, lean, tossSeed, tossReady) {
   const yes = { label: 'YES', side: 'for', lines: debate.for };
   const no = { label: 'NO', side: 'against', lines: debate.against };
   const maybe = { label: 'MAYBE', side: 'maybe', lines: [] };
   if (lean === 'for') return { parts: [no, yes, maybe], coin: null, toss: null };
   if (lean === 'against') return { parts: [yes, no, maybe], coin: null, toss: null };
   if (lean === 'maybe') return { parts: [maybe, yes, no], coin: null, toss: null };
-  const toss = coinToss(tossSeed ?? debate.seed);
+  const toss = tossReady || coinToss(tossSeed ?? debate.seed);
   const coin = toss.face;
   if (coin === 'tails') return { parts: [no, yes, maybe], coin, toss };
   if (coin === 'edge') return { parts: [maybe, yes, no], coin, toss };
@@ -1653,7 +1700,7 @@ function orderDefenses(debate, lean, tossSeed) {
 function formatBeat(debate, options = {}) {
   const lean = options.lean ?? null;
   const hear = options.hear !== false;
-  const { parts, coin, toss } = orderDefenses(debate, lean, options.tossSeed);
+  const { parts, coin, toss } = orderDefenses(debate, lean, options.tossSeed, options.toss);
   const think = coin ? thinkLines(debate, toss) : [];
   const extras = [];
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
@@ -1701,15 +1748,22 @@ function formatBeat(debate, options = {}) {
 }
 
 function speakBeat(state, options = {}) {
+  const hand = handFromWord(state.hand);
+  const throwWord = state.live
+    ? mix32(entropyWord(), tossWord(`when:${state.throwAt ?? 0}`))
+    : tossWord(state.seed === undefined ? `talk:${state.turn}` : `${state.seed}:${state.turn}`);
   return formatBeat(beat(state), {
     hear: options.hear,
     lean: options.lean ?? state.lastLean,
     limit: state.limit,
-    tossSeed: state.live ? entropyWord() : undefined,
+    toss: tossWithHand(hand, throwWord),
   });
 }
 
 function createTalkState(options = {}) {
+  const seeded = options.seed !== undefined;
+  const live = options.live === true;
+  const hand = options.hand ?? tossWord(seeded ? `hand:${options.seed}` : live ? entropyWord() : 'hand:anon');
   return {
     topic: options.topic ? String(options.topic).trim() : '',
     style: STYLE_NAMES.includes(options.style) ? options.style : DEFAULT_STYLE,
@@ -1717,7 +1771,9 @@ function createTalkState(options = {}) {
     dissentName: options.dissentName,
     tolerance: Math.max(0, options.tolerance ?? 2),
     seed: options.seed,
-    live: options.live === true,
+    live,
+    hand,
+    throwAt: options.throwAt,
     turn: 0,
     lastLean: null,
     limit: lineLimit(options.limit),
@@ -1827,9 +1883,9 @@ function talkReply(state, raw) {
 }
 
 // The box is the thing. Buttons act on what is in it.
-function talkAct(state, action, box = '') {
+function talkAct(state, action, box = '', extra = {}) {
   const text = String(box ?? '').trim();
-  const now = { ...state };
+  const now = extra.throwAt != null ? { ...state, throwAt: extra.throwAt } : { ...state };
   const topic = boxTopic(text);
   const fresh = topic !== '' && topic !== now.topic;
 
@@ -2550,12 +2606,14 @@ if (typeof document !== 'undefined') {
           const body = rawLine.charCodeAt(0) === 0x200b ? rawLine.slice(1) : rawLine;
           const zHit = isThink && /^(-?\d+\.\d{3})$/.test(body) ? Number(body) : null;
           const bandHit = isThink ? body.match(/^±(\d+\.\d{3})$/) : null;
-          const hexHit = isThink && /^[0-9a-f]{8}$/.test(body);
+          const hexHit = isThink && /^h?[0-9a-f]{8}$/.test(body);
+          const spinHit = isThink && /^\d+\.\d$/.test(body);
+          const wobbleHit = isThink && /^\d+\.\d{2}$/.test(body);
           const land = rawLine.match(/\*\*bot lands on (heads|tails|edge)\*\*/);
           const flip = /\*\*bot flips coin\*\*/.test(rawLine);
           if (zHit !== null) lastZ = zHit;
           if (bandHit) lastBand = Number(bandHit[1]);
-          if (isThink && !hexHit && zHit === null && !bandHit) fill.append(embedVec('think'));
+          if (isThink && !hexHit && zHit === null && !bandHit && !spinHit && !wobbleHit) fill.append(embedVec('think'));
           if (bandHit) fill.append(embedVec('axis', 'axis', lastZ, lastBand));
           follow();
           const parts = [...wrap.childNodes];
@@ -2598,7 +2656,8 @@ if (typeof document !== 'undefined') {
     };
     let state = createTalkState({ style: 'plain', live: true });
     const say = (action) => {
-      const reply = talkAct(state, action, thing.value);
+      const throwAt = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      const reply = talkAct(state, action, thing.value, { throwAt });
       state = reply.state;
       show(reply.text, true);
       if (reply.exit) {
@@ -2662,6 +2721,8 @@ export {
   formatBeat,
   coinFace,
   coinToss,
+  tossWithHand,
+  handFromWord,
   landFromZ,
   battleName,
   COIN_H,

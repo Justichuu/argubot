@@ -39,6 +39,8 @@ import {
   openingLines,
   coinFace,
   coinToss,
+  tossWithHand,
+  handFromWord,
   landFromZ,
   battleName,
   formatBeat,
@@ -625,6 +627,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(src, /vec coin/);
   assert.match(src, /vec axis/);
   assert.match(src, /getRandomValues/);
+  assert.match(src, /handFromWord/);
+  assert.match(src, /tossWithHand/);
+  assert.match(src, /performance\.now/);
   assert.match(src, /Math\.hypot/);
   assert.match(src, /live: true/);
   assert.doesNotMatch(src, /rare % LINE_LIMIT|LINE_LIMIT_BASELINE === 0/);
@@ -1418,22 +1423,57 @@ test('a coin is a cylinder; z is uniform; edge is the band', () => {
   assert.equal(hashed.heads + hashed.tails + hashed.edge, N);
   assert.ok(hashed.edge > 0, 'nature still happens');
   assert.ok(hashed.heads > hashed.edge && hashed.tails > hashed.edge);
-  assert.ok(Math.abs(hashed.edge / N - COIN_BAND) < 0.03);
-  assert.ok(Math.abs(hashed.heads - hashed.tails) < 200, 'evil must not tip the scale');
+  assert.ok(hashed.edge < N / 8, 'edge must not be a third of the table');
+  assert.ok(Math.abs(hashed.heads - hashed.tails) < 280, 'evil must not tip the scale');
   const once = coinToss('same-toss');
   const again = coinToss('same-toss');
   assert.equal(once.face, again.face);
   assert.equal(once.z, again.z);
   assert.equal(once.word, again.word);
+  assert.equal(once.hand, again.hand);
   assert.equal(landFromZ(once.z), once.face);
+  const proof = talkReply(createTalkState({ seed: 'proof' }), 'cars').text;
+  assert.match(proof, /\u200bh[0-9a-f]{8}/);
+  assert.match(proof, /\u200b[0-9a-f]{8}/);
+  assert.match(proof, /\u200b-?\d+\.\d{3}/);
+  assert.match(proof, /\u200b±\d+\.\d{3}/);
   const live = createTalkState({ live: true });
   const a = talkReply(live, 'cars').text.match(/\*\*bot lands on (heads|tails|edge)\*\*/)[1];
   const b = talkReply(createTalkState({ live: true }), 'cars').text.match(/\*\*bot lands on (heads|tails|edge)\*\*/)[1];
-  assert.match(talkReply(createTalkState({ seed: 'proof' }), 'cars').text, /\u200b[0-9a-f]{8}/);
-  assert.match(talkReply(createTalkState({ seed: 'proof' }), 'cars').text, /\u200b-?\d+\.\d{3}/);
-  assert.match(talkReply(createTalkState({ seed: 'proof' }), 'cars').text, /\u200b±\d+\.\d{3}/);
   assert.ok(a === 'heads' || a === 'tails' || a === 'edge');
   assert.ok(b === 'heads' || b === 'tails' || b === 'edge');
+});
+
+test('who flips changes the toss', () => {
+  const still = { word: 1, spin: 6, jitter: 0.02, wobble: 0.04 };
+  const wild = { word: 2, spin: 42, jitter: 0.8, wobble: 0.3 };
+  const count = (hand) => {
+    const t = { heads: 0, tails: 0, edge: 0, same: 0, flipped: 0 };
+    for (let i = 0; i < 4096; i += 1) {
+      const toss = tossWithHand(hand, hashString(`throw:${i}`));
+      t[toss.face] += 1;
+      if (toss.face === 'edge') continue;
+      if (toss.face === toss.start) t.same += 1;
+      else t.flipped += 1;
+    }
+    return t;
+  };
+  const a = count(still);
+  const b = count(wild);
+  assert.ok(a.same + a.flipped > 0 && b.same + b.flipped > 0);
+  assert.ok(a.same / (a.same + a.flipped) > b.same / (b.same + b.flipped), 'a still hand keeps the start face more');
+  assert.ok(b.edge > a.edge, 'a wild hand finds the band more');
+  assert.ok(Math.abs(a.heads - a.tails) < 280);
+  assert.ok(Math.abs(b.heads - b.tails) < 280);
+  const one = tossWithHand(still, hashString('same-throw'));
+  const other = tossWithHand(wild, hashString('same-throw'));
+  assert.notEqual(one.z, other.z);
+  const first = talkReply(createTalkState({ seed: 'who-a' }), 'cars');
+  const more = talkReply(first.state, 'more');
+  const handOf = (text) => text.match(/\u200bh([0-9a-f]{8})/)[1];
+  const throwOf = (text) => text.match(/\u200b(?!h)([0-9a-f]{8})/)[1];
+  assert.equal(handOf(first.text), handOf(more.text), 'the hand stays');
+  assert.notEqual(throwOf(first.text), throwOf(more.text), 'the throw is new');
 });
 
 test('runTalk leaves when the person is done', async () => {

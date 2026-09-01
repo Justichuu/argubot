@@ -21,6 +21,6 @@ node argubot.js
 ```
 
 The first one prints both sides. The second one talks. Type `done` to leave.
-`yes` `no` `maybe` say your side. If it cannot tell, it flips a coin. A cylinder. z is uniform on the sphere. Edge is the band. Crypto if you did not plant a seed. Heads is YES first. Tails is NO first. Edge is MAYBE. Nature, not a weight.
+`yes` `no` `maybe` say your side. If it cannot tell, it flips a coin. A cylinder. Who flips changes z. Edge is the band. The tap is in the throw. Crypto if you did not plant a seed. Heads is YES first. Tails is NO first. Edge is MAYBE. Nature, not a weight.
 
 Read `argubot.js`. Checks are `test.js`. `npm test`. MIT.
