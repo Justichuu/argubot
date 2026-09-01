@@ -457,7 +457,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
   assert.match(html, /The box is the thing\. Type a thing\./);
   assert.match(html, /I don't know what I did\. Neither do you\./);
-  assert.match(html, /The irony is none of those words make sense\./);
+  assert.doesNotMatch(html, /The irony is|irony is /i);
   assert.match(html, /Who is this for\. People on earth\. Or people who laugh at it\. None of this makes sense to anyone mostly on earth\. Not confirmed\./);
   assert.match(html, /Head is in options\. Off\./);
   assert.doesNotMatch(html, /comedy if it is funny\. Or not\./);
@@ -519,7 +519,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(body, /Not really that funny/);
   assert.match(body, /Not confirmed comedy gold/);
   assert.match(body, /None of this makes sense to anyone mostly on earth ⸮/);
-  assert.match(body, /The irony is none of those words make sense/);
+  assert.doesNotMatch(body, /The irony is|irony is /i);
   assert.ok(body.indexOf('id="thing"') > 0);
   assert.ok(body.indexOf('id="thing"') < body.indexOf('id="out"'));
   assert.ok(html.indexOf('principal of its existence') < html.indexOf('<body>'), 'the long text stays in meta so the page stays small');
