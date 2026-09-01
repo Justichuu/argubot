@@ -1292,7 +1292,7 @@ const COMEDY = /^(comedy|gold|funny|who|who is this for|feature|normal|customize
 const COMEDY_TOPIC = 'this is only funny to people who laugh at it';
 const HUMAN = /^(human|tech|technology)[.?]*$/i;
 const HUMAN_TOPIC = 'Using technology takes away from the human experience in general';
-const EARTH = /^(earth|sense|none of this makes sense|none of this makes sense to anyone mostly on earth)[.?]*$/i;
+const EARTH = /^(earth|sense|⸮|none of this makes sense|none of this makes sense to anyone mostly on earth)[.?⸮]*$/i;
 const EARTH_TOPIC = 'None of this makes sense to anyone mostly on earth';
 
 function isMetaphorClaim(claim) {
@@ -1396,6 +1396,7 @@ const SLASH_KIND = {
   technology: 'human',
   earth: 'earth',
   sense: 'earth',
+  '⸮': 'earth',
 };
 
 function detectLean(text) {

@@ -515,7 +515,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(body, /it's me as a bot/);
   assert.match(body, /Not really that funny/);
   assert.match(body, /Not confirmed comedy gold/);
-  assert.match(body, /None of this makes sense to anyone mostly on earth/);
+  assert.match(body, /None of this makes sense to anyone mostly on earth ⸮/);
   assert.ok(body.indexOf('id="thing"') > 0);
   assert.ok(body.indexOf('id="thing"') < body.indexOf('id="out"'));
   assert.ok(html.indexOf('principal of its existence') < html.indexOf('<body>'), 'the long text stays in meta so the page stays small');
@@ -661,6 +661,9 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('sense').kind, 'earth');
   assert.equal(classifyTurn('none of this makes sense').kind, 'earth');
   assert.equal(classifyTurn('None of this makes sense to anyone mostly on earth').kind, 'earth');
+  assert.equal(classifyTurn('⸮').kind, 'earth');
+  assert.equal(classifyTurn('/⸮').kind, 'earth');
+  assert.equal(classifyTurn('?').kind, 'help');
   assert.equal(classifyTurn('funny pizza').kind, 'topic');
   assert.equal(classifyTurn('gold rush').kind, 'topic');
   assert.equal(classifyTurn('who should run').kind, 'topic');
@@ -834,6 +837,9 @@ test('earth is none of this making sense, or it does to someone', () => {
   const named = talkReply(started.state, 'sense');
   assert.match(named.text, /^Maybe none of this makes sense to anyone mostly on earth\.$/m);
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
+  const mark = talkReply(createTalkState({ seed: 'mark' }), '⸮');
+  assert.match(mark.text, /^Maybe none of this makes sense to anyone mostly on earth\.$/m);
+  assert.match(mark.text, /^Also maybe it makes sense to someone\. Or to people who laugh at it\.$/m);
 });
 
 test('fix with no topic starts on LLMs and keeps an even scale', () => {
