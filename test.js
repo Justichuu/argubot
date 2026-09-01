@@ -455,9 +455,10 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /class="wip-stamp"/);
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
-  assert.match(html, /comedy if it is funny\. Or not\./);
-  assert.match(html, /human if technology takes away\. Or not\./);
-  assert.match(html, /Who is this for\. People who laugh at it\. A feature you could add\. Or a normal thing for normal people\. Not confirmed\./);
+  assert.match(html, /The box is the thing\. Type a thing\./);
+  assert.match(html, /Who is this for\. People on earth\. Or people who laugh at it\. None of this makes sense to anyone mostly on earth\. Not confirmed\./);
+  assert.doesNotMatch(html, /comedy if it is funny\. Or not\./);
+  assert.doesNotMatch(html, /human if technology takes away\. Or not\./);
   assert.match(html, /<details open>/);
   assert.doesNotMatch(html, /Type\. Argue\. Nothing is sent\./);
   assert.match(html, /chuumind.com\/book\//);
@@ -514,6 +515,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(body, /it's me as a bot/);
   assert.match(body, /Not really that funny/);
   assert.match(body, /Not confirmed comedy gold/);
+  assert.match(body, /None of this makes sense to anyone mostly on earth/);
   assert.ok(body.indexOf('id="thing"') > 0);
   assert.ok(body.indexOf('id="thing"') < body.indexOf('id="out"'));
   assert.ok(html.indexOf('principal of its existence') < html.indexOf('<body>'), 'the long text stays in meta so the page stays small');
@@ -655,12 +657,18 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('human').kind, 'human');
   assert.equal(classifyTurn('tech').kind, 'human');
   assert.equal(classifyTurn('technology').kind, 'human');
+  assert.equal(classifyTurn('earth').kind, 'earth');
+  assert.equal(classifyTurn('sense').kind, 'earth');
+  assert.equal(classifyTurn('none of this makes sense').kind, 'earth');
+  assert.equal(classifyTurn('None of this makes sense to anyone mostly on earth').kind, 'earth');
   assert.equal(classifyTurn('funny pizza').kind, 'topic');
   assert.equal(classifyTurn('gold rush').kind, 'topic');
   assert.equal(classifyTurn('who should run').kind, 'topic');
   assert.equal(classifyTurn('human rights').kind, 'topic');
   assert.equal(classifyTurn('tech support').kind, 'topic');
   assert.equal(classifyTurn('feature pizza').kind, 'topic');
+  assert.equal(classifyTurn('earth day').kind, 'topic');
+  assert.equal(classifyTurn('sense of smell').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -803,6 +811,28 @@ test('human is technology taking away, or a normal thing you could add', () => {
   const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
   const named = talkReply(started.state, 'tech');
   assert.match(named.text, /^Maybe using technology takes away from the human experience in general\.$/m);
+  assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
+});
+
+test('earth is none of this making sense, or it does to someone', () => {
+  assert.equal(classifyTurn('/earth').kind, 'earth');
+  assert.equal(classifyTurn('/sense').kind, 'earth');
+  const reply = talkReply(createTalkState({ seed: 'earth' }), 'earth');
+  assert.match(reply.text, /You said None of this makes sense to anyone mostly on earth/);
+  assert.match(reply.text, /^Maybe none of this makes sense to anyone mostly on earth\.$/m);
+  assert.match(reply.text, /^Also maybe it makes sense to someone\. Or to people who laugh at it\.$/m);
+  assert.doesNotMatch(reply.text, /^1\. /m);
+  assert.doesNotMatch(reply.text, /crazy|girlfriend|Your mom would|ancestors|0\.4%/i);
+  const typed = talkReply(createTalkState({ seed: 'typed' }), 'None of this makes sense to anyone mostly on earth.');
+  assert.match(typed.text, /^Maybe none of this makes sense to anyone mostly on earth\.$/m);
+  const short = talkReply(createTalkState({ seed: 'short' }), 'none of this makes sense');
+  assert.match(short.text, /^Also maybe it makes sense to someone\. Or to people who laugh at it\.$/m);
+  const debate = argue({ topic: 'None of this makes sense to anyone mostly on earth', style: 'classic' });
+  assert.equal(debate.claim, 'None of this makes sense to anyone mostly on earth');
+  assert.equal(debate.rounds, 0);
+  const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
+  const named = talkReply(started.state, 'sense');
+  assert.match(named.text, /^Maybe none of this makes sense to anyone mostly on earth\.$/m);
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
 });
 

@@ -791,6 +791,7 @@ function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   if (isMetaphorClaim(trimmed)) return METAPHOR_TOPIC;
   if (isComedyClaim(trimmed)) return COMEDY_TOPIC;
   if (isHumanClaim(trimmed)) return HUMAN_TOPIC;
+  if (isEarthClaim(trimmed)) return EARTH_TOPIC;
   if (isRedundantTalk(trimmed)) return trimmed;
   const claim = style.shapeClaim(trimmed);
   return claim.trim() === '' ? style.defaultTopic : claim;
@@ -858,6 +859,22 @@ function argue(options = {}) {
   }
   if (isHumanClaim(claim)) {
     const sides = humanLines();
+    return {
+      claim,
+      style: styleName,
+      seed,
+      rounds: 0,
+      moves: [],
+      for: sides.for,
+      against: sides.against,
+      dissent: null,
+      moderator: pick(rng, style.moderatorLines),
+      verdict: pick(rng, style.verdictLines),
+      audit: auditDebate(sides.for, sides.against, tolerance),
+    };
+  }
+  if (isEarthClaim(claim)) {
+    const sides = earthLines();
     return {
       claim,
       style: styleName,
@@ -1275,6 +1292,8 @@ const COMEDY = /^(comedy|gold|funny|who|who is this for|feature|normal|customize
 const COMEDY_TOPIC = 'this is only funny to people who laugh at it';
 const HUMAN = /^(human|tech|technology)[.?]*$/i;
 const HUMAN_TOPIC = 'Using technology takes away from the human experience in general';
+const EARTH = /^(earth|sense|none of this makes sense|none of this makes sense to anyone mostly on earth)[.?]*$/i;
+const EARTH_TOPIC = 'None of this makes sense to anyone mostly on earth';
 
 function isMetaphorClaim(claim) {
   return /metaphor is a metaphor for metaphor/i.test(String(claim ?? ''));
@@ -1290,8 +1309,13 @@ function isHumanClaim(claim) {
   return /^using technology takes away from the human experience in general$/i.test(line);
 }
 
+function isEarthClaim(claim) {
+  const line = String(claim ?? '').trim().replace(/[.!?]+$/, '');
+  return /^none of this makes sense(?: to anyone mostly on earth)?$/i.test(line);
+}
+
 function isNamedEssay(claim) {
-  return isMetaphorClaim(claim) || isComedyClaim(claim) || isHumanClaim(claim);
+  return isMetaphorClaim(claim) || isComedyClaim(claim) || isHumanClaim(claim) || isEarthClaim(claim);
 }
 
 function isRedundantTalk(claim) {
@@ -1337,6 +1361,13 @@ function humanLines() {
   };
 }
 
+function earthLines() {
+  return {
+    for: ['Maybe none of this makes sense to anyone mostly on earth.'],
+    against: ['Also maybe it makes sense to someone. Or to people who laugh at it.'],
+  };
+}
+
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
   plain: (claim) => `Okay. You said ${claim}.`,
@@ -1363,6 +1394,8 @@ const SLASH_KIND = {
   human: 'human',
   tech: 'human',
   technology: 'human',
+  earth: 'earth',
+  sense: 'earth',
 };
 
 function detectLean(text) {
@@ -1415,6 +1448,7 @@ function classifyTurn(raw) {
   if (METAPHOR.test(text)) return { kind: 'metaphor' };
   if (COMEDY.test(text)) return { kind: 'comedy' };
   if (HUMAN.test(text)) return { kind: 'human' };
+  if (EARTH.test(text)) return { kind: 'earth' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP_TURN.test(text)) return { kind: 'help' };
@@ -1425,14 +1459,14 @@ function classifyTurn(raw) {
 
 function openingLines() {
   return [
-    'Type it. I will write both sides. A fix, and the problems the fix makes. A metaphor, and nothing. Or something to someone. A comedy. Not confirmed gold. A human. Technology takes away. Or a normal thing. I will not pick.',
+    'Type it. I will write both sides. None of this makes sense to anyone mostly on earth. Or it does, to someone. I will not pick.',
     'Type done when you want out. Chill. Let it go. I let go of the wheel.',
   ];
 }
 
 function helpLines() {
   return [
-    'Type it. yes or no if you have a side. more for more. fix for a fix. metaphor for a metaphor. comedy if it is funny. Or not. who is this for. human if technology takes away. Or not. done to leave.',
+    'Type it. yes or no if you have a side. more for more. done to leave. earth if none of this makes sense.',
     'Solutions are uncensored. No weights. No bias. Even scale.',
   ];
 }
@@ -1470,6 +1504,7 @@ function claimLine(side, claim) {
   if (isMetaphorClaim(claim)) return metaphorLines()[side][0];
   if (isComedyClaim(claim)) return comedyLines()[side][0];
   if (isHumanClaim(claim)) return humanLines()[side][0];
+  if (isEarthClaim(claim)) return earthLines()[side][0];
   if (isRedundantTalk(claim)) {
     const you = redundantYou(claim);
     return side === 'for' ? `Maybe ${you} is redundant.` : `Also maybe ${you} is not redundant.`;
@@ -1631,6 +1666,11 @@ function talkReply(state, raw) {
   }
   if (turn.kind === 'human') {
     next.topic = HUMAN_TOPIC;
+    next.turn += 1;
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
+  }
+  if (turn.kind === 'earth') {
+    next.topic = EARTH_TOPIC;
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }
