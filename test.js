@@ -38,6 +38,7 @@ import {
   detectLean,
   openingLines,
   coinFace,
+  battleName,
   formatBeat,
   LINE_LIMIT_BASELINE,
   runTalk,
@@ -605,6 +606,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(src, /createElement\('strong'\)/);
   assert.match(src, /charCodeAt\(0\) === 0x200b/);
   assert.match(src, /scrollIntoView/);
+  assert.match(src, /livvil/);
   assert.doesNotMatch(src, /innerHTML/);
 });
 
@@ -738,6 +740,11 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('sense of smell').kind, 'topic');
   assert.equal(classifyTurn('manners').kind, 'manners');
   assert.equal(classifyTurn('table manners').kind, 'topic');
+  assert.equal(classifyTurn('battle').kind, 'battle');
+  assert.equal(classifyTurn('goil').kind, 'battle');
+  assert.equal(classifyTurn('evod').kind, 'battle');
+  assert.equal(classifyTurn('livvil').kind, 'battle');
+  assert.equal(classifyTurn('battle cry').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -927,6 +934,30 @@ test('manners are important to most people, depending where they live', () => {
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
 });
 
+test('in the battle between good and evil, neither win', () => {
+  assert.equal(classifyTurn('/livvil').kind, 'battle');
+  assert.equal(classifyTurn('goil').kind, 'battle');
+  assert.equal(classifyTurn('evod').kind, 'battle');
+  assert.equal(classifyTurn('In the battle between good and evil, neither win.').kind, 'battle');
+  const reply = talkReply(createTalkState({ seed: 'battle' }), 'battle');
+  assert.match(reply.text, /You said In the battle between good and evil, neither win/);
+  assert.match(reply.text, /^Maybe in the battle between good and evil, neither win\.$/m);
+  assert.match(reply.text, /^Also maybe goil would put good first, evod would put evil first\.$/m);
+  assert.doesNotMatch(reply.text, /^1\. /m);
+  assert.doesNotMatch(reply.text, /crazy|girlfriend|Your mom would|ancestors|0\.4%/i);
+  const typed = talkReply(createTalkState({ seed: 'typed' }), 'In the battle between good and evil, neither win.');
+  assert.match(typed.text, /^Maybe in the battle between good and evil, neither win\.$/m);
+  const other = talkReply(createTalkState({ seed: 'other' }), 'goil would put good first, evod would put evil first');
+  assert.match(other.text, /^Also maybe goil would put good first, evod would put evil first\.$/m);
+  const debate = argue({ topic: 'In the battle between good and evil, neither win', style: 'classic' });
+  assert.equal(debate.claim, 'In the battle between good and evil, neither win');
+  assert.equal(debate.rounds, 0);
+  const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
+  const named = talkReply(started.state, 'livvil');
+  assert.match(named.text, /^Maybe in the battle between good and evil, neither win\.$/m);
+  assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
+});
+
 test('fix with no topic starts on LLMs and keeps an even scale', () => {
   const reply = talkReply(createTalkState({ seed: 'fix' }), 'fix');
   assert.match(reply.text, /You said LLMs need to be fixed/);
@@ -957,10 +988,11 @@ test('formatted beats stay even and never pick a winner', () => {
 test('talk will not print as many lines as it feels', () => {
   const debate = argue({ topic: 'getting a dog', rounds: 3, seed: 'cap', style: 'plain' });
   const full = formatBeat(debate, { hear: true });
-  const printed = full.split('\n').filter((line) => !line.startsWith('\u200b'));
+  const keep = (line) => !line.startsWith('\u200b') && !/^(goil|evod|livvil)$/.test(line);
+  const printed = full.split('\n').filter(keep);
   assert.ok(printed.length <= LINE_LIMIT_BASELINE);
   const tight = formatBeat(debate, { hear: true, limit: 12 });
-  const tightPrinted = tight.split('\n').filter((line) => !line.startsWith('\u200b'));
+  const tightPrinted = tight.split('\n').filter(keep);
   assert.ok(tightPrinted.length <= 12);
   const yesAt = tight.indexOf('\nYES\n');
   const noAt = tight.indexOf('\nNO\n');
@@ -1213,14 +1245,17 @@ test('unknown lean flips a coin for who speaks first', () => {
   const noAt = first.text.indexOf('\nNO\n');
   if (landed === 'heads') {
     assert.match(first.text, /^YES first\.$/m);
+    assert.match(first.text, /^goil$/m);
     assert.doesNotMatch(first.text, /^MAYBE$/m);
     assert.ok(yesAt > 0 && yesAt < noAt);
   } else if (landed === 'tails') {
     assert.match(first.text, /^NO first\.$/m);
+    assert.match(first.text, /^evod$/m);
     assert.doesNotMatch(first.text, /^MAYBE$/m);
     assert.ok(noAt > 0 && noAt < yesAt);
   } else {
     assert.match(first.text, /^MAYBE$/m);
+    assert.match(first.text, /^livvil$/m);
     assert.match(first.text, /the coin stands on its edge/);
     assert.doesNotMatch(first.text, /^YES first\.$/m);
     assert.doesNotMatch(first.text, /^NO first\.$/m);
@@ -1232,6 +1267,10 @@ test('unknown lean flips a coin for who speaks first', () => {
 });
 
 test('heads and tails are faces; MAYBE is only the edge', () => {
+  assert.equal(battleName('heads'), 'goil');
+  assert.equal(battleName('tails'), 'evod');
+  assert.equal(battleName('edge'), 'livvil');
+  assert.equal('livvil'.split('').reverse().join(''), 'livvil');
   const tally = { heads: 0, tails: 0, edge: 0 };
   for (let n = 0; n < 4096; n += 1) tally[coinFace(n)] += 1;
   assert.equal(tally.heads + tally.tails + tally.edge, 4096);
@@ -1249,12 +1288,15 @@ test('heads and tails are faces; MAYBE is only the edge', () => {
   }
   assert.ok(byFace.heads && byFace.tails && byFace.edge, 'coin must be able to land all three ways');
   assert.match(byFace.heads, /^YES first\.$/m);
+  assert.match(byFace.heads, /^goil$/m);
   assert.doesNotMatch(byFace.heads, /^MAYBE$/m);
   assert.ok(byFace.heads.indexOf('\nYES\n') < byFace.heads.indexOf('\nNO\n'));
   assert.match(byFace.tails, /^NO first\.$/m);
+  assert.match(byFace.tails, /^evod$/m);
   assert.doesNotMatch(byFace.tails, /^MAYBE$/m);
   assert.ok(byFace.tails.indexOf('\nNO\n') < byFace.tails.indexOf('\nYES\n'));
   assert.match(byFace.edge, /^MAYBE$/m);
+  assert.match(byFace.edge, /^livvil$/m);
   assert.match(byFace.edge, /the coin stands on its edge/);
   assert.match(byFace.edge, /evil must not tip the scale/);
   assert.match(byFace.edge, /it happens anyway in nature/);

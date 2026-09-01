@@ -797,6 +797,7 @@ function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   if (isHumanClaim(trimmed)) return HUMAN_TOPIC;
   if (isEarthClaim(trimmed)) return EARTH_TOPIC;
   if (isMannersClaim(trimmed)) return MANNERS_TOPIC;
+  if (isBattleClaim(trimmed)) return BATTLE_TOPIC;
   if (isRedundantTalk(trimmed)) return trimmed;
   const claim = style.shapeClaim(trimmed);
   return claim.trim() === '' ? style.defaultTopic : claim;
@@ -896,6 +897,22 @@ function argue(options = {}) {
   }
   if (isMannersClaim(claim)) {
     const sides = mannersLines();
+    return {
+      claim,
+      style: styleName,
+      seed,
+      rounds: 0,
+      moves: [],
+      for: sides.for,
+      against: sides.against,
+      dissent: null,
+      moderator: pick(rng, style.moderatorLines),
+      verdict: pick(rng, style.verdictLines),
+      audit: auditDebate(sides.for, sides.against, tolerance),
+    };
+  }
+  if (isBattleClaim(claim)) {
+    const sides = battleLines();
     return {
       claim,
       style: styleName,
@@ -1317,6 +1334,8 @@ const EARTH = /^(earth|sense|none of this makes sense|none of this makes sense t
 const EARTH_TOPIC = 'None of this makes sense to anyone mostly on earth';
 const MANNERS = /^(manners|manners are important to most people|depending where they live)[.?]*$/i;
 const MANNERS_TOPIC = 'Manners are important to most people';
+const BATTLE = /^(battle|goil|evod|livvil|good and evil|in the battle between good and evil, neither win)[.?]*$/i;
+const BATTLE_TOPIC = 'In the battle between good and evil, neither win';
 
 function isMetaphorClaim(claim) {
   return /metaphor is a metaphor for metaphor/i.test(String(claim ?? ''));
@@ -1342,12 +1361,18 @@ function isMannersClaim(claim) {
   return /^(manners are important to most people|depending where they live)$/i.test(line);
 }
 
+function isBattleClaim(claim) {
+  const line = String(claim ?? '').trim().replace(/[.!?]+$/, '');
+  return /^(in the battle between good and evil, neither win|goil would put good first, evod would put evil first)$/i.test(line);
+}
+
 function isNamedEssay(claim) {
   return isMetaphorClaim(claim)
     || isComedyClaim(claim)
     || isHumanClaim(claim)
     || isEarthClaim(claim)
-    || isMannersClaim(claim);
+    || isMannersClaim(claim)
+    || isBattleClaim(claim);
 }
 
 function isRedundantTalk(claim) {
@@ -1407,6 +1432,13 @@ function mannersLines() {
   };
 }
 
+function battleLines() {
+  return {
+    for: ['Maybe in the battle between good and evil, neither win.'],
+    against: ['Also maybe goil would put good first, evod would put evil first.'],
+  };
+}
+
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
   plain: (claim) => `Okay. You said ${claim}.`,
@@ -1436,6 +1468,10 @@ const SLASH_KIND = {
   earth: 'earth',
   sense: 'earth',
   manners: 'manners',
+  battle: 'battle',
+  goil: 'battle',
+  evod: 'battle',
+  livvil: 'battle',
 };
 
 function detectLean(text) {
@@ -1490,6 +1526,7 @@ function classifyTurn(raw) {
   if (HUMAN.test(text)) return { kind: 'human' };
   if (EARTH.test(text)) return { kind: 'earth' };
   if (MANNERS.test(text)) return { kind: 'manners' };
+  if (BATTLE.test(text)) return { kind: 'battle' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP_TURN.test(text)) return { kind: 'help' };
@@ -1547,6 +1584,7 @@ function claimLine(side, claim) {
   if (isHumanClaim(claim)) return humanLines()[side][0];
   if (isEarthClaim(claim)) return earthLines()[side][0];
   if (isMannersClaim(claim)) return mannersLines()[side][0];
+  if (isBattleClaim(claim)) return battleLines()[side][0];
   if (isRedundantTalk(claim)) {
     const you = redundantYou(claim);
     return side === 'for' ? `Maybe ${you} is redundant.` : `Also maybe ${you} is not redundant.`;
@@ -1569,6 +1607,12 @@ function coinFace(seed) {
   const rare = Math.imul((n >>> 1) ^ 0x9e3779b9, 0x85ebca6b) >>> 0;
   if (rare % LINE_LIMIT_BASELINE === 0) return 'edge';
   return (n & 1) === 0 ? 'heads' : 'tails';
+}
+
+function battleName(coin) {
+  if (coin === 'heads') return 'goil';
+  if (coin === 'tails') return 'evod';
+  return 'livvil';
 }
 
 const THINK_SHARDS = [
@@ -1604,6 +1648,7 @@ function thinkLines(debate, coin) {
     lines.push('\u200bevil must not tip the scale');
     lines.push('\u200bit happens anyway in nature');
   }
+  lines.push(battleName(coin));
   return lines;
 }
 
@@ -1770,6 +1815,11 @@ function talkReply(state, raw) {
   }
   if (turn.kind === 'manners') {
     next.topic = MANNERS_TOPIC;
+    next.turn += 1;
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
+  }
+  if (turn.kind === 'battle') {
+    next.topic = BATTLE_TOPIC;
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }
@@ -2045,6 +2095,7 @@ No topic starts a conversation. A topic prints both sides.
 Type done to leave. yes and no lean. If it cannot tell which side you
 are on, it flips a coin. Heads is YES first. Tails is NO first.
 A coin has two faces. Edge is rare. MAYBE. Nature, not a weight.
+Goil puts good first. Evod puts evil first. Livvil is neither. Same both ways.
 
   --plain     everyday words (default)
   --classic   debate-club voice
@@ -2388,7 +2439,7 @@ if (typeof document !== 'undefined') {
       const think = raw.charCodeAt(0) === 0x200b;
       const body = think ? raw.slice(1) : raw;
       if (think) wrap.className = 'think';
-      else if (/^(YES|NO|MAYBE)( first\.)?$/.test(body)) wrap.className = 'mark';
+      else if (/^(YES|NO|MAYBE|goil|evod|livvil)( first\.)?$/i.test(body)) wrap.className = 'mark';
       const bits = body.split(/(\*\*[^*]+\*\*)/g);
       for (const bit of bits) {
         const hit = bit.match(/^\*\*([^*]+)\*\*$/);
@@ -2525,6 +2576,7 @@ export {
   openingLines,
   formatBeat,
   coinFace,
+  battleName,
   LINE_LIMIT_BASELINE,
   lineLimit,
   runTalk,
