@@ -2065,8 +2065,12 @@ if (typeof document !== 'undefined') {
     const btnType = document.getElementById('acc_type');
     const btnHi = document.getElementById('acc_hi');
     const btnSpeak = document.getElementById('acc_speak');
+    const btnHead = document.getElementById('acc_head');
+    const siteOptions = document.querySelector('.site-options');
+    const filmBox = document.querySelector('.film');
     let typeLevel = 0;
     let speakOn = false;
+    let headOn = false;
     const hint = (msg) => { if (note) note.textContent = msg || ''; };
     const roll = rollVisitor();
     const audio = audioFromRoll(roll);
@@ -2131,6 +2135,7 @@ if (typeof document !== 'undefined') {
         typeLevel === 2 && 'type2',
         root.classList.contains('access-hi') && 'hi',
         speakOn && 'speak',
+        headOn && 'head',
       ].filter(Boolean);
       try {
         history.replaceState(null, '', parts.length ? `#access=${parts.join(',')}` : location.pathname + location.search);
@@ -2173,6 +2178,32 @@ if (typeof document !== 'undefined') {
       }
       writeHash();
     });
+    const applyHead = () => {
+      root.classList.toggle('show-head', headOn);
+      if (filmBox) filmBox.hidden = !headOn;
+      if (btnHead) {
+        btnHead.setAttribute('aria-pressed', headOn ? 'true' : 'false');
+        btnHead.textContent = headOn ? 'Hide head' : 'Head';
+        btnHead.title = headOn ? 'The face. On.' : 'The face. Off.';
+      }
+      if (!headOn && film) {
+        try { film.pause(); } catch (err) {}
+        const trigger = document.querySelector('.film-trigger');
+        if (trigger) trigger.open = false;
+      }
+      if (headOn && siteOptions) siteOptions.open = true;
+    };
+    btnHead?.addEventListener('click', () => {
+      headOn = !headOn;
+      applyHead();
+      hint(headOn ? 'The face is here.' : 'Head is off.');
+      writeHash();
+    });
+    siteOptions?.addEventListener('toggle', () => {
+      if (!siteOptions.open && film) {
+        try { film.pause(); } catch (err) {}
+      }
+    });
     const flags = ((location.hash || '').match(/access=([\w,]+)/) || [, ''])[1].split(',').filter(Boolean);
     if (flags.includes('type2')) typeLevel = 2;
     else if (flags.includes('type')) typeLevel = 1;
@@ -2186,6 +2217,8 @@ if (typeof document !== 'undefined') {
       btnSpeak.setAttribute('aria-pressed', 'true');
       btnSpeak.textContent = 'Stop speak';
     }
+    if (flags.includes('head')) headOn = true;
+    applyHead();
     const show = (text, moveFocus) => {
       out.textContent = text;
       voice(text);

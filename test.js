@@ -459,6 +459,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /I don't know what I did\. Neither do you\./);
   assert.match(html, /The irony is none of those words make sense\./);
   assert.match(html, /Who is this for\. People on earth\. Or people who laugh at it\. None of this makes sense to anyone mostly on earth\. Not confirmed\./);
+  assert.match(html, /Head is in options\. Off\./);
   assert.doesNotMatch(html, /comedy if it is funny\. Or not\./);
   assert.doesNotMatch(html, /human if technology takes away\. Or not\./);
   assert.match(html, /<details open>/);
@@ -911,7 +912,20 @@ test('there is one demo', () => {
   assert.match(readme, /I hate it\./);
   assert.match(readme, /Dystopian ad bullshit/);
   assert.match(readme, /Cyberpunk nightmare fuel/);
+  assert.match(readme, /Head is in options\. Off\./);
   assert.ok(readme.indexOf('I hate it.') < readme.indexOf('argubot_demo.gif'), 'readme does not show the face first');
+  assert.match(html, /<summary>Options<\/summary>/);
+  assert.match(html, /id="acc_head"/);
+  assert.doesNotMatch(html, /<details class="site-options"[^>]*\bopen\b/);
+  assert.match(html, /<section class="film"[^>]*\bhidden\b/);
+  const optionsAt = html.indexOf('<details class="site-options">');
+  const headBtnAt = html.indexOf('id="acc_head"');
+  const filmAt = html.indexOf('<section class="film"');
+  const optionsEnd = html.indexOf('</details>', filmAt);
+  assert.ok(optionsAt > 0 && headBtnAt > optionsAt && filmAt > headBtnAt && filmAt < optionsEnd, 'the head stays in options');
+  const src = readFileSync(new URL('./argubot.js', import.meta.url), 'utf8');
+  assert.match(src, /headOn && 'head'/);
+  assert.match(src, /getElementById\('acc_head'\)/);
   assert.match(html, /<summary>Trigger me\. The face is in here\.<\/summary>/);
   assert.match(html, /class="film-trigger"/);
   assert.doesNotMatch(html, /<details class="film-trigger"[^>]*\bopen\b/);
