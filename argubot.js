@@ -796,6 +796,7 @@ function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   if (isComedyClaim(trimmed)) return COMEDY_TOPIC;
   if (isHumanClaim(trimmed)) return HUMAN_TOPIC;
   if (isEarthClaim(trimmed)) return EARTH_TOPIC;
+  if (isMannersClaim(trimmed)) return MANNERS_TOPIC;
   if (isRedundantTalk(trimmed)) return trimmed;
   const claim = style.shapeClaim(trimmed);
   return claim.trim() === '' ? style.defaultTopic : claim;
@@ -879,6 +880,22 @@ function argue(options = {}) {
   }
   if (isEarthClaim(claim)) {
     const sides = earthLines();
+    return {
+      claim,
+      style: styleName,
+      seed,
+      rounds: 0,
+      moves: [],
+      for: sides.for,
+      against: sides.against,
+      dissent: null,
+      moderator: pick(rng, style.moderatorLines),
+      verdict: pick(rng, style.verdictLines),
+      audit: auditDebate(sides.for, sides.against, tolerance),
+    };
+  }
+  if (isMannersClaim(claim)) {
+    const sides = mannersLines();
     return {
       claim,
       style: styleName,
@@ -1298,6 +1315,8 @@ const HUMAN = /^(human|tech|technology)[.?]*$/i;
 const HUMAN_TOPIC = 'Using technology takes away from the human experience in general';
 const EARTH = /^(earth|sense|none of this makes sense|none of this makes sense to anyone mostly on earth)[.?]*$/i;
 const EARTH_TOPIC = 'None of this makes sense to anyone mostly on earth';
+const MANNERS = /^(manners|manners are important to most people|depending where they live)[.?]*$/i;
+const MANNERS_TOPIC = 'Manners are important to most people';
 
 function isMetaphorClaim(claim) {
   return /metaphor is a metaphor for metaphor/i.test(String(claim ?? ''));
@@ -1318,8 +1337,17 @@ function isEarthClaim(claim) {
   return /^none of this makes sense(?: to anyone mostly on earth)?$/i.test(line);
 }
 
+function isMannersClaim(claim) {
+  const line = String(claim ?? '').trim().replace(/[.!?]+$/, '');
+  return /^(manners are important to most people|depending where they live)$/i.test(line);
+}
+
 function isNamedEssay(claim) {
-  return isMetaphorClaim(claim) || isComedyClaim(claim) || isHumanClaim(claim) || isEarthClaim(claim);
+  return isMetaphorClaim(claim)
+    || isComedyClaim(claim)
+    || isHumanClaim(claim)
+    || isEarthClaim(claim)
+    || isMannersClaim(claim);
 }
 
 function isRedundantTalk(claim) {
@@ -1372,6 +1400,13 @@ function earthLines() {
   };
 }
 
+function mannersLines() {
+  return {
+    for: ['Maybe manners are important to most people.'],
+    against: ['Also maybe depending where they live.'],
+  };
+}
+
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
   plain: (claim) => `Okay. You said ${claim}.`,
@@ -1400,6 +1435,7 @@ const SLASH_KIND = {
   technology: 'human',
   earth: 'earth',
   sense: 'earth',
+  manners: 'manners',
 };
 
 function detectLean(text) {
@@ -1453,6 +1489,7 @@ function classifyTurn(raw) {
   if (COMEDY.test(text)) return { kind: 'comedy' };
   if (HUMAN.test(text)) return { kind: 'human' };
   if (EARTH.test(text)) return { kind: 'earth' };
+  if (MANNERS.test(text)) return { kind: 'manners' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP_TURN.test(text)) return { kind: 'help' };
@@ -1509,6 +1546,7 @@ function claimLine(side, claim) {
   if (isComedyClaim(claim)) return comedyLines()[side][0];
   if (isHumanClaim(claim)) return humanLines()[side][0];
   if (isEarthClaim(claim)) return earthLines()[side][0];
+  if (isMannersClaim(claim)) return mannersLines()[side][0];
   if (isRedundantTalk(claim)) {
     const you = redundantYou(claim);
     return side === 'for' ? `Maybe ${you} is redundant.` : `Also maybe ${you} is not redundant.`;
@@ -1721,6 +1759,11 @@ function talkReply(state, raw) {
   }
   if (turn.kind === 'earth') {
     next.topic = EARTH_TOPIC;
+    next.turn += 1;
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
+  }
+  if (turn.kind === 'manners') {
+    next.topic = MANNERS_TOPIC;
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }

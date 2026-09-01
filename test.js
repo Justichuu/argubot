@@ -735,6 +735,8 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('feature pizza').kind, 'topic');
   assert.equal(classifyTurn('earth day').kind, 'topic');
   assert.equal(classifyTurn('sense of smell').kind, 'topic');
+  assert.equal(classifyTurn('manners').kind, 'manners');
+  assert.equal(classifyTurn('table manners').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -897,6 +899,30 @@ test('earth is none of this making sense, or it does to someone', () => {
   const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
   const named = talkReply(started.state, 'sense');
   assert.match(named.text, /^Maybe none of this makes sense to anyone mostly on earth\.$/m);
+  assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
+});
+
+test('manners are important to most people, depending where they live', () => {
+  assert.equal(classifyTurn('/manners').kind, 'manners');
+  assert.equal(classifyTurn('manners').kind, 'manners');
+  assert.equal(classifyTurn('Manners are important to most people.').kind, 'manners');
+  assert.equal(classifyTurn('depending where they live').kind, 'manners');
+  const reply = talkReply(createTalkState({ seed: 'manners' }), 'manners');
+  assert.match(reply.text, /You said Manners are important to most people/);
+  assert.match(reply.text, /^Maybe manners are important to most people\.$/m);
+  assert.match(reply.text, /^Also maybe depending where they live\.$/m);
+  assert.doesNotMatch(reply.text, /^1\. /m);
+  assert.doesNotMatch(reply.text, /crazy|girlfriend|Your mom would|ancestors|0\.4%/i);
+  const typed = talkReply(createTalkState({ seed: 'typed' }), 'Manners are important to most people.');
+  assert.match(typed.text, /^Maybe manners are important to most people\.$/m);
+  const place = talkReply(createTalkState({ seed: 'place' }), 'depending where they live');
+  assert.match(place.text, /^Also maybe depending where they live\.$/m);
+  const debate = argue({ topic: 'Manners are important to most people', style: 'classic' });
+  assert.equal(debate.claim, 'Manners are important to most people');
+  assert.equal(debate.rounds, 0);
+  const started = talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza');
+  const named = talkReply(started.state, 'manners');
+  assert.match(named.text, /^Maybe manners are important to most people\.$/m);
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
 });
 
