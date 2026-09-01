@@ -263,6 +263,51 @@ test('an empty topic falls back to arguing about itself', () => {
   assert.equal(normalizeClaim('', 'classic'), STYLES.classic.defaultTopic);
 });
 
+test('a claim about the world becomes something the reasons can hold', () => {
+  // Every plain family slots the topic into a sentence wanting a noun phrase:
+  // "$ takes five minutes", "a kid would love $". A bare clause produced "your
+  // friends would think pineapple belongs on pizza is funny", which is the
+  // reason argubot read as nonsense on most inputs.
+  assert.strictEqual(
+    normalizeClaim('pineapple belongs on pizza', 'plain'),
+    'agreeing that pineapple belongs on pizza',
+  );
+  assert.strictEqual(
+    normalizeClaim('cats are better than dogs', 'plain'),
+    'agreeing that cats are better than dogs',
+  );
+});
+
+test('a name for a thing is left alone', () => {
+  // "work", "matter" and "cost" are verbs in a dictionary and nouns in a topic
+  // box. Guessing wrong turns "remote work" into "agreeing that remote work",
+  // so only auxiliaries and copulas count as evidence of a claim.
+  for (const plain of ['remote work', 'a bike', 'learning guitar', 'the cost of rent']) {
+    assert.strictEqual(normalizeClaim(plain, 'plain'), plain, plain);
+  }
+});
+
+test('a question becomes the choice it is asking about', () => {
+  assert.strictEqual(normalizeClaim('should I quit my job', 'plain'), 'whether to quit my job');
+  assert.strictEqual(normalizeClaim('can we fix it', 'plain'), 'whether to fix it');
+});
+
+test('the built-in topics are not rewritten by the shaper', () => {
+  // Hand written by the author. Shaping them would be this code overruling a
+  // person on their own sentence.
+  assert.strictEqual(normalizeClaim('LLMs need to be fixed', 'plain'), 'LLMs need to be fixed');
+});
+
+test('the headline shows what was typed, not the shaped phrase', () => {
+  const debate = argue({ topic: 'hot dogs are sandwiches', style: 'plain', seed: 1 });
+  assert.strictEqual(debate.heading, 'hot dogs are sandwiches');
+  assert.strictEqual(debate.claim, 'agreeing that hot dogs are sandwiches');
+  const text = render(debate, { color: false });
+  assert.match(text, /ARGUING ABOUT HOT DOGS ARE SANDWICHES/);
+  // and the reasons still read as English
+  assert.match(text, /agreeing that hot dogs are sandwiches/);
+});
+
 test('claims keep their own clause when they already have one', () => {
   assert.equal(normalizeClaim('whether birds are real'), 'whether birds are real');
   assert.equal(normalizeClaim('if the dress was blue'), 'if the dress was blue');
@@ -619,8 +664,16 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(src, /createElement\('strong'\)/);
   assert.match(src, /createElementNS/);
   assert.match(src, /PACE/);
-  assert.match(src, /word:\s*320/);
-  assert.match(src, /think:\s*96/);
+  assert.match(src, /word:\s*110/);
+  assert.match(src, /think:\s*45/);
+  assert.match(src, /Click for the rest/);
+  // The pace used to be 320 ms a word with no way past it, so a full debate
+  // took eighty-eight seconds and a reader saw whichever side the coin put
+  // first and left. Pin the escape hatch, not just the number: reduced motion,
+  // a click, and Escape.
+  assert.match(src, /prefers-reduced-motion/);
+  assert.match(src, /hurry/);
+  assert.match(src, /'Escape'/);
   assert.doesNotMatch(src, /await wait\(18\)/);
   assert.doesNotMatch(src, /await wait\(28\)/);
   assert.match(src, /embedVec/);
