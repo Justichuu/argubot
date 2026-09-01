@@ -57,6 +57,60 @@ function personalize(text, name) {
   return String(text).replace(/Gary/g, name);
 }
 
+// One roll per visit. Memory only. Do not write it down.
+const FAKE_QUOTES = [
+  'wow really works',
+  '5 stars would argue again',
+  'changed my life tbh',
+  'saw results immediately',
+  'my manager is crying happy tears',
+  'so easy my boss gets it',
+  'best decision this quarter',
+  'highly recommend to anyone',
+  'customers love it',
+  'finally something that just works',
+  'would buy again',
+  'seamless experience',
+  'ten out of ten no notes',
+  'it scaled our synergy',
+];
+const AUDIO_FILTERS = ['lowpass', 'highpass', 'notch', 'allpass'];
+
+function rollVisitor() {
+  return Math.random();
+}
+
+function audioFromRoll(roll) {
+  const rng = makeRng(hashString(`audio:${String(roll)}`));
+  return {
+    filter: pick(rng, AUDIO_FILTERS),
+    freq: 180 + Math.floor(rng() * 4200),
+    q: 0.4 + rng() * 2.2,
+    pan: rng() * 2 - 1,
+    delay: rng() * 0.18,
+    drive: rng() * 0.65,
+    speakPitch: 0.2 + rng() * 1.6,
+    speakRate: 0.65 + rng() * 0.85,
+  };
+}
+
+function quotesFromRoll(roll, count = 3) {
+  const take = Math.max(1, Math.min(FAKE_QUOTES.length, Number(count) || 3));
+  const rng = makeRng(hashString(`quotes:${String(roll)}`));
+  return shuffled(rng, FAKE_QUOTES).slice(0, take);
+}
+
+function driveCurve(amount) {
+  const n = 256;
+  const curve = new Float32Array(n);
+  const k = Math.max(0, Number(amount) || 0) * 20;
+  for (let i = 0; i < n; i += 1) {
+    const x = (i * 2) / (n - 1) - 1;
+    curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+  }
+  return curve;
+}
+
 // Every family supplies a FOR and an AGAINST built from the same rhetorical move.
 // Balance is enforced by construction: no argument exists without its evil twin.
 
@@ -1868,12 +1922,58 @@ if (typeof document !== 'undefined') {
     let typeLevel = 0;
     let speakOn = false;
     const hint = (msg) => { if (note) note.textContent = msg || ''; };
+    const roll = rollVisitor();
+    const audio = audioFromRoll(roll);
+    const quotes = quotesFromRoll(roll);
+    const quoteBox = document.getElementById('fake-quotes');
+    if (quoteBox) {
+      quoteBox.replaceChildren();
+      for (const line of quotes) {
+        const item = document.createElement('li');
+        const said = document.createElement('blockquote');
+        said.textContent = line;
+        const who = document.createElement('cite');
+        who.textContent = generateName(makeRng(hashString(`cite:${line}:${roll}`)));
+        item.append(said, who);
+        quoteBox.append(item);
+      }
+    }
+    const film = document.querySelector('.film video');
+    let filmWired = false;
+    const wireFilmAudio = () => {
+      if (filmWired || !film || !window.AudioContext) return;
+      filmWired = true;
+      try {
+        const ctx = new AudioContext();
+        const source = ctx.createMediaElementSource(film);
+        const filter = ctx.createBiquadFilter();
+        filter.type = audio.filter;
+        filter.frequency.value = audio.freq;
+        filter.Q.value = audio.q;
+        const shaper = ctx.createWaveShaper();
+        shaper.curve = driveCurve(audio.drive);
+        const delay = ctx.createDelay(0.3);
+        delay.delayTime.value = audio.delay;
+        const pan = ctx.createStereoPanner();
+        pan.pan.value = audio.pan;
+        source.connect(filter);
+        filter.connect(shaper);
+        shaper.connect(delay);
+        delay.connect(pan);
+        pan.connect(ctx.destination);
+        ctx.resume();
+      } catch (err) {}
+    };
+    film?.addEventListener('play', wireFilmAudio);
     const silence = () => { try { window.speechSynthesis?.cancel(); } catch (err) {} };
     const voice = (msg) => {
       if (!speakOn || !window.speechSynthesis) return;
       try {
         silence();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(String(msg || '')));
+        const utter = new SpeechSynthesisUtterance(String(msg || ''));
+        utter.pitch = audio.speakPitch;
+        utter.rate = audio.speakRate;
+        window.speechSynthesis.speak(utter);
       } catch (err) {}
     };
     const writeHash = () => {
@@ -2011,4 +2111,8 @@ export {
   runTalk,
   formatLineage,
   runValidate,
+  rollVisitor,
+  audioFromRoll,
+  quotesFromRoll,
+  FAKE_QUOTES,
 };

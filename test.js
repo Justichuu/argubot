@@ -41,6 +41,10 @@ import {
   LINE_LIMIT_BASELINE,
   runTalk,
   runValidate,
+  rollVisitor,
+  audioFromRoll,
+  quotesFromRoll,
+  FAKE_QUOTES,
 } from './argubot.js';
 
 const CLI = fileURLToPath(new URL('./argubot.js', import.meta.url));
@@ -513,7 +517,11 @@ test('the html page can sit on chuumind.com', () => {
   assert.doesNotMatch(html, /fetch\s*\(/);
   assert.doesNotMatch(html, /XMLHttpRequest/);
   assert.doesNotMatch(html, /localStorage/);
+  assert.doesNotMatch(html, /sessionStorage/);
   assert.doesNotMatch(html, /indexedDB/);
+  assert.match(html, /id="fake-quotes"/);
+  assert.match(html, /Customer feedback/);
+  assert.match(html, /Verified\. Five stars\. A lie\./);
   assert.doesNotMatch(html, /captcha|recaptcha|biometric/i);
   assert.match(html, /--accent:\s*#ff4d2e/);
   assert.match(html, /--halo:\s*#ffd84a/);
@@ -1013,6 +1021,44 @@ test('runTalk leaves when the person is done', async () => {
   assert.match(output, /You said yes/);
   assert.match(output, /I did not pick/);
   assert.doesNotMatch(output, /justichuu|github\.com|src\/talk/i);
+});
+
+test('a visitor roll is random and is not saved', () => {
+  const once = rollVisitor();
+  const twice = rollVisitor();
+  assert.ok(once >= 0 && once < 1);
+  assert.ok(twice >= 0 && twice < 1);
+  const src = readFileSync(new URL('./argubot.js', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
+  assert.doesNotMatch(src, /localStorage\.(get|set|remove)Item/);
+  assert.doesNotMatch(src, /sessionStorage\./);
+  assert.doesNotMatch(src, /indexedDB\./);
+  assert.doesNotMatch(src, /document\.cookie\s*=/);
+  assert.doesNotMatch(html, /localStorage|sessionStorage|indexedDB|document\.cookie/);
+});
+
+test('the film audio follows the visitor roll', () => {
+  const one = audioFromRoll(0.11);
+  const again = audioFromRoll(0.11);
+  const other = audioFromRoll(0.79);
+  assert.deepEqual(one, again);
+  assert.notDeepEqual(one, other);
+  assert.ok(['lowpass', 'highpass', 'notch', 'allpass'].includes(one.filter));
+  assert.ok(one.freq > 0 && one.freq < 5000);
+  assert.ok(one.speakPitch > 0 && one.speakRate > 0);
+});
+
+test('fake customer lines are generic and untrue', () => {
+  assert.ok(FAKE_QUOTES.includes('wow really works'));
+  assert.ok(FAKE_QUOTES.length >= 8);
+  const one = quotesFromRoll(0.2);
+  const again = quotesFromRoll(0.2);
+  const other = quotesFromRoll(0.91);
+  assert.deepEqual(one, again);
+  assert.equal(one.length, 3);
+  assert.ok(one.every((line) => FAKE_QUOTES.includes(line)));
+  assert.notDeepEqual(one, other);
+  assert.ok(FAKE_QUOTES.every((line) => !/[\u2013\u2014]/.test(line)));
 });
 
 test('the CLI talk loop reads lines and exits', async () => {
