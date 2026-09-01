@@ -1830,7 +1830,7 @@ async function runValidate() {
     }
     if (rel === 'index.html') {
       if (!/name="viewport"/.test(text)) note(failures, rel, 'viewport-missing');
-      if (!/Skip to the letter/.test(text) || !/id="letter"/.test(text)) {
+      if (!/class="skip"[^>]*>Skip</.test(text) || !/id="letter"/.test(text)) {
         note(failures, rel, 'skip-link-missing');
       }
     }
@@ -2200,7 +2200,7 @@ if (typeof document !== 'undefined') {
       const on = !root.classList.contains('access-hi');
       root.classList.toggle('access-hi', on);
       btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
-      hint(on ? 'High contrast.' : 'Usual contrast.');
+      hint('Contrast.');
       writeHash();
     });
     const applyInk = () => {
@@ -2213,7 +2213,7 @@ if (typeof document !== 'undefined') {
     btnInk?.addEventListener('click', () => {
       root.classList.toggle('lamp');
       applyInk();
-      hint(root.classList.contains('lamp') ? 'Ink paper.' : 'Usual paper.');
+      hint(root.classList.contains('lamp') ? 'Ink.' : 'Paper.');
       writeHash();
     });
     btnSpeak?.addEventListener('click', () => {
@@ -2222,14 +2222,13 @@ if (typeof document !== 'undefined') {
         btnSpeak.setAttribute('aria-pressed', 'false');
         btnSpeak.textContent = 'Speak';
         silence();
-        hint('Speak is off.');
+        hint('Speak.');
       } else {
         speakOn = true;
         btnSpeak.setAttribute('aria-pressed', 'true');
-        btnSpeak.textContent = 'Stop speak';
-        const msg = 'A voice on this machine. It will not hear you.';
-        hint(msg);
-        voice(msg);
+        btnSpeak.textContent = 'Speak';
+        hint('Speak.');
+        voice('Speak.');
       }
       writeHash();
     });
@@ -2254,7 +2253,7 @@ if (typeof document !== 'undefined') {
           btnSpeak.textContent = 'Speak';
         }
         silence();
-        hint('Speak is off.');
+        hint('Speak.');
         writeHash();
         ev.preventDefault();
         return;
@@ -2282,7 +2281,7 @@ if (typeof document !== 'undefined') {
     if (flags.includes('speak') && btnSpeak) {
       speakOn = true;
       btnSpeak.setAttribute('aria-pressed', 'true');
-      btnSpeak.textContent = 'Stop speak';
+      btnSpeak.textContent = 'Speak';
     }
     if (flags.includes('head') && filmWrap) filmWrap.open = true;
     const show = (text, moveFocus) => {

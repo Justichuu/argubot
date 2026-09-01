@@ -441,7 +441,7 @@ test('the html page can sit on chuumind.com', () => {
   const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
   assert.match(html, /name="viewport"/);
   assert.match(html, /viewport-fit=cover/);
-  assert.match(html, /Skip to the letter/);
+  assert.match(html, /class="skip"[^>]*>Skip</);
   assert.match(html, /id="letter"/);
   assert.match(html, /100svh/);
   const skin = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
@@ -466,12 +466,13 @@ test('the html page can sit on chuumind.com', () => {
   assert.doesNotMatch(html, /<html[^>]*\bfull\b/);
   assert.match(html, /id="letter"[^>]*role="main"/);
   assert.match(html, /The box is the thing\. Type a thing\./);
-  assert.match(html, /This stays here\. It does not call this website\. Nothing is sent\. Close the tab and it's gone\./);
-  assert.match(html, /I don't know what I did\. Neither do you\./);
+  assert.match(html, /This stays here\. It does not call this website\. Nothing is sent\./);
+  assert.doesNotMatch(html, /Close the tab and it's gone/);
+  assert.match(html, /Idk what you did and neither do you/);
   assert.doesNotMatch(html, /The irony is|irony is |\u2e2e/i);
   assert.match(html, /Who is this for\. People on earth\. Or people who laugh at it\. None of this makes sense to anyone mostly on earth\. Not confirmed\./);
   assert.doesNotMatch(html, /Box is biggest|Stamp is the red thing|Face is the film/);
-  assert.match(html, /<summary[^>]*>The film<\/summary>/);
+  assert.match(html, /<summary[^>]*>video<\/summary>/);
   assert.match(html, /button:hover[\s\S]*background: var\(--ink\)/);
   assert.doesNotMatch(html, /#argue \{[^}]*linear-gradient/);
   assert.doesNotMatch(html, /#pesky \{[^}]*#ff7a18/);
@@ -491,7 +492,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /chuumind.com\/rights\//);
   assert.match(html, /chuumind.com\/privacy\//);
   assert.match(html, /chuumind.com\/attributions\//);
-  assert.match(html, /id="acc_speak"[^>]*title="A voice\."/);
+  assert.match(html, /id="acc_speak"[^>]*title="Speak\."/);
   assert.match(html, /src="\.\/argubot\.js"/);
   assert.match(html, /id="argue"[^>]*title="Both sides\."/);
   assert.match(html, /id="yes"[^>]*title="Your side\."/);
@@ -562,7 +563,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /id="pesky"/);
   assert.match(html, /Pesky reviews/);
   assert.match(html, /id="pesky-box"[^>]*\bhidden\b/);
-  assert.match(html, /Rolled this visit\. Not saved\./);
+  assert.match(html, /Never save visitor rolls\./);
   assert.match(html, /<summary[^>]*>How these lines got here<\/summary>/);
   assert.match(html, /English names\. Other languages\. One is gibberish\. Random stars\./);
   assert.match(html, /Leave your own review/);
@@ -954,7 +955,7 @@ test('there is one demo', () => {
   assert.match(readme, /I hate it\./);
   assert.match(readme, /Dystopian ad bullshit/);
   assert.match(readme, /Cyberpunk nightmare fuel/);
-  assert.match(readme, /this is a letter\. The film is closed\./);
+  assert.match(readme, /The letter theme from chuumind\.com/);
   assert.ok(readme.indexOf('I hate it.') < readme.indexOf('argubot_demo.gif'), 'readme does not show the face first');
   assert.match(html, /<details class="film-letter">/);
   assert.doesNotMatch(html, /<details class="film-letter"[^>]*\bopen\b/);
@@ -975,7 +976,7 @@ test('there is one demo', () => {
   assert.match(html, /Do not open if you do not want that/);
   assert.match(html, /class="film-warn wip-stamp"/);
   assert.doesNotMatch(html, /idomath/i);
-  const skipAt = html.indexOf('Skip this film and read its transcript');
+  const skipAt = html.indexOf('Skip this video and read its transcript');
   const warnAt = html.indexOf('<strong>Uncanny.</strong>');
   const triggerAt = html.indexOf('Trigger me. The face is in here.');
   const videoAt = html.indexOf('<video controls preload="none"');
