@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="full">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -114,9 +114,10 @@
       -webkit-mask-size: 100% 100%;
       mask-size: 100% 100%;
     }
-    p { max-width: 54ch; margin: 0 0 1.15em; overflow-wrap: anywhere; }
+    .wrap.letter .masthead { max-width: 38rem; }
+    p { max-width: 38rem; margin: 0 0 1.15em; overflow-wrap: anywhere; font-size: 19px; }
     a { color: var(--ink); text-underline-offset: 3px; }
-    .lede { color: var(--muted); max-width: 54ch; margin: 0 0 1.15em; font-size: 17px; }
+    .lede { color: var(--muted); max-width: 38rem; margin: 0 0 1.15em; font-size: 17px; }
     .wip-stamp {
       margin: 0 0 1.15rem;
       padding: .72rem 1rem .68rem;
@@ -149,6 +150,7 @@
     .notes details p { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     .notes .wip-stamp { margin: 10px 0 0; max-width: none; color: var(--ink); font-size: 15px; }
     textarea, button { font: inherit; color: var(--ink); }
+    #talk, #out { max-width: 38rem; }
     textarea {
       width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
       border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field);
@@ -156,7 +158,6 @@
     html.full #thing { min-height: min(46vh, 24rem); }
     html.full .here,
     html.full .notes,
-    html.full .sign,
     html.full .site-made { display: none; }
     .here { margin: 12px 0 16px; }
     .here[hidden] { display: none; }
@@ -166,11 +167,6 @@
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
       border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
     }
-    #argue { background: linear-gradient(90deg, var(--mint) 0 50%, var(--accent) 50% 100%); }
-    #yes { background: var(--mint); }
-    #no { background: var(--accent); }
-    #more { background: var(--cyan); }
-    #done { background: var(--ink); color: var(--paper); }
     #acc_here {
       background: var(--accent);
       border-style: dashed;
@@ -180,7 +176,7 @@
       letter-spacing: .06em;
       text-transform: uppercase;
     }
-    #acc_head { background: var(--violet); color: #fff; }
+    #acc_head { background: var(--paper); }
     button:hover,
     button[aria-pressed="true"],
     .notes details[open] summary,
@@ -224,10 +220,10 @@
       padding: 16px 18px; min-height: 8rem; max-height: 24em; overflow: auto; margin: 0 0 28px;
     }
     #out:empty { display: none; }
-    .sign { margin: 28px 0 12px; font-style: italic; font-size: 17px; line-height: 1.5; }
+    .sign { margin: 52px 0 12px; max-width: 38rem; font-style: italic; font-size: 17px; line-height: 1.5; }
     footer.site {
       display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start;
-      color: var(--muted); font-size: 14px; font-style: italic; min-height: 44px;
+      max-width: 38rem; color: var(--muted); font-size: 14px; font-style: italic; min-height: 44px;
     }
     footer.site p, footer.site .site-links { margin: 0 1.5em 10px 0; }
     footer.site a { margin-right: 12px; }
@@ -298,29 +294,32 @@
     .site-options .opt-why { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     .site-options .opt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .film[hidden] { display: none; }
-    html.feel { font-size: 22px; }
-    html.vibe { font-size: 26px; }
-    html.feel .lede { letter-spacing: .02em; }
-    html.vibe .lede { letter-spacing: .04em; }
-    html.vibe h1 { letter-spacing: .02em; }
-    html.access-hi { --paper: #fff; --ink: #000; --muted: #000; --field: #fff; }
-    html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line {
-      background: #fff; color: #000;
+    html.feel, html.access-big { font-size: 22px; }
+    html.vibe, html.access-bigger { font-size: 26px; }
+    html.feel .lede, html.access-big .lede { font-size: 21px; }
+    html.vibe .lede, html.access-bigger .lede { font-size: 25px; }
+    html.feel .kicker, html.access-big .kicker { font-size: 18px; }
+    html.vibe .kicker, html.access-bigger .kicker { font-size: 21px; }
+    html.feel h1, html.access-big h1 { font-size: clamp(34px, 5.5vw, 50px); }
+    html.vibe h1, html.access-bigger h1 { font-size: clamp(40px, 6.2vw, 58px); }
+    html.feel .sign, html.access-big .sign { font-size: 21px; }
+    html.vibe .sign, html.access-bigger .sign { font-size: 25px; }
+    html.access-hi {
+      --paper: #000;
+      --ink: #fff;
+      --muted: #f2f2f2;
+      --rule: #fff;
+      --field: #000;
+      --accent: #ff0;
+      --accent-ink: #ff0;
+      --halo: #000;
+      --mint: #000;
+      --cyan: #000;
+      --violet: #000;
     }
-    html.access-hi #argue,
-    html.access-hi #yes,
-    html.access-hi #no,
-    html.access-hi #more,
-    html.access-hi #done,
-    html.access-hi #acc_here,
-    html.access-hi #acc_head {
-      background: #fff;
-      color: #000;
-      filter: none;
-      box-shadow: none;
-    }
+    html.access-hi body { background-color: var(--paper); }
     html.access-hi body::after { display: none; }
-    html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line { border-color: #000; }
+    html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line { border-color: currentColor; }
     h2 { font: italic 400 clamp(22px, 3.5vw, 30px)/1.2 var(--serif); margin: 1.2em 0 .4em; }
     .film { margin: 1.4rem 0 1.8rem; }
     .film-trigger { margin: 0 0 1rem; }
@@ -362,17 +361,19 @@
     .film-transcript ol { margin: 0; padding: .2rem 1rem 1rem 3.5rem; }
     .film-transcript li { padding: .42rem 0 .42rem .35rem; }
     .film-transcript time { display: inline-block; min-width: 3.4rem; font: 700 .82rem var(--sans); color: var(--muted); }
-    html.feel .film-transcript, html.feel .film-meta { font-size: 19px; }
-    html.vibe .film-transcript, html.vibe .film-meta { font-size: 23px; }
+    html.feel .film-transcript, html.feel .film-meta,
+    html.access-big .film-transcript, html.access-big .film-meta { font-size: 19px; }
+    html.vibe .film-transcript, html.vibe .film-meta,
+    html.access-bigger .film-transcript, html.access-bigger .film-meta { font-size: 23px; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     @media (forced-colors: active) { button, textarea, #out, summary, video { border: 2px solid CanvasText; } }
   </style>
 </head>
 <body>
   <a class="skip" href="#letter">Skip to the letter</a>
-  <div class="wrap letter" id="letter">
+  <div class="wrap letter" id="letter" role="main">
     <header class="masthead">
-      <div class="kicker"><a href="https://chuumind.com/">ChuuMind</a> · argubot</div>
+      <div class="kicker"><a href="https://chuumind.com/">ChuuMind</a> · <a href="https://chuumind.com/tools/">tools</a> · argubot</div>
       <h1>argubot</h1>
       <div class="squiggle" aria-hidden="true"></div>
     </header>
@@ -394,22 +395,23 @@
       <details>
         <summary title="How.">Instructions</summary>
         <p>The box is the thing. Type a thing. Argue. yes or no if you have a side. more for more. done to leave.</p>
+        <p>Nothing is sent. Close the tab and it's gone.</p>
         <p>I don't know what I did. Neither do you.</p>
         <p>Who is this for. People on earth. Or people who laugh at it. None of this makes sense to anyone mostly on earth. Not confirmed.</p>
-        <p>Box is the page. Biggest. Stamp is the red thing. Face is the film. Off unless you want them.</p>
+        <p>This is a letter. Box is biggest. Stamp is the red thing. Face is the film. Off unless you want them.</p>
       </details>
     </div>
     <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
     <noscript>
       <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
     </noscript>
-    <p class="sign">Justichuu<br><time datetime="2026-08-31">31 August 2026</time></p>
     <footer class="site">
       <nav class="site-links" aria-label="ChuuMind">
-        <a href="https://chuumind.com/">ChuuMind</a>
+        <a href="https://chuumind.com/">Home</a>
+        <a href="https://chuumind.com/tools/">Tools</a>
         <a href="https://chuumind.com/book/">Book</a>
         <a href="https://chuumind.com/rights/">Your rights</a>
-        <a href="https://chuumind.com/privacy/">Privacy proof</a>
+        <a href="https://chuumind.com/privacy/">Privacy</a>
         <a href="https://chuumind.com/attributions/">Attributions</a>
       </nav>
       <p class="site-made">A person made this page. A machine did not.</p>
@@ -431,16 +433,16 @@
       </aside>
       <div class="site-access" role="region" aria-label="Access">
         <button type="button" id="acc_type" aria-pressed="false" title="Type. Feel. Vibe.">Type</button>
-        <button type="button" id="acc_hi" aria-pressed="false" title="Light or dark.">Contrast</button>
+        <button type="button" id="acc_hi" aria-pressed="false" title="Contrast.">Contrast</button>
         <button type="button" id="acc_ink" aria-pressed="false" title="Ink.">Ink</button>
         <button type="button" id="acc_speak" aria-pressed="false" title="A voice.">Speak</button>
         <span id="acc_note" role="status" aria-live="polite"></span>
       </div>
       <details class="site-options">
         <summary title="More.">Options</summary>
-        <p class="opt-why">You do not need these. Box is the page. Stamp is the red thing. Face is the film.</p>
+        <p class="opt-why">This is a letter. Box is biggest. Stamp is the red thing. Face is the film.</p>
         <div class="opt-acts">
-          <button type="button" id="acc_full" aria-pressed="true" title="Biggest.">Box</button>
+          <button type="button" id="acc_full" aria-pressed="false" title="Biggest.">Box</button>
           <button type="button" id="acc_here" aria-pressed="false" title="Stamp.">Stamp</button>
           <button type="button" id="acc_head" aria-pressed="false" title="Face.">Face</button>
         </div>
@@ -474,6 +476,7 @@
         </section>
       </details>
     </footer>
+    <p class="sign">Justichuu<br><time datetime="2026-09-01">1 September 2026</time></p>
   </div>
   <script type="module" src="./argubot.js"></script>
 </body>

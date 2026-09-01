@@ -2078,7 +2078,7 @@ if (typeof document !== 'undefined') {
     let typeLevel = 0;
     let speakOn = false;
     let headOn = false;
-    let fullOn = true;
+    let fullOn = false;
     let hereOn = false;
     const hint = (msg) => { if (note) note.textContent = msg || ''; };
     const tip = (el) => {
@@ -2179,12 +2179,12 @@ if (typeof document !== 'undefined') {
     };
     const writeHash = () => {
       const parts = [
-        typeLevel === 1 && 'feel',
-        typeLevel === 2 && 'vibe',
+        typeLevel === 1 && 'type',
+        typeLevel === 2 && 'type2',
         root.classList.contains('access-hi') && 'hi',
         root.classList.contains('lamp') && 'ink',
         speakOn && 'speak',
-        !fullOn && 'nofull',
+        fullOn && 'full',
         hereOn && 'here',
         headOn && 'head',
       ].filter(Boolean);
@@ -2196,6 +2196,8 @@ if (typeof document !== 'undefined') {
       if (!btnType) return;
       root.classList.toggle('feel', typeLevel === 1);
       root.classList.toggle('vibe', typeLevel === 2);
+      root.classList.toggle('access-big', typeLevel === 1);
+      root.classList.toggle('access-bigger', typeLevel === 2);
       btnType.setAttribute('aria-pressed', typeLevel > 0 ? 'true' : 'false');
       btnType.textContent = ['Type', 'Feel', 'Vibe'][typeLevel];
     };
@@ -2209,7 +2211,7 @@ if (typeof document !== 'undefined') {
       const on = !root.classList.contains('access-hi');
       root.classList.toggle('access-hi', on);
       btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
-      hint(on ? 'Dark on light.' : 'Normal colors.');
+      hint(on ? 'High contrast.' : 'Usual contrast.');
       writeHash();
     });
     const applyInk = () => {
@@ -2236,7 +2238,7 @@ if (typeof document !== 'undefined') {
         speakOn = true;
         btnSpeak.setAttribute('aria-pressed', 'true');
         btnSpeak.textContent = 'Stop speak';
-        const msg = 'A voice. It will not hear you.';
+        const msg = 'A voice on this machine. It will not hear you.';
         hint(msg);
         voice(msg);
       }
@@ -2305,6 +2307,35 @@ if (typeof document !== 'undefined') {
         try { film.pause(); } catch (err) {}
       }
     });
+    document.addEventListener('focusin', (ev) => {
+      if (!speakOn || !ev.target) return;
+      let lab = ev.target.getAttribute('aria-label') || ev.target.getAttribute('title') || '';
+      if (!lab) lab = String(ev.target.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      if (lab) voice(lab);
+    });
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape' && speakOn) {
+        speakOn = false;
+        if (btnSpeak) {
+          btnSpeak.setAttribute('aria-pressed', 'false');
+          btnSpeak.textContent = 'Speak';
+        }
+        silence();
+        hint('Speak is off.');
+        writeHash();
+        ev.preventDefault();
+        return;
+      }
+      let n = '';
+      if (ev.altKey && !ev.ctrlKey && !ev.metaKey) {
+        if (ev.code && ev.code.indexOf('Digit') === 0) n = ev.code.slice(5);
+        else if (ev.key && ev.key.length === 1 && ev.key >= '1' && ev.key <= '4') n = ev.key;
+      }
+      if (n === '1') { ev.preventDefault(); btnType?.click(); }
+      if (n === '2') { ev.preventDefault(); btnHi?.click(); }
+      if (n === '3') { ev.preventDefault(); btnSpeak?.click(); }
+      if (n === '4') { ev.preventDefault(); btnInk?.click(); }
+    });
     const flags = ((location.hash || '').match(/access=([\w,]+)/) || [, ''])[1].split(',').filter(Boolean);
     if (flags.includes('vibe') || flags.includes('type2')) typeLevel = 2;
     else if (flags.includes('feel') || flags.includes('type')) typeLevel = 1;
@@ -2320,6 +2351,7 @@ if (typeof document !== 'undefined') {
       btnSpeak.setAttribute('aria-pressed', 'true');
       btnSpeak.textContent = 'Stop speak';
     }
+    if (flags.includes('full')) fullOn = true;
     if (flags.includes('nofull')) fullOn = false;
     if (flags.includes('here')) {
       hereOn = true;
