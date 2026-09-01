@@ -8,7 +8,7 @@ Give it a thing. It argues maybe. It will not pick.
 
 I hate it. Dystopian ad bullshit. Cyberpunk nightmare fuel. A robot face talks with this film. Do not open if you do not want that.
 
-On the page, this is a letter. Stamp and Face are in options. Off.
+On the page, this is a letter. The film is closed.
 
 ![argubot arguing maybe and also maybe of hey how are you](argubot_demo.gif)
 

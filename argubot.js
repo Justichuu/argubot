@@ -2069,17 +2069,9 @@ if (typeof document !== 'undefined') {
     const btnHi = document.getElementById('acc_hi');
     const btnInk = document.getElementById('acc_ink');
     const btnSpeak = document.getElementById('acc_speak');
-    const btnHead = document.getElementById('acc_head');
-    const btnFull = document.getElementById('acc_full');
-    const btnHere = document.getElementById('acc_here');
-    const siteOptions = document.querySelector('.site-options');
-    const filmBox = document.querySelector('.film');
-    const hereBox = document.querySelector('.here');
+    const filmWrap = document.querySelector('.film-letter');
     let typeLevel = 0;
     let speakOn = false;
-    let headOn = false;
-    let fullOn = false;
-    let hereOn = false;
     const hint = (msg) => { if (note) note.textContent = msg || ''; };
     const tip = (el) => {
       const msg = el && el.getAttribute('title');
@@ -2184,9 +2176,6 @@ if (typeof document !== 'undefined') {
         root.classList.contains('access-hi') && 'hi',
         root.classList.contains('lamp') && 'ink',
         speakOn && 'speak',
-        fullOn && 'full',
-        hereOn && 'here',
-        headOn && 'head',
       ].filter(Boolean);
       try {
         history.replaceState(null, '', parts.length ? `#access=${parts.join(',')}` : location.pathname + location.search);
@@ -2244,67 +2233,11 @@ if (typeof document !== 'undefined') {
       }
       writeHash();
     });
-    const applyHere = () => {
-      if (hereBox) hereBox.hidden = !hereOn;
-      if (btnHere) {
-        btnHere.setAttribute('aria-pressed', hereOn ? 'true' : 'false');
-        btnHere.title = hereOn ? 'Stamp. On.' : 'Stamp.';
-      }
-    };
-    const applyHead = () => {
-      root.classList.toggle('show-head', headOn);
-      if (filmBox) filmBox.hidden = !headOn;
-      if (btnHead) {
-        btnHead.setAttribute('aria-pressed', headOn ? 'true' : 'false');
-        btnHead.textContent = headOn ? 'Hide face' : 'Face';
-        btnHead.title = headOn ? 'Face. On.' : 'Face.';
-      }
-      if (!headOn && film) {
+    filmWrap?.addEventListener('toggle', () => {
+      if (!filmWrap.open && film) {
         try { film.pause(); } catch (err) {}
         const trigger = document.querySelector('.film-trigger');
         if (trigger) trigger.open = false;
-      }
-      if (headOn && siteOptions) siteOptions.open = true;
-    };
-    const applyFull = () => {
-      root.classList.toggle('full', fullOn);
-      if (btnFull) {
-        btnFull.setAttribute('aria-pressed', fullOn ? 'true' : 'false');
-        btnFull.title = fullOn ? 'Biggest.' : 'Biggest. Off.';
-      }
-    };
-    const applyView = () => {
-      applyFull();
-      applyHere();
-      applyHead();
-    };
-    btnFull?.addEventListener('click', () => {
-      fullOn = !fullOn;
-      if (fullOn) {
-        hereOn = false;
-        headOn = false;
-      }
-      applyView();
-      hint(fullOn ? 'Box. Biggest.' : 'Box is off.');
-      writeHash();
-    });
-    btnHere?.addEventListener('click', () => {
-      hereOn = !hereOn;
-      if (hereOn) fullOn = false;
-      applyView();
-      hint(hereOn ? 'Stamp. This stays here.' : 'Stamp is off.');
-      writeHash();
-    });
-    btnHead?.addEventListener('click', () => {
-      headOn = !headOn;
-      if (headOn) fullOn = false;
-      applyView();
-      hint(headOn ? 'Face. The film.' : 'Face is off.');
-      writeHash();
-    });
-    siteOptions?.addEventListener('toggle', () => {
-      if (!siteOptions.open && film) {
-        try { film.pause(); } catch (err) {}
       }
     });
     document.addEventListener('focusin', (ev) => {
@@ -2351,17 +2284,7 @@ if (typeof document !== 'undefined') {
       btnSpeak.setAttribute('aria-pressed', 'true');
       btnSpeak.textContent = 'Stop speak';
     }
-    if (flags.includes('full')) fullOn = true;
-    if (flags.includes('nofull')) fullOn = false;
-    if (flags.includes('here')) {
-      hereOn = true;
-      fullOn = false;
-    }
-    if (flags.includes('head')) {
-      headOn = true;
-      fullOn = false;
-    }
-    applyView();
+    if (flags.includes('head') && filmWrap) filmWrap.open = true;
     const show = (text, moveFocus) => {
       out.textContent = text;
       voice(text);

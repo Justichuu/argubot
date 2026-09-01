@@ -155,32 +155,16 @@
       width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
       border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field);
     }
-    html.full #thing { min-height: min(46vh, 24rem); }
-    html.full .here,
-    html.full .notes,
-    html.full .site-made { display: none; }
-    .here { margin: 12px 0 16px; }
-    .here[hidden] { display: none; }
     .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin: 12px 0 16px; }
     #done { grid-column: 1 / -1; }
     button {
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
       border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
     }
-    #acc_here {
-      background: var(--accent);
-      border-style: dashed;
-      border-width: 3px;
-      font-family: var(--sans);
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-    }
-    #acc_head { background: var(--paper); }
     button:hover,
     button[aria-pressed="true"],
     .notes details[open] summary,
-    .site-options[open] > summary {
+    .film-letter[open] > summary {
       background: var(--ink);
       color: var(--paper);
       filter: none;
@@ -282,18 +266,15 @@
     }
     .customer-how > summary::-webkit-details-marker { display: none; }
     .site-access { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
-    .site-options { margin: 8px 0 0; width: 100%; }
-    .site-options > summary {
+    .film-letter { margin: 8px 0 0; width: 100%; }
+    .film-letter > summary {
       list-style: none;
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
       border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
       display: inline-flex; align-items: center;
     }
-    .site-options > summary::-webkit-details-marker { display: none; }
-    .site-options[open] > summary { background: var(--ink); color: var(--paper); }
-    .site-options .opt-why { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
-    .site-options .opt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-    .film[hidden] { display: none; }
+    .film-letter > summary::-webkit-details-marker { display: none; }
+    .film-letter[open] > summary { background: var(--ink); color: var(--paper); }
     html.feel, html.access-big { font-size: 22px; }
     html.vibe, html.access-bigger { font-size: 26px; }
     html.feel .lede, html.access-big .lede { font-size: 21px; }
@@ -388,17 +369,13 @@
         <button type="button" id="done" title="Out.">Done</button>
       </div>
     </form>
-    <aside class="here" hidden>
-      <p class="wip-stamp" role="status"><strong>This stays here.</strong> It does not call this website. Nothing is sent.</p>
-    </aside>
     <div class="notes">
       <details>
         <summary title="How.">Instructions</summary>
         <p>The box is the thing. Type a thing. Argue. yes or no if you have a side. more for more. done to leave.</p>
-        <p>Nothing is sent. Close the tab and it's gone.</p>
+        <p>This stays here. It does not call this website. Nothing is sent. Close the tab and it's gone.</p>
         <p>I don't know what I did. Neither do you.</p>
         <p>Who is this for. People on earth. Or people who laugh at it. None of this makes sense to anyone mostly on earth. Not confirmed.</p>
-        <p>This is a letter. Box is biggest. Stamp is the red thing. Face is the film. Off unless you want them.</p>
       </details>
     </div>
     <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
@@ -438,15 +415,9 @@
         <button type="button" id="acc_speak" aria-pressed="false" title="A voice.">Speak</button>
         <span id="acc_note" role="status" aria-live="polite"></span>
       </div>
-      <details class="site-options">
-        <summary title="More.">Options</summary>
-        <p class="opt-why">This is a letter. Box is biggest. Stamp is the red thing. Face is the film.</p>
-        <div class="opt-acts">
-          <button type="button" id="acc_full" aria-pressed="false" title="Biggest.">Box</button>
-          <button type="button" id="acc_here" aria-pressed="false" title="Stamp.">Stamp</button>
-          <button type="button" id="acc_head" aria-pressed="false" title="Face.">Face</button>
-        </div>
-        <section class="film" hidden aria-labelledby="film-argubot">
+      <details class="film-letter">
+        <summary title="Uncanny.">The film</summary>
+        <section class="film" aria-labelledby="film-argubot">
           <h2 id="film-argubot">Demo film</h2>
           <p><a href="#transcript-argubot">Skip this film and read its transcript</a></p>
           <p class="film-warn wip-stamp" role="status"><strong>Uncanny.</strong> A robot face talks with this film. Do not open if you do not want that.</p>
