@@ -436,6 +436,10 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Skip to the letter/);
   assert.match(html, /id="letter"/);
   assert.match(html, /100svh/);
+  const skin = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
+  const rules = skin.replace(/\/\*[\s\S]*?\*\//g, '').replace(/body::after\s*\{[\s\S]*?\n\s*\}/, '');
+  assert.doesNotMatch(rules, /min-height:\s*100(?:vh|svh|dvh|lvh)/, 'html/body must not stretch past the letter');
+  assert.match(skin, /body::after[\s\S]*100svh/);
   assert.match(html, /safe-area-inset/);
   assert.match(html, /min-height:\s*44px/);
   assert.match(html, /This stays here\./);
