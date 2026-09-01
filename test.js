@@ -604,6 +604,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(src, /streamTok/);
   assert.match(src, /createElement\('strong'\)/);
   assert.match(src, /charCodeAt\(0\) === 0x200b/);
+  assert.match(src, /scrollIntoView/);
   assert.doesNotMatch(src, /innerHTML/);
 });
 

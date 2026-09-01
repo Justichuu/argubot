@@ -2402,6 +2402,9 @@ if (typeof document !== 'undefined') {
       caret.className = 'caret';
       caret.setAttribute('aria-hidden', 'true');
       out.append(caret);
+      const follow = () => {
+        try { caret.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch (err) {}
+      };
       const lines = String(text || '').split('\n');
       const run = async () => {
         for (let i = 0; i < lines.length; i += 1) {
@@ -2412,6 +2415,7 @@ if (typeof document !== 'undefined') {
           out.insertBefore(fill, caret);
           const isThink = wrap.className === 'think';
           if (/\*\*bot lands on /.test(lines[i])) await wait(240);
+          follow();
           const parts = [...wrap.childNodes];
           for (const node of parts) {
             if (my !== streamTok) return;
@@ -2436,8 +2440,10 @@ if (typeof document !== 'undefined') {
               fill.append(node);
               await wait(/\*\*bot /.test(lines[i]) ? 90 : 40);
             }
+            follow();
           }
           if (isThink) await wait(70);
+          follow();
         }
         if (my !== streamTok) return;
         caret.remove();
