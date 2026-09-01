@@ -145,7 +145,7 @@
       display: inline-flex; align-items: center;
     }
     .notes summary::-webkit-details-marker { display: none; }
-    .notes details[open] summary { box-shadow: 4px 4px 0 var(--ink); }
+    .notes details[open] summary { background: var(--ink); color: var(--paper); }
     .notes details p { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     .notes .wip-stamp { margin: 10px 0 0; max-width: none; color: var(--ink); font-size: 15px; }
     textarea, button { font: inherit; color: var(--ink); }
@@ -157,7 +157,7 @@
     html.full .here,
     html.full .notes,
     html.full .sign,
-    html.full footer.site > p { display: none; }
+    html.full .site-made { display: none; }
     .here { margin: 12px 0 16px; }
     .here[hidden] { display: none; }
     .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin: 12px 0 16px; }
@@ -171,14 +171,6 @@
     #no { background: var(--accent); }
     #more { background: var(--cyan); }
     #done { background: var(--ink); color: var(--paper); }
-    #pesky { background: #ff7a18; }
-    #own-send { background: #e8a0ff; }
-    #acc_type { background: #ff9ec8; }
-    html.feel #acc_type { background: #ffd1e8; }
-    html.vibe #acc_type { background: var(--violet); color: #fff; }
-    #acc_hi { background: #f4f0e6; }
-    #acc_speak { background: #7af0ff; }
-    #acc_full { background: #fff1a8; }
     #acc_here {
       background: var(--accent);
       border-style: dashed;
@@ -189,15 +181,15 @@
       text-transform: uppercase;
     }
     #acc_head { background: var(--violet); color: #fff; }
-    .notes summary { background: #f0c8a0; }
-    .site-options > summary { background: #d4b8e8; }
-    .film-transcript summary { background: #e8dcc8; }
-    button:hover, .notes summary:hover, .site-options > summary:hover {
-      filter: brightness(0.93);
-      box-shadow: 3px 3px 0 rgba(18, 12, 20, .16);
+    button:hover,
+    button[aria-pressed="true"],
+    .notes details[open] summary,
+    .site-options[open] > summary {
+      background: var(--ink);
+      color: var(--paper);
+      filter: none;
+      box-shadow: none;
     }
-    #done:hover, #acc_head:hover { filter: brightness(1.18); }
-    button[aria-pressed="true"] { box-shadow: 4px 4px 0 var(--ink); }
     a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
     @media (hover: hover) {
       button[title], summary[title] { position: relative; z-index: 1; }
@@ -237,8 +229,9 @@
       display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start;
       color: var(--muted); font-size: 14px; font-style: italic; min-height: 44px;
     }
-    footer.site p { margin: 0 1.5em 10px 0; }
+    footer.site p, footer.site .site-links { margin: 0 1.5em 10px 0; }
     footer.site a { margin-right: 12px; }
+    .site-links { display: flex; flex-wrap: wrap; gap: 0 12px; }
     .pesky-reviews { margin: 8px 0 12px; width: 100%; }
     .review-cards {
       list-style: none;
@@ -301,7 +294,7 @@
       display: inline-flex; align-items: center;
     }
     .site-options > summary::-webkit-details-marker { display: none; }
-    .site-options[open] > summary { box-shadow: 4px 4px 0 var(--ink); }
+    .site-options[open] > summary { background: var(--ink); color: var(--paper); }
     .site-options .opt-why { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     .site-options .opt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .film[hidden] { display: none; }
@@ -319,17 +312,8 @@
     html.access-hi #no,
     html.access-hi #more,
     html.access-hi #done,
-    html.access-hi #pesky,
-    html.access-hi #own-send,
-    html.access-hi #acc_type,
-    html.access-hi #acc_hi,
-    html.access-hi #acc_speak,
-    html.access-hi #acc_full,
     html.access-hi #acc_here,
-    html.access-hi #acc_head,
-    html.access-hi .notes summary,
-    html.access-hi .site-options > summary,
-    html.access-hi .film-transcript summary {
+    html.access-hi #acc_head {
       background: #fff;
       color: #000;
       filter: none;
@@ -421,13 +405,14 @@
     </noscript>
     <p class="sign">Justichuu<br><time datetime="2026-08-31">31 August 2026</time></p>
     <footer class="site">
-      <p>
+      <nav class="site-links" aria-label="ChuuMind">
+        <a href="https://chuumind.com/">ChuuMind</a>
         <a href="https://chuumind.com/book/">Book</a>
         <a href="https://chuumind.com/rights/">Your rights</a>
         <a href="https://chuumind.com/privacy/">Privacy proof</a>
         <a href="https://chuumind.com/attributions/">Attributions</a>
-      </p>
-      <p>A person made this page. A machine did not.</p>
+      </nav>
+      <p class="site-made">A person made this page. A machine did not.</p>
       <aside class="pesky-reviews" aria-label="Pesky reviews">
         <button type="button" id="pesky" aria-pressed="false" aria-expanded="false" aria-controls="pesky-box" title="Seven cards.">Pesky reviews</button>
         <div class="pesky-box" id="pesky-box" hidden>
@@ -447,6 +432,7 @@
       <div class="site-access" role="region" aria-label="Access">
         <button type="button" id="acc_type" aria-pressed="false" title="Type. Feel. Vibe.">Type</button>
         <button type="button" id="acc_hi" aria-pressed="false" title="Light or dark.">Contrast</button>
+        <button type="button" id="acc_ink" aria-pressed="false" title="Ink.">Ink</button>
         <button type="button" id="acc_speak" aria-pressed="false" title="A voice.">Speak</button>
         <span id="acc_note" role="status" aria-live="polite"></span>
       </div>

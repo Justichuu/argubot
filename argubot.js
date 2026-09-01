@@ -2067,6 +2067,7 @@ if (typeof document !== 'undefined') {
     const note = document.getElementById('acc_note');
     const btnType = document.getElementById('acc_type');
     const btnHi = document.getElementById('acc_hi');
+    const btnInk = document.getElementById('acc_ink');
     const btnSpeak = document.getElementById('acc_speak');
     const btnHead = document.getElementById('acc_head');
     const btnFull = document.getElementById('acc_full');
@@ -2181,6 +2182,7 @@ if (typeof document !== 'undefined') {
         typeLevel === 1 && 'feel',
         typeLevel === 2 && 'vibe',
         root.classList.contains('access-hi') && 'hi',
+        root.classList.contains('lamp') && 'ink',
         speakOn && 'speak',
         !fullOn && 'nofull',
         hereOn && 'here',
@@ -2208,6 +2210,19 @@ if (typeof document !== 'undefined') {
       root.classList.toggle('access-hi', on);
       btnHi.setAttribute('aria-pressed', on ? 'true' : 'false');
       hint(on ? 'Dark on light.' : 'Normal colors.');
+      writeHash();
+    });
+    const applyInk = () => {
+      const on = root.classList.contains('lamp');
+      if (!btnInk) return;
+      btnInk.setAttribute('aria-pressed', on ? 'true' : 'false');
+      btnInk.textContent = on ? 'Paper' : 'Ink';
+      btnInk.title = on ? 'Paper.' : 'Ink.';
+    };
+    btnInk?.addEventListener('click', () => {
+      root.classList.toggle('lamp');
+      applyInk();
+      hint(root.classList.contains('lamp') ? 'Ink paper.' : 'Usual paper.');
       writeHash();
     });
     btnSpeak?.addEventListener('click', () => {
@@ -2298,6 +2313,8 @@ if (typeof document !== 'undefined') {
       root.classList.add('access-hi');
       btnHi.setAttribute('aria-pressed', 'true');
     }
+    if (flags.includes('ink')) root.classList.add('lamp');
+    applyInk();
     if (flags.includes('speak') && btnSpeak) {
       speakOn = true;
       btnSpeak.setAttribute('aria-pressed', 'true');

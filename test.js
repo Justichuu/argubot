@@ -478,9 +478,14 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /#no \{[^}]*--accent/);
   assert.match(html, /#more \{[^}]*--cyan/);
   assert.match(html, /#done \{[^}]*--ink/);
-  assert.match(html, /#pesky \{[^}]*#ff7a18/);
   assert.match(html, /#acc_head \{[^}]*--violet/);
-  assert.doesNotMatch(html, /button:hover,\s*button\[aria-pressed="true"\] \{ background: var\(--ink\)/);
+  assert.match(html, /button:hover[\s\S]*background: var\(--ink\)/);
+  assert.doesNotMatch(html, /#pesky \{[^}]*#ff7a18/);
+  assert.doesNotMatch(html, /html\.full footer\.site > p/);
+  assert.match(html, /class="site-links"/);
+  assert.match(html, /aria-label="ChuuMind"/);
+  assert.match(html, /id="acc_ink"[^>]*title="Ink\."/);
+  assert.match(html, /html\.lamp/);
   assert.doesNotMatch(html, /comedy if it is funny\. Or not\./);
   assert.doesNotMatch(html, /human if technology takes away\. Or not\./);
   assert.doesNotMatch(html, /<details[^>]*\bopen\b/);
@@ -583,6 +588,8 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(src, /\['Type', 'Feel', 'Vibe'\]/);
   assert.match(src, /typeLevel === 1 && 'feel'/);
   assert.match(src, /typeLevel === 2 && 'vibe'/);
+  assert.match(src, /classList\.contains\('lamp'\) && 'ink'/);
+  assert.match(src, /getElementById\('acc_ink'\)/);
   assert.doesNotMatch(src, /\u2e2e/);
   assert.doesNotMatch(html, /chuumind\.com\/styles\.css|chuumind\.com\/access\.js/);
 });
