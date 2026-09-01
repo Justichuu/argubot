@@ -457,6 +457,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
   assert.match(html, /The box is the thing\. Type a thing\./);
   assert.match(html, /I don't know what I did\. Neither do you\./);
+  assert.match(html, /The irony is none of those words make sense\./);
   assert.match(html, /Who is this for\. People on earth\. Or people who laugh at it\. None of this makes sense to anyone mostly on earth\. Not confirmed\./);
   assert.doesNotMatch(html, /comedy if it is funny\. Or not\./);
   assert.doesNotMatch(html, /human if technology takes away\. Or not\./);
@@ -517,6 +518,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(body, /Not really that funny/);
   assert.match(body, /Not confirmed comedy gold/);
   assert.match(body, /None of this makes sense to anyone mostly on earth ⸮/);
+  assert.match(body, /The irony is none of those words make sense/);
   assert.ok(body.indexOf('id="thing"') > 0);
   assert.ok(body.indexOf('id="thing"') < body.indexOf('id="out"'));
   assert.ok(html.indexOf('principal of its existence') < html.indexOf('<body>'), 'the long text stays in meta so the page stays small');
@@ -930,7 +932,7 @@ test('there is one demo', () => {
   assert.ok(skipAt > 0 && skipAt < warnAt, 'skip stays outside the face');
   assert.ok(warnAt > 0 && warnAt < triggerAt, 'the warning is in front of the flap');
   assert.ok(videoAt > triggerAt && videoAt < closeAt, 'the face stays inside Trigger me');
-  assert.match(html, /<video controls preload="none"/);
+  assert.match(html, /<video controls preload="none" playsinline/);
   assert.match(html, /argubot_demo\.vtt/);
   assert.match(html, /label="English captions" default/);
   assert.doesNotMatch(html, /\sautoplay\b|\sloop\b/);
