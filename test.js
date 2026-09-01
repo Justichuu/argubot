@@ -458,7 +458,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /class="wip-stamp"/);
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.doesNotMatch(html, /Here and Instructions/);
-  assert.match(html, /<summary>Instructions<\/summary>/);
+  assert.match(html, /<summary[^>]*>Instructions<\/summary>/);
   assert.match(html, /class="here"/);
   assert.match(html, /<aside class="here"[^>]*\bhidden\b/);
   assert.match(html, /id="acc_full"/);
@@ -479,7 +479,12 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /chuumind.com\/attributions\//);
   assert.match(html, /Will not hear you|will not hear you/);
   assert.match(html, /src="\.\/argubot\.js"/);
-  assert.match(html, /id="argue"/);
+  assert.match(html, /id="argue"[^>]*title="Both sides\. It will not pick\."/);
+  assert.match(html, /id="yes"[^>]*title="Your side\. Still both sides\."/);
+  assert.match(html, /id="no"[^>]*title="Your side\. Still both sides\."/);
+  assert.match(html, /id="more"[^>]*title="More of the same thing\."/);
+  assert.match(html, /id="done"[^>]*title="Leave\. It did not pick\."/);
+  assert.match(html, /content: attr\(title\)/);
   assert.match(html, /id="thing"/);
   assert.match(html, /it's me as a bot/);
   assert.match(html, /makes them worse and unfriendly and breaks their logic/);
@@ -544,7 +549,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Pesky reviews/);
   assert.match(html, /id="pesky-box"[^>]*\bhidden\b/);
   assert.match(html, /Rolled this visit\. Not saved\./);
-  assert.match(html, /<summary>How these lines got here<\/summary>/);
+  assert.match(html, /<summary[^>]*>How these lines got here<\/summary>/);
   assert.match(html, /English names\. Other languages\. One is gibberish\. Random stars\./);
   assert.match(html, /Leave your own review/);
   assert.match(html, /id="own-review"/);
@@ -933,7 +938,7 @@ test('there is one demo', () => {
   assert.match(readme, /Cyberpunk nightmare fuel/);
   assert.match(readme, /Full view is on\. Here and Head are in options\. Off\./);
   assert.ok(readme.indexOf('I hate it.') < readme.indexOf('argubot_demo.gif'), 'readme does not show the face first');
-  assert.match(html, /<summary>Options<\/summary>/);
+  assert.match(html, /<summary[^>]*>Options<\/summary>/);
   assert.match(html, /id="acc_head"/);
   assert.doesNotMatch(html, /<details class="site-options"[^>]*\bopen\b/);
   assert.match(html, /<section class="film"[^>]*\bhidden\b/);
@@ -947,7 +952,7 @@ test('there is one demo', () => {
   assert.match(src, /hereOn && 'here'/);
   assert.match(src, /!fullOn && 'nofull'/);
   assert.match(src, /getElementById\('acc_head'\)/);
-  assert.match(html, /<summary>Trigger me\. The face is in here\.<\/summary>/);
+  assert.match(html, /<summary[^>]*>Trigger me\. The face is in here\.<\/summary>/);
   assert.match(html, /class="film-trigger"/);
   assert.doesNotMatch(html, /<details class="film-trigger"[^>]*\bopen\b/);
   assert.doesNotMatch(html, /Trigger warning/);
@@ -958,7 +963,7 @@ test('there is one demo', () => {
   assert.doesNotMatch(html, /idomath/i);
   const skipAt = html.indexOf('Skip this film and read its transcript');
   const warnAt = html.indexOf('<strong>Uncanny.</strong>');
-  const triggerAt = html.indexOf('<summary>Trigger me. The face is in here.</summary>');
+  const triggerAt = html.indexOf('Trigger me. The face is in here.');
   const videoAt = html.indexOf('<video controls preload="none"');
   const closeAt = html.indexOf('</details>', triggerAt);
   assert.ok(skipAt > 0 && skipAt < warnAt, 'skip stays outside the face');

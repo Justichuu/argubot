@@ -2080,6 +2080,14 @@ if (typeof document !== 'undefined') {
     let fullOn = true;
     let hereOn = false;
     const hint = (msg) => { if (note) note.textContent = msg || ''; };
+    const tip = (el) => {
+      const msg = el && el.getAttribute('title');
+      if (msg) hint(msg);
+    };
+    document.querySelectorAll('button[title], summary[title]').forEach((el) => {
+      el.addEventListener('mouseenter', () => tip(el));
+      el.addEventListener('focus', () => tip(el));
+    });
     const roll = rollVisitor();
     const audio = audioFromRoll(roll);
     const quotes = quotesFromRoll(roll);
