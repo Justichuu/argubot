@@ -2066,11 +2066,16 @@ if (typeof document !== 'undefined') {
     const btnHi = document.getElementById('acc_hi');
     const btnSpeak = document.getElementById('acc_speak');
     const btnHead = document.getElementById('acc_head');
+    const btnFull = document.getElementById('acc_full');
+    const btnHere = document.getElementById('acc_here');
     const siteOptions = document.querySelector('.site-options');
     const filmBox = document.querySelector('.film');
+    const hereBox = document.querySelector('.here');
     let typeLevel = 0;
     let speakOn = false;
     let headOn = false;
+    let fullOn = true;
+    let hereOn = false;
     const hint = (msg) => { if (note) note.textContent = msg || ''; };
     const roll = rollVisitor();
     const audio = audioFromRoll(roll);
@@ -2135,6 +2140,8 @@ if (typeof document !== 'undefined') {
         typeLevel === 2 && 'type2',
         root.classList.contains('access-hi') && 'hi',
         speakOn && 'speak',
+        !fullOn && 'nofull',
+        hereOn && 'here',
         headOn && 'head',
       ].filter(Boolean);
       try {
@@ -2178,6 +2185,13 @@ if (typeof document !== 'undefined') {
       }
       writeHash();
     });
+    const applyHere = () => {
+      if (hereBox) hereBox.hidden = !hereOn;
+      if (btnHere) {
+        btnHere.setAttribute('aria-pressed', hereOn ? 'true' : 'false');
+        btnHere.title = hereOn ? 'The red thing. On.' : 'The red thing. Off.';
+      }
+    };
     const applyHead = () => {
       root.classList.toggle('show-head', headOn);
       if (filmBox) filmBox.hidden = !headOn;
@@ -2193,9 +2207,39 @@ if (typeof document !== 'undefined') {
       }
       if (headOn && siteOptions) siteOptions.open = true;
     };
+    const applyFull = () => {
+      root.classList.toggle('full', fullOn);
+      if (btnFull) {
+        btnFull.setAttribute('aria-pressed', fullOn ? 'true' : 'false');
+        btnFull.title = fullOn ? 'Biggest box. On.' : 'Biggest box. Off.';
+      }
+    };
+    const applyView = () => {
+      applyFull();
+      applyHere();
+      applyHead();
+    };
+    btnFull?.addEventListener('click', () => {
+      fullOn = !fullOn;
+      if (fullOn) {
+        hereOn = false;
+        headOn = false;
+      }
+      applyView();
+      hint(fullOn ? 'Full view. Biggest box.' : 'Full view is off.');
+      writeHash();
+    });
+    btnHere?.addEventListener('click', () => {
+      hereOn = !hereOn;
+      if (hereOn) fullOn = false;
+      applyView();
+      hint(hereOn ? 'Here. This stays here.' : 'Here is off.');
+      writeHash();
+    });
     btnHead?.addEventListener('click', () => {
       headOn = !headOn;
-      applyHead();
+      if (headOn) fullOn = false;
+      applyView();
       hint(headOn ? 'The face is here.' : 'Head is off.');
       writeHash();
     });
@@ -2217,8 +2261,16 @@ if (typeof document !== 'undefined') {
       btnSpeak.setAttribute('aria-pressed', 'true');
       btnSpeak.textContent = 'Stop speak';
     }
-    if (flags.includes('head')) headOn = true;
-    applyHead();
+    if (flags.includes('nofull')) fullOn = false;
+    if (flags.includes('here')) {
+      hereOn = true;
+      fullOn = false;
+    }
+    if (flags.includes('head')) {
+      headOn = true;
+      fullOn = false;
+    }
+    applyView();
     const show = (text, moveFocus) => {
       out.textContent = text;
       voice(text);
