@@ -145,7 +145,7 @@
       display: inline-flex; align-items: center;
     }
     .notes summary::-webkit-details-marker { display: none; }
-    .notes details[open] summary { background: var(--ink); color: var(--paper); }
+    .notes details[open] summary { box-shadow: 4px 4px 0 var(--ink); }
     .notes details p { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     .notes .wip-stamp { margin: 10px 0 0; max-width: none; color: var(--ink); font-size: 15px; }
     textarea, button { font: inherit; color: var(--ink); }
@@ -166,7 +166,38 @@
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
       border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
     }
-    button:hover, button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+    #argue { background: linear-gradient(90deg, var(--mint) 0 50%, var(--accent) 50% 100%); }
+    #yes { background: var(--mint); }
+    #no { background: var(--accent); }
+    #more { background: var(--cyan); }
+    #done { background: var(--ink); color: var(--paper); }
+    #pesky { background: #ff7a18; }
+    #own-send { background: #e8a0ff; }
+    #acc_type { background: #ff9ec8; }
+    html.feel #acc_type { background: #ffd1e8; }
+    html.vibe #acc_type { background: var(--violet); color: #fff; }
+    #acc_hi { background: #f4f0e6; }
+    #acc_speak { background: #7af0ff; }
+    #acc_full { background: #fff1a8; }
+    #acc_here {
+      background: var(--accent);
+      border-style: dashed;
+      border-width: 3px;
+      font-family: var(--sans);
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    #acc_head { background: var(--violet); color: #fff; }
+    .notes summary { background: #f0c8a0; }
+    .site-options > summary { background: #d4b8e8; }
+    .film-transcript summary { background: #e8dcc8; }
+    button:hover, .notes summary:hover, .site-options > summary:hover {
+      filter: brightness(0.93);
+      box-shadow: 3px 3px 0 rgba(18, 12, 20, .16);
+    }
+    #done:hover, #acc_head:hover { filter: brightness(1.18); }
+    button[aria-pressed="true"] { box-shadow: 4px 4px 0 var(--ink); }
     a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
     @media (hover: hover) {
       button[title], summary[title] { position: relative; z-index: 1; }
@@ -270,7 +301,8 @@
       display: inline-flex; align-items: center;
     }
     .site-options > summary::-webkit-details-marker { display: none; }
-    .site-options[open] > summary { background: var(--ink); color: var(--paper); }
+    .site-options[open] > summary { box-shadow: 4px 4px 0 var(--ink); }
+    .site-options .opt-why { margin: 10px 0 0; color: var(--muted); font-size: 14px; max-width: 54ch; }
     .site-options .opt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .film[hidden] { display: none; }
     html.feel { font-size: 22px; }
@@ -281,6 +313,27 @@
     html.access-hi { --paper: #fff; --ink: #000; --muted: #000; --field: #fff; }
     html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line {
       background: #fff; color: #000;
+    }
+    html.access-hi #argue,
+    html.access-hi #yes,
+    html.access-hi #no,
+    html.access-hi #more,
+    html.access-hi #done,
+    html.access-hi #pesky,
+    html.access-hi #own-send,
+    html.access-hi #acc_type,
+    html.access-hi #acc_hi,
+    html.access-hi #acc_speak,
+    html.access-hi #acc_full,
+    html.access-hi #acc_here,
+    html.access-hi #acc_head,
+    html.access-hi .notes summary,
+    html.access-hi .site-options > summary,
+    html.access-hi .film-transcript summary {
+      background: #fff;
+      color: #000;
+      filter: none;
+      box-shadow: none;
     }
     html.access-hi body::after { display: none; }
     html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line { border-color: #000; }
@@ -359,7 +412,7 @@
         <p>The box is the thing. Type a thing. Argue. yes or no if you have a side. more for more. done to leave.</p>
         <p>I don't know what I did. Neither do you.</p>
         <p>Who is this for. People on earth. Or people who laugh at it. None of this makes sense to anyone mostly on earth. Not confirmed.</p>
-        <p>Full view is on. Biggest box. Here and Head are in options. Off.</p>
+        <p>Box is the page. Biggest. Stamp is the red thing. Face is the film. Off unless you want them.</p>
       </details>
     </div>
     <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
@@ -399,10 +452,11 @@
       </div>
       <details class="site-options">
         <summary title="More.">Options</summary>
+        <p class="opt-why">You do not need these. Box is the page. Stamp is the red thing. Face is the film.</p>
         <div class="opt-acts">
-          <button type="button" id="acc_full" aria-pressed="true" title="Biggest.">Full</button>
-          <button type="button" id="acc_here" aria-pressed="false" title="Stamp.">Here</button>
-          <button type="button" id="acc_head" aria-pressed="false" title="Face.">Head</button>
+          <button type="button" id="acc_full" aria-pressed="true" title="Biggest.">Box</button>
+          <button type="button" id="acc_here" aria-pressed="false" title="Stamp.">Stamp</button>
+          <button type="button" id="acc_head" aria-pressed="false" title="Face.">Face</button>
         </div>
         <section class="film" hidden aria-labelledby="film-argubot">
           <h2 id="film-argubot">Demo film</h2>

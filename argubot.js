@@ -2239,7 +2239,7 @@ if (typeof document !== 'undefined') {
       if (filmBox) filmBox.hidden = !headOn;
       if (btnHead) {
         btnHead.setAttribute('aria-pressed', headOn ? 'true' : 'false');
-        btnHead.textContent = headOn ? 'Hide head' : 'Head';
+        btnHead.textContent = headOn ? 'Hide face' : 'Face';
         btnHead.title = headOn ? 'Face. On.' : 'Face.';
       }
       if (!headOn && film) {
@@ -2268,21 +2268,21 @@ if (typeof document !== 'undefined') {
         headOn = false;
       }
       applyView();
-      hint(fullOn ? 'Full view. Biggest box.' : 'Full view is off.');
+      hint(fullOn ? 'Box. Biggest.' : 'Box is off.');
       writeHash();
     });
     btnHere?.addEventListener('click', () => {
       hereOn = !hereOn;
       if (hereOn) fullOn = false;
       applyView();
-      hint(hereOn ? 'Here. This stays here.' : 'Here is off.');
+      hint(hereOn ? 'Stamp. This stays here.' : 'Stamp is off.');
       writeHash();
     });
     btnHead?.addEventListener('click', () => {
       headOn = !headOn;
       if (headOn) fullOn = false;
       applyView();
-      hint(headOn ? 'The face is here.' : 'Head is off.');
+      hint(headOn ? 'Face. The film.' : 'Face is off.');
       writeHash();
     });
     siteOptions?.addEventListener('toggle', () => {
