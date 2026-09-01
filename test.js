@@ -456,6 +456,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
   assert.match(html, /The box is the thing\. Type a thing\./);
+  assert.match(html, /I don't know what I did\. Neither do you\./);
   assert.match(html, /Who is this for\. People on earth\. Or people who laugh at it\. None of this makes sense to anyone mostly on earth\. Not confirmed\./);
   assert.doesNotMatch(html, /comedy if it is funny\. Or not\./);
   assert.doesNotMatch(html, /human if technology takes away\. Or not\./);
