@@ -145,8 +145,9 @@
       width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
       border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field);
     }
+    textarea::placeholder { color: var(--muted); opacity: 1; }
     .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin: 12px 0 16px; }
-    #done { grid-column: 1 / -1; }
+    #argue { grid-column: 1 / -1; }
     button {
       min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
       border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
@@ -246,14 +247,6 @@
       font: inherit; color: var(--ink);
     }
     #own-note { margin: 0; color: var(--muted); font-size: 14px; }
-    .customer-how { margin: 4px 0 0; }
-    .customer-how > summary {
-      list-style: none;
-      min-height: 44px; min-width: 44px; padding: 8px 0; cursor: pointer;
-      display: inline-flex; align-items: center;
-      color: var(--muted); font-size: 14px;
-    }
-    .customer-how > summary::-webkit-details-marker { display: none; }
     .site-access { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
     .film-letter { margin: 8px 0 0; width: 100%; }
     .film-letter > summary {
@@ -349,7 +342,7 @@
     </header>
     <p class="lede">It's me as a bot, not really funny.</p>
     <form id="talk">
-      <textarea id="thing" name="thing" rows="3" autocomplete="off" enterkeyhint="go" autocapitalize="sentences" aria-label="Type here"></textarea>
+      <textarea id="thing" name="thing" rows="3" autocomplete="off" enterkeyhint="go" autocapitalize="sentences" aria-label="Type a thing." placeholder="Type a thing."></textarea>
       <div class="acts">
         <button type="submit" id="argue" title="Both sides.">Argue</button>
         <button type="button" id="yes" title="Your side.">Yes</button>
@@ -378,10 +371,7 @@
         <div class="pesky-box" id="pesky-box" hidden>
           <p>Not saved.</p>
           <ul id="customer-lines" class="review-cards"></ul>
-          <details class="customer-how">
-            <summary title="How.">How these lines got here</summary>
-            <p>English names. Other languages. One is gibberish. Random stars. Nothing is sent.</p>
-          </details>
+          <p>English names. Other languages. One is gibberish. Random stars. Nothing is sent.</p>
           <form id="own-review">
             <input id="own-line" name="own" autocomplete="off" enterkeyhint="send" spellcheck="false" aria-label="Leave your own review">
             <button type="submit" id="own-send" title="Fake post.">Leave your own review</button>

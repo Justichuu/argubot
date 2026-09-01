@@ -564,7 +564,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Pesky reviews/);
   assert.match(html, /id="pesky-box"[^>]*\bhidden\b/);
   assert.match(html, /Not saved\./);
-  assert.match(html, /<summary[^>]*>How these lines got here<\/summary>/);
+  assert.doesNotMatch(html, /How these lines got here/);
+  assert.match(html, /placeholder="Type a thing\."/);
+  assert.match(html, /#argue \{[^}]*grid-column:\s*1\s*\/\s*-1/);
   assert.match(html, /English names\. Other languages\. One is gibberish\. Random stars\./);
   assert.match(html, /Leave your own review/);
   assert.match(html, /id="own-review"/);
