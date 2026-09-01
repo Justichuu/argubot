@@ -2231,7 +2231,7 @@ if (typeof document !== 'undefined') {
       if (hereBox) hereBox.hidden = !hereOn;
       if (btnHere) {
         btnHere.setAttribute('aria-pressed', hereOn ? 'true' : 'false');
-        btnHere.title = hereOn ? 'The red thing. On.' : 'The red thing. Off.';
+        btnHere.title = hereOn ? 'Stamp. On.' : 'Stamp.';
       }
     };
     const applyHead = () => {
@@ -2240,7 +2240,7 @@ if (typeof document !== 'undefined') {
       if (btnHead) {
         btnHead.setAttribute('aria-pressed', headOn ? 'true' : 'false');
         btnHead.textContent = headOn ? 'Hide head' : 'Head';
-        btnHead.title = headOn ? 'The face. On.' : 'The face. Off.';
+        btnHead.title = headOn ? 'Face. On.' : 'Face.';
       }
       if (!headOn && film) {
         try { film.pause(); } catch (err) {}
@@ -2253,7 +2253,7 @@ if (typeof document !== 'undefined') {
       root.classList.toggle('full', fullOn);
       if (btnFull) {
         btnFull.setAttribute('aria-pressed', fullOn ? 'true' : 'false');
-        btnFull.title = fullOn ? 'Biggest box. On.' : 'Biggest box. Off.';
+        btnFull.title = fullOn ? 'Biggest.' : 'Biggest. Off.';
       }
     };
     const applyView = () => {
