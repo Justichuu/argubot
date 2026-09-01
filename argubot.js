@@ -58,21 +58,29 @@ function personalize(text, name) {
 }
 
 // One roll per visit. Memory only. Do not write it down.
+// Same lie. Different mouths. Different languages. Different stars.
+const SAME_LIE = 'wow really works';
 const FAKE_QUOTES = [
-  'wow really works',
-  '5 stars would argue again',
-  'changed my life tbh',
-  'saw results immediately',
-  'my manager is crying happy tears',
-  'so easy my boss gets it',
-  'best decision this quarter',
-  'highly recommend to anyone',
-  'customers love it',
-  'finally something that just works',
-  'would buy again',
-  'seamless experience',
-  'ten out of ten no notes',
-  'it scaled our synergy',
+  { lang: 'en', text: 'wow really works' },
+  { lang: 'es', text: 'wow de verdad funciona' },
+  { lang: 'fr', text: 'wow ca marche vraiment' },
+  { lang: 'de', text: 'wow funktioniert wirklich' },
+  { lang: 'it', text: 'wow funziona davvero' },
+  { lang: 'pt', text: 'wow realmente funciona' },
+  { lang: 'nl', text: 'wow het werkt echt' },
+  { lang: 'pl', text: 'wow naprawde dziala' },
+  { lang: 'ja', text: 'わあ本当に効く' },
+  { lang: 'ko', text: '와 진짜 돼요' },
+  { lang: 'zh', text: '哇真的有用' },
+  { lang: 'ar', text: 'واو يشتغل فعلا' },
+  { lang: 'ru', text: 'вау реально работает' },
+  { lang: 'hi', text: 'वाह सच में काम करता है' },
+  { lang: 'sv', text: 'wow det funkar verkligen' },
+  { lang: 'tr', text: 'vay gercekten ise yariyor' },
+  { lang: 'he', text: 'ואו באמת עובד' },
+  { lang: 'vi', text: 'wow that su hieu qua' },
+  { lang: 'fi', text: 'wow se toimii oikeasti' },
+  { lang: 'uk', text: 'вау реально працює' },
 ];
 const AUDIO_FILTERS = ['lowpass', 'highpass', 'notch', 'allpass'];
 
@@ -94,10 +102,17 @@ function audioFromRoll(roll) {
   };
 }
 
-function quotesFromRoll(roll, count = 3) {
-  const take = Math.max(1, Math.min(FAKE_QUOTES.length, Number(count) || 3));
+function quotesFromRoll(roll, count = 5) {
+  const take = Math.max(1, Math.min(FAKE_QUOTES.length, Number(count) || 5));
   const rng = makeRng(hashString(`quotes:${String(roll)}`));
-  return shuffled(rng, FAKE_QUOTES).slice(0, take);
+  const lines = shuffled(rng, FAKE_QUOTES).slice(0, take);
+  const stars = shuffled(rng, [1, 2, 3, 4, 5]);
+  return lines.map((item, i) => ({
+    lang: item.lang,
+    text: item.text,
+    stars: stars[i % 5],
+    name: generateName(makeRng(hashString(`cite:${item.lang}:${String(roll)}`))),
+  }));
 }
 
 function driveCurve(amount) {
@@ -1931,9 +1946,12 @@ if (typeof document !== 'undefined') {
       for (const line of quotes) {
         const item = document.createElement('li');
         const said = document.createElement('blockquote');
-        said.textContent = line;
+        said.lang = line.lang;
+        said.dir = 'auto';
+        said.textContent = line.text;
         const who = document.createElement('cite');
-        who.textContent = generateName(makeRng(hashString(`cite:${line}:${roll}`)));
+        const starWord = line.stars === 1 ? '1 star' : `${line.stars} stars`;
+        who.textContent = `${line.name}, ${starWord}`;
         item.append(said, who);
         quoteBox.append(item);
       }
@@ -2115,4 +2133,5 @@ export {
   audioFromRoll,
   quotesFromRoll,
   FAKE_QUOTES,
+  SAME_LIE,
 };

@@ -45,6 +45,7 @@ import {
   audioFromRoll,
   quotesFromRoll,
   FAKE_QUOTES,
+  SAME_LIE,
 } from './argubot.js';
 
 const CLI = fileURLToPath(new URL('./argubot.js', import.meta.url));
@@ -1048,17 +1049,23 @@ test('the film audio follows the visitor roll', () => {
   assert.ok(one.speakPitch > 0 && one.speakRate > 0);
 });
 
-test('fake customer lines are generic and untrue', () => {
-  assert.ok(FAKE_QUOTES.includes('wow really works'));
+test('fake customer lines are the same lie in different mouths', () => {
+  assert.equal(SAME_LIE, 'wow really works');
   assert.ok(FAKE_QUOTES.length >= 8);
+  assert.equal(new Set(FAKE_QUOTES.map((row) => row.lang)).size, FAKE_QUOTES.length);
+  assert.equal(new Set(FAKE_QUOTES.map((row) => row.text)).size, FAKE_QUOTES.length);
+  assert.ok(FAKE_QUOTES.some((row) => row.lang === 'en' && row.text === SAME_LIE));
   const one = quotesFromRoll(0.2);
   const again = quotesFromRoll(0.2);
   const other = quotesFromRoll(0.91);
   assert.deepEqual(one, again);
-  assert.equal(one.length, 3);
-  assert.ok(one.every((line) => FAKE_QUOTES.includes(line)));
-  assert.notDeepEqual(one, other);
-  assert.ok(FAKE_QUOTES.every((line) => !/[\u2013\u2014]/.test(line)));
+  assert.equal(one.length, 5);
+  assert.equal(new Set(one.map((row) => row.name)).size, one.length);
+  assert.equal(new Set(one.map((row) => row.lang)).size, one.length);
+  assert.deepEqual([...one.map((row) => row.stars)].sort(), [1, 2, 3, 4, 5]);
+  assert.ok(one.every((row) => FAKE_QUOTES.some((src) => src.lang === row.lang && src.text === row.text)));
+  assert.notDeepEqual(one.map((row) => row.lang), other.map((row) => row.lang));
+  assert.ok(FAKE_QUOTES.every((row) => !/[\u2013\u2014]/.test(row.text)));
 });
 
 test('the CLI talk loop reads lines and exits', async () => {
