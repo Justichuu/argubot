@@ -780,14 +780,15 @@ test('there is one demo', () => {
   assert.match(html, /<summary>Trigger me<\/summary>/);
   assert.match(html, /class="film-trigger"/);
   assert.doesNotMatch(html, /<details class="film-trigger"[^>]*\bopen\b/);
-  assert.match(html, /Trigger warning/);
+  assert.doesNotMatch(html, /Trigger warning/);
+  assert.match(html, /<strong>I hate it\.<\/strong>/);
   assert.match(html, /Uncanny/);
-  assert.match(html, /I hate it/);
   assert.match(html, /robot face talks/);
+  assert.match(html, /class="film-warn wip-stamp"/);
   assert.doesNotMatch(html, /idomath/i);
   const skipAt = html.indexOf('Skip this film and read its transcript');
   const triggerAt = html.indexOf('<summary>Trigger me</summary>');
-  const warnAt = html.indexOf('Trigger warning. Uncanny. I hate it.');
+  const warnAt = html.indexOf('<strong>I hate it.</strong>');
   const videoAt = html.indexOf('<video controls preload="none"');
   const closeAt = html.indexOf('</details>', triggerAt);
   assert.ok(skipAt > 0 && skipAt < triggerAt, 'skip stays outside the face');

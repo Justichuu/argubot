@@ -190,20 +190,9 @@
     }
     .film-trigger > summary::-webkit-details-marker { display: none; }
     .film-trigger[open] > summary { background: var(--ink); color: var(--paper); border-color: var(--ink); box-shadow: none; }
-    .film-warn {
-      margin: 10px 0 .8rem;
-      max-width: 54ch;
-      color: var(--accent-ink);
-      font-family: var(--sans);
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-    }
+    .film-warn { margin: 10px 0 .8rem; max-width: none; }
+    .film-warn strong { display: block; font-size: 1.2em; letter-spacing: .12em; }
     html.access-hi .film-trigger > summary { background: var(--paper); color: var(--ink); box-shadow: none; border-color: currentColor; }
-    html.access-hi .film-warn { color: var(--ink); }
-    html.access-big .film-warn { font-size: 18px; }
-    html.access-bigger .film-warn { font-size: 21px; }
     .film video {
       display: block; width: 100%; height: auto;
       border-radius: var(--radius);
@@ -262,7 +251,7 @@
       <p><a href="#transcript-argubot">Skip this film and read its transcript</a></p>
       <details class="film-trigger">
         <summary>Trigger me</summary>
-        <p class="film-warn">Trigger warning. Uncanny. I hate it. A robot face talks with this film.</p>
+        <p class="film-warn wip-stamp" role="status"><strong>I hate it.</strong> Uncanny. A robot face talks with this film.</p>
         <video controls preload="none" poster="./argubot_demo.jpg" aria-describedby="film-argubot-description">
           <source src="./argubot_demo.mp4" type="video/mp4">
           <track kind="captions" src="./argubot_demo.vtt" srclang="en" label="English captions" default>
