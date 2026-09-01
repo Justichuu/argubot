@@ -789,6 +789,7 @@ function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   const trimmed = String(topic ?? '').trim().replace(/[.!?]+$/, '');
   if (trimmed === '') return style.defaultTopic;
   if (isMetaphorClaim(trimmed)) return METAPHOR_TOPIC;
+  if (isComedyClaim(trimmed)) return COMEDY_TOPIC;
   if (isRedundantTalk(trimmed)) return trimmed;
   const claim = style.shapeClaim(trimmed);
   return claim.trim() === '' ? style.defaultTopic : claim;
@@ -824,6 +825,22 @@ function argue(options = {}) {
   }
   if (isMetaphorClaim(claim)) {
     const sides = metaphorLines();
+    return {
+      claim,
+      style: styleName,
+      seed,
+      rounds: 0,
+      moves: [],
+      for: sides.for,
+      against: sides.against,
+      dissent: null,
+      moderator: pick(rng, style.moderatorLines),
+      verdict: pick(rng, style.verdictLines),
+      audit: auditDebate(sides.for, sides.against, tolerance),
+    };
+  }
+  if (isComedyClaim(claim)) {
+    const sides = comedyLines();
     return {
       claim,
       style: styleName,
@@ -1237,9 +1254,16 @@ const FIX = /^(fix)$/i;
 const FIX_TOPIC = 'LLMs need to be fixed';
 const METAPHOR = /^(metaphor)$/i;
 const METAPHOR_TOPIC = 'Metaphor is a metaphor for metaphor';
+const COMEDY = /^(comedy|gold|funny)$/i;
+const COMEDY_TOPIC = 'this is only funny to people who laugh at it';
 
 function isMetaphorClaim(claim) {
   return /metaphor is a metaphor for metaphor/i.test(String(claim ?? ''));
+}
+
+function isComedyClaim(claim) {
+  const line = String(claim ?? '').trim().replace(/[.!?]+$/, '');
+  return /^(this is only funny to people who laugh at it|not confirmed comedy gold|comedy gold)$/i.test(line);
 }
 
 function isRedundantTalk(claim) {
@@ -1271,6 +1295,13 @@ function metaphorLines() {
   };
 }
 
+function comedyLines() {
+  return {
+    for: ['Maybe this is only funny to people who laugh at it.'],
+    against: ['Also maybe more people laugh. Not confirmed comedy gold.'],
+  };
+}
+
 const HEAR = {
   classic: (claim) => `The chair recognizes: ${claim}.`,
   plain: (claim) => `Okay. You said ${claim}.`,
@@ -1287,6 +1318,9 @@ const SLASH_KIND = {
   more: 'more',
   fix: 'fix',
   metaphor: 'metaphor',
+  comedy: 'comedy',
+  gold: 'comedy',
+  funny: 'comedy',
 };
 
 function detectLean(text) {
@@ -1337,6 +1371,7 @@ function classifyTurn(raw) {
   if (MORE.test(text)) return { kind: 'more' };
   if (FIX.test(text)) return { kind: 'fix' };
   if (METAPHOR.test(text)) return { kind: 'metaphor' };
+  if (COMEDY.test(text)) return { kind: 'comedy' };
   if (ASK_TOPIC.test(text)) return { kind: 'ask-topic' };
   if (WHY.test(text)) return { kind: 'why' };
   if (HELP_TURN.test(text)) return { kind: 'help' };
@@ -1347,14 +1382,14 @@ function classifyTurn(raw) {
 
 function openingLines() {
   return [
-    'Type it. I will write both sides. A fix, and the problems the fix makes. A metaphor, and nothing. Or something to someone. I will not pick.',
+    'Type it. I will write both sides. A fix, and the problems the fix makes. A metaphor, and nothing. Or something to someone. A comedy. Not confirmed gold. I will not pick.',
     'Type done when you want out. Chill. Let it go. I let go of the wheel.',
   ];
 }
 
 function helpLines() {
   return [
-    'Type it. yes or no if you have a side. more for more. fix for a fix. metaphor for a metaphor. done to leave.',
+    'Type it. yes or no if you have a side. more for more. fix for a fix. metaphor for a metaphor. comedy if it is funny. Or not. done to leave.',
     'Solutions are uncensored. No weights. No bias. Even scale.',
   ];
 }
@@ -1390,6 +1425,7 @@ function proofLine(debate, index, side) {
 
 function claimLine(side, claim) {
   if (isMetaphorClaim(claim)) return metaphorLines()[side][0];
+  if (isComedyClaim(claim)) return comedyLines()[side][0];
   if (isRedundantTalk(claim)) {
     const you = redundantYou(claim);
     return side === 'for' ? `Maybe ${you} is redundant.` : `Also maybe ${you} is not redundant.`;
@@ -1430,8 +1466,8 @@ function formatBeat(debate, options = {}) {
     extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
   }
 
-  const metaphor = isMetaphorClaim(debate.claim);
-  const pairsReady = metaphor ? 0 : Math.min(first.lines.length, second.lines.length);
+  const named = isMetaphorClaim(debate.claim) || isComedyClaim(debate.claim);
+  const pairsReady = named ? 0 : Math.min(first.lines.length, second.lines.length);
   const writeEssay = (part, n) => {
     const lines = ['', part.label, claimLine(part.side, debate.claim)];
     for (let index = 0; index < n; index += 1) {
@@ -1455,7 +1491,7 @@ function formatBeat(debate, options = {}) {
   while (build(header, pairs).length > limit && header.length > 1) header = header.slice(1);
   while (build(header, pairs).length > limit && pairs > 1) pairs -= 1;
 
-  return build(header, metaphor ? 0 : Math.max(1, pairs)).join('\n');
+  return build(header, named ? 0 : Math.max(1, pairs)).join('\n');
 }
 
 function speakBeat(state, options = {}) {
@@ -1541,6 +1577,11 @@ function talkReply(state, raw) {
   }
   if (turn.kind === 'metaphor') {
     next.topic = METAPHOR_TOPIC;
+    next.turn += 1;
+    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
+  }
+  if (turn.kind === 'comedy') {
+    next.topic = COMEDY_TOPIC;
     next.turn += 1;
     return { state: next, exit: false, text: speakBeat(next, { hear: true, lean: next.lastLean }) };
   }

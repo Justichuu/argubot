@@ -455,6 +455,7 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /class="wip-stamp"/);
   assert.match(html, /background:\s*var\(--accent\)/);
   assert.match(html, /<summary>Here and Instructions<\/summary>/);
+  assert.match(html, /comedy if it is funny\. Or not\./);
   assert.match(html, /<details open>/);
   assert.doesNotMatch(html, /Type\. Argue\. Nothing is sent\./);
   assert.match(html, /chuumind.com\/book\//);
@@ -640,6 +641,11 @@ test('lean words are not topics, and topics are not leans', () => {
   assert.equal(classifyTurn('fix the roads').kind, 'topic');
   assert.equal(classifyTurn('metaphor').kind, 'metaphor');
   assert.equal(classifyTurn('metaphor is nothing').kind, 'topic');
+  assert.equal(classifyTurn('comedy').kind, 'comedy');
+  assert.equal(classifyTurn('gold').kind, 'comedy');
+  assert.equal(classifyTurn('funny').kind, 'comedy');
+  assert.equal(classifyTurn('funny pizza').kind, 'topic');
+  assert.equal(classifyTurn('gold rush').kind, 'topic');
   assert.equal(classifyTurn('plain').kind, 'style');
 });
 
@@ -731,6 +737,28 @@ test('metaphor is the name, which is nothing, or something to someone', () => {
   assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
   const debate = argue({ topic: 'Metaphor is a metaphor for metaphor.', style: 'classic' });
   assert.equal(debate.claim, 'Metaphor is a metaphor for metaphor');
+  assert.equal(debate.rounds, 0);
+});
+
+test('comedy is only funny to people who laugh, or more people, not gold', () => {
+  assert.equal(classifyTurn('/comedy').kind, 'comedy');
+  assert.equal(classifyTurn('/gold').kind, 'comedy');
+  assert.equal(classifyTurn('/funny').kind, 'comedy');
+  const reply = talkReply(createTalkState({ seed: 'comedy' }), 'comedy');
+  assert.match(reply.text, /You said this is only funny to people who laugh at it/);
+  assert.match(reply.text, /^Maybe this is only funny to people who laugh at it\.$/m);
+  assert.match(reply.text, /^Also maybe more people laugh\. Not confirmed comedy gold\.$/m);
+  assert.doesNotMatch(reply.text, /^1\. /m);
+  assert.doesNotMatch(reply.text, /crazy|girlfriend|Your mom would|ancestors|0\.4%|I did this is only funny/i);
+  const gold = talkReply(createTalkState({ seed: 'gold' }), 'gold');
+  assert.match(gold.text, /^Maybe this is only funny to people who laugh at it\.$/m);
+  const named = talkReply(talkReply(createTalkState({ seed: 'switch' }), 'pineapple on pizza').state, 'funny');
+  assert.match(named.text, /^Maybe this is only funny to people who laugh at it\.$/m);
+  assert.doesNotMatch(named.text, /pineapple on pizza is a fix/);
+  const typed = talkReply(createTalkState({ seed: 'typed' }), 'not confirmed comedy gold');
+  assert.match(typed.text, /^Also maybe more people laugh\. Not confirmed comedy gold\.$/m);
+  const debate = argue({ topic: 'comedy gold', style: 'classic' });
+  assert.equal(debate.claim, 'this is only funny to people who laugh at it');
   assert.equal(debate.rounds, 0);
 });
 
