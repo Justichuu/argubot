@@ -510,6 +510,7 @@ test('the html page can sit on chuumind.com', () => {
   const body = html.slice(html.indexOf('<body>'));
   assert.match(body, /it's me as a bot/);
   assert.match(body, /Not really that funny/);
+  assert.match(body, /Not confirmed comedy gold/);
   assert.ok(body.indexOf('id="thing"') > 0);
   assert.ok(body.indexOf('id="thing"') < body.indexOf('id="out"'));
   assert.ok(html.indexOf('principal of its existence') < html.indexOf('<body>'), 'the long text stays in meta so the page stays small');
