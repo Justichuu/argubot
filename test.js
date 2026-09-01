@@ -777,11 +777,94 @@ test('there is one demo', () => {
   assert.match(readme, /argubot_demo\.gif/);
   assert.match(readme, /argubot_demo\.mp4/);
   assert.match(readme, /argubot_demo\.vtt/);
+  assert.match(html, /<summary>Trigger me<\/summary>/);
+  assert.match(html, /class="film-trigger"/);
+  assert.doesNotMatch(html, /<details class="film-trigger"[^>]*\bopen\b/);
+  assert.match(html, /Trigger warning/);
+  assert.match(html, /Uncanny/);
+  assert.match(html, /I hate it/);
+  assert.match(html, /robot face talks/);
+  assert.doesNotMatch(html, /idomath/i);
+  const skipAt = html.indexOf('Skip this film and read its transcript');
+  const triggerAt = html.indexOf('<summary>Trigger me</summary>');
+  const warnAt = html.indexOf('Trigger warning. Uncanny. I hate it.');
+  const videoAt = html.indexOf('<video controls preload="none"');
+  const closeAt = html.indexOf('</details>', triggerAt);
+  assert.ok(skipAt > 0 && skipAt < triggerAt, 'skip stays outside the face');
+  assert.ok(triggerAt > 0 && warnAt > triggerAt && warnAt < closeAt);
+  assert.ok(videoAt > warnAt && videoAt < closeAt, 'the face stays inside Trigger me');
   assert.match(html, /<video controls preload="none"/);
   assert.match(html, /argubot_demo\.vtt/);
   assert.match(html, /label="English captions" default/);
   assert.doesNotMatch(html, /\sautoplay\b|\sloop\b/);
   assert.equal((gif.toString('latin1').match(/\x21\xf9\x04/g) || []).length > 1, true);
+});
+
+test('every film frame sits in the box', () => {
+  const PHI = (1 + Math.sqrt(5)) / 2;
+  const SQRT2 = Math.SQRT2;
+  const FRAMES = 894;
+  const FACE = 248;
+  const MARGIN = 18;
+  const W = 1280;
+  const H = 800;
+
+  const viseme = (rms, lo, hi) => {
+    if (!Number.isFinite(rms) || rms < 0) return 0;
+    if (rms <= lo) return 0;
+    if (rms <= hi) return 1;
+    return 2;
+  };
+
+  const hold = (seq, min = 2) => {
+    const out = seq.slice();
+    let last = out[0];
+    let held = 1;
+    for (let i = 1; i < out.length; i += 1) {
+      if (out[i] === last) {
+        held += 1;
+        continue;
+      }
+      if (held < min) {
+        out[i] = last;
+        held += 1;
+        continue;
+      }
+      last = out[i];
+      held = 1;
+    }
+    return out;
+  };
+
+  const box = (n) => {
+    const sx = FACE * (1 + 0.04 * Math.sin(n * PHI));
+    const sy = FACE * (1 + 0.04 * Math.sin(n * SQRT2 + 1));
+    const a = Math.abs(0.04 * Math.sin(n * SQRT2));
+    const bw = sx * Math.cos(a) + sy * Math.sin(a);
+    const bh = sx * Math.sin(a) + sy * Math.cos(a);
+    const x = W - bw - MARGIN + ((Math.floor(n * PHI) % 3) - 1);
+    const y = H - bh - MARGIN + ((Math.floor(n * SQRT2) % 5) - 2);
+    return { x, y, bw, bh, viseme: n % 3 };
+  };
+
+  const raw = [];
+  for (let n = 0; n < FRAMES; n += 1) raw.push(viseme((n * 97) % 4000, 0, 2154.5));
+  const seq = hold(raw, 2);
+  assert.equal(seq.length, FRAMES);
+  assert.ok(seq.every((v) => v === 0 || v === 1 || v === 2));
+  assert.equal(viseme(0, 0, 2154.5), 0);
+  assert.equal(viseme(100, 0, 2154.5), 1);
+  assert.equal(viseme(4000, 0, 2154.5), 2);
+
+  for (let n = 0; n < FRAMES; n += 1) {
+    const b = box(n);
+    assert.ok(b.bw > 200 && b.bh > 200);
+    assert.ok(b.x >= 0, `x ${b.x} on ${n}`);
+    assert.ok(b.y >= 0, `y ${b.y} on ${n}`);
+    assert.ok(b.x + b.bw <= W, `right ${b.x + b.bw} on ${n}`);
+    assert.ok(b.y + b.bh <= H, `bottom ${b.y + b.bh} on ${n}`);
+    assert.ok(seq[n] === 0 || seq[n] === 1 || seq[n] === 2);
+  }
 });
 
 test('create deducts the margin of error from the named limit', () => {
