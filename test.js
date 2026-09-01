@@ -941,24 +941,25 @@ test('you can set the line limit and the default is the 2010 chrome baseline', (
 });
 
 test('there is one demo', () => {
-  const gif = readFileSync(new URL('./argubot_demo.gif', import.meta.url));
   const mp4 = readFileSync(new URL('./argubot_demo.mp4', import.meta.url));
   const vtt = readFileSync(new URL('./argubot_demo.vtt', import.meta.url), 'utf8');
   const html = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
   const readme = readFileSync(new URL('./README.md', import.meta.url), 'utf8');
-  assert.ok(gif.length > 0);
   assert.ok(mp4.length > 0);
   assert.match(mp4.toString('latin1'), /mp4a/);
   assert.match(vtt, /^WEBVTT/m);
   assert.match(vtt, /Version 1\.5\.0/);
-  assert.match(readme, /argubot_demo\.gif/);
+  assert.match(vtt, /bot flips coin/);
+  assert.match(vtt, /bot lands on heads/);
   assert.match(readme, /argubot_demo\.mp4/);
   assert.match(readme, /argubot_demo\.vtt/);
+  assert.doesNotMatch(readme, /argubot_demo\.gif/);
   assert.match(readme, /I hate it\./);
   assert.match(readme, /Dystopian ad bullshit/);
   assert.match(readme, /Cyberpunk nightmare fuel/);
   assert.match(readme, /The letter theme from chuumind\.com/);
-  assert.ok(readme.indexOf('I hate it.') < readme.indexOf('argubot_demo.gif'), 'readme does not show the face first');
+  assert.ok(readme.indexOf('I hate it.') < readme.indexOf('argubot_demo.mp4'), 'readme does not show the face first');
+  assert.doesNotMatch(html, /argubot_demo\.gif/);
   assert.match(html, /<details class="film-letter">/);
   assert.doesNotMatch(html, /<details class="film-letter"[^>]*\bopen\b/);
   assert.match(html, /<section class="film"/);
@@ -989,8 +990,8 @@ test('there is one demo', () => {
   assert.match(html, /<video controls preload="none" playsinline/);
   assert.match(html, /argubot_demo\.vtt/);
   assert.match(html, /label="English captions" default/);
+  assert.match(html, /bot flips coin\. bot lands on heads/);
   assert.doesNotMatch(html, /\sautoplay\b|\sloop\b/);
-  assert.equal((gif.toString('latin1').match(/\x21\xf9\x04/g) || []).length > 1, true);
 });
 
 test('every film frame sits in the box', () => {
