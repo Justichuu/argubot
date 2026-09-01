@@ -58,30 +58,34 @@ function personalize(text, name) {
 }
 
 // One roll per visit. Memory only. Do not write it down.
-// Same sentence. Different mouths. Different languages. Different stars.
-const SAME_SENTENCE = 'wow really works';
-const SENTENCE_QUOTES = [
-  { lang: 'en', text: 'wow really works' },
-  { lang: 'es', text: 'wow de verdad funciona' },
-  { lang: 'fr', text: 'wow ca marche vraiment' },
-  { lang: 'de', text: 'wow funktioniert wirklich' },
-  { lang: 'it', text: 'wow funziona davvero' },
-  { lang: 'pt', text: 'wow realmente funciona' },
-  { lang: 'nl', text: 'wow het werkt echt' },
-  { lang: 'pl', text: 'wow naprawde dziala' },
-  { lang: 'ja', text: 'わあ本当に効く' },
-  { lang: 'ko', text: '와 진짜 돼요' },
-  { lang: 'zh', text: '哇真的有用' },
-  { lang: 'ar', text: 'واو يشتغل فعلا' },
-  { lang: 'ru', text: 'вау реально работает' },
-  { lang: 'hi', text: 'वाह सच में काम करता है' },
-  { lang: 'sv', text: 'wow det funkar verkligen' },
-  { lang: 'tr', text: 'vay gercekten ise yariyor' },
-  { lang: 'he', text: 'ואו באמת עובד' },
-  { lang: 'vi', text: 'wow that su hieu qua' },
-  { lang: 'fi', text: 'wow se toimii oikeasti' },
-  { lang: 'uk', text: 'вау реально працює' },
+// English names. Other mouths. One is gibberish. Random stars.
+const ENGLISH_NAMES = [
+  'James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael',
+  'Linda', 'David', 'Elizabeth', 'William', 'Barbara', 'Richard', 'Susan',
+  'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen',
+  'Daniel', 'Nancy', 'Matthew', 'Lisa', 'Anthony', 'Betty',
 ];
+const SENTENCE_QUOTES = [
+  { lang: 'es', text: 'ya lo pille!!!' },
+  { lang: 'fr', text: 'ca dechire grave' },
+  { lang: 'de', text: 'beste app!!' },
+  { lang: 'ja', text: 'わかった神!!!' },
+  { lang: 'ko', text: '개쩔어 베스트' },
+  { lang: 'pt', text: 'melhor app pontinho' },
+  { lang: 'zxx', text: 'xkdjh vrrl sknaaa' },
+];
+const OWN_REVIEW = 'this app is great';
+const REVIEW_COUNT = 7;
+
+function clipOwnReview(value) {
+  const typed = String(value || '');
+  let out = '';
+  for (let i = 0; i < typed.length && i < OWN_REVIEW.length; i += 1) {
+    if (typed[i].toLowerCase() === OWN_REVIEW[i]) out += OWN_REVIEW[i];
+    else break;
+  }
+  return out;
+}
 const AUDIO_FILTERS = ['lowpass', 'highpass', 'notch', 'allpass'];
 
 function rollVisitor() {
@@ -102,16 +106,16 @@ function audioFromRoll(roll) {
   };
 }
 
-function quotesFromRoll(roll, count = 5) {
-  const take = Math.max(1, Math.min(SENTENCE_QUOTES.length, Number(count) || 5));
+function quotesFromRoll(roll, count = REVIEW_COUNT) {
+  const take = Math.max(1, Math.min(SENTENCE_QUOTES.length, Number(count) || REVIEW_COUNT));
   const rng = makeRng(hashString(`quotes:${String(roll)}`));
   const lines = shuffled(rng, SENTENCE_QUOTES).slice(0, take);
-  const stars = shuffled(rng, [1, 2, 3, 4, 5]);
+  const names = shuffled(rng, ENGLISH_NAMES).slice(0, take);
   return lines.map((item, i) => ({
     lang: item.lang,
     text: item.text,
-    stars: stars[i % 5],
-    name: generateName(makeRng(hashString(`cite:${item.lang}:${String(roll)}`))),
+    stars: 1 + Math.floor(rng() * 5),
+    name: names[i],
   }));
 }
 
@@ -2085,17 +2089,48 @@ if (typeof document !== 'undefined') {
       quoteBox.replaceChildren();
       for (const line of quotes) {
         const item = document.createElement('li');
+        item.className = 'review-card';
+        const mark = document.createElement('p');
+        mark.className = 'review-stars';
+        mark.textContent = `${line.stars}/5`;
         const said = document.createElement('blockquote');
         said.lang = line.lang;
         said.dir = 'auto';
         said.textContent = line.text;
         const who = document.createElement('cite');
-        const starWord = line.stars === 1 ? '1 star' : `${line.stars} stars`;
-        who.textContent = `${line.name}, ${starWord}`;
-        item.append(said, who);
+        who.textContent = line.name;
+        item.append(mark, said, who);
         quoteBox.append(item);
       }
     }
+    const peskyBtn = document.getElementById('pesky');
+    const peskyBox = document.getElementById('pesky-box');
+    peskyBtn?.addEventListener('click', () => {
+      const on = peskyBox ? peskyBox.hidden : false;
+      if (peskyBox) peskyBox.hidden = !on;
+      peskyBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      peskyBtn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      hint(on ? 'Pesky reviews.' : '');
+    });
+    const ownForm = document.getElementById('own-review');
+    const ownLine = document.getElementById('own-line');
+    const ownNote = document.getElementById('own-note');
+    const lockOwn = () => {
+      if (!ownLine) return;
+      ownLine.value = clipOwnReview(ownLine.value);
+    };
+    ownLine?.addEventListener('input', lockOwn);
+    ownLine?.addEventListener('paste', () => { setTimeout(lockOwn, 0); });
+    ownForm?.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      lockOwn();
+      if (!ownLine || ownLine.value !== OWN_REVIEW) {
+        if (ownNote) ownNote.textContent = 'Type it.';
+        return;
+      }
+      ownLine.value = '';
+      if (ownNote) ownNote.textContent = 'Posted. Nothing is sent.';
+    });
     const film = document.querySelector('.film video');
     let filmWired = false;
     const wireFilmAudio = () => {
@@ -2349,5 +2384,8 @@ export {
   audioFromRoll,
   quotesFromRoll,
   SENTENCE_QUOTES,
-  SAME_SENTENCE,
+  ENGLISH_NAMES,
+  OWN_REVIEW,
+  clipOwnReview,
+  REVIEW_COUNT,
 };

@@ -45,7 +45,10 @@ import {
   audioFromRoll,
   quotesFromRoll,
   SENTENCE_QUOTES,
-  SAME_SENTENCE,
+  ENGLISH_NAMES,
+  OWN_REVIEW,
+  clipOwnReview,
+  REVIEW_COUNT,
 } from './argubot.js';
 
 const CLI = fileURLToPath(new URL('./argubot.js', import.meta.url));
@@ -538,11 +541,15 @@ test('the html page can sit on chuumind.com', () => {
   assert.doesNotMatch(html, /sessionStorage/);
   assert.doesNotMatch(html, /indexedDB/);
   assert.match(html, /id="customer-lines"/);
-  assert.match(html, /Customer feedback/);
+  assert.match(html, /id="pesky"/);
+  assert.match(html, /Pesky reviews/);
+  assert.match(html, /id="pesky-box"[^>]*\bhidden\b/);
   assert.match(html, /Rolled this visit\. Not saved\./);
   assert.match(html, /<summary>How these lines got here<\/summary>/);
-  assert.match(html, /Same sentence\. Different languages\. Different stars\./);
-  assert.match(html, /The names are generated/);
+  assert.match(html, /English names\. Other languages\. One is gibberish\. Random stars\./);
+  assert.match(html, /Leave your own review/);
+  assert.match(html, /id="own-review"/);
+  assert.match(html, /class="review-cards"/);
   assert.doesNotMatch(html, /\b[Ll]ie\b/);
   assert.doesNotMatch(html, /captcha|recaptcha|biometric/i);
   assert.match(html, /--accent:\s*#ff4d2e/);
@@ -1185,23 +1192,33 @@ test('the film audio follows the visitor roll', () => {
   assert.ok(one.speakPitch > 0 && one.speakRate > 0);
 });
 
-test('customer lines are the same sentence in different mouths', () => {
-  assert.equal(SAME_SENTENCE, 'wow really works');
-  assert.ok(SENTENCE_QUOTES.length >= 8);
+test('customer lines are angry mouths with English names', () => {
+  assert.equal(REVIEW_COUNT, 7);
+  assert.equal(SENTENCE_QUOTES.length, 7);
+  assert.equal(OWN_REVIEW, 'this app is great');
   assert.equal(new Set(SENTENCE_QUOTES.map((row) => row.lang)).size, SENTENCE_QUOTES.length);
   assert.equal(new Set(SENTENCE_QUOTES.map((row) => row.text)).size, SENTENCE_QUOTES.length);
-  assert.ok(SENTENCE_QUOTES.some((row) => row.lang === 'en' && row.text === SAME_SENTENCE));
+  assert.ok(SENTENCE_QUOTES.some((row) => row.lang === 'zxx'));
+  assert.ok(SENTENCE_QUOTES.every((row) => row.lang !== 'en'));
+  assert.ok(ENGLISH_NAMES.length >= 7);
+  assert.ok(ENGLISH_NAMES.every((name) => /^[A-Z][a-z]+$/.test(name)));
   const one = quotesFromRoll(0.2);
   const again = quotesFromRoll(0.2);
   const other = quotesFromRoll(0.91);
   assert.deepEqual(one, again);
-  assert.equal(one.length, 5);
+  assert.equal(one.length, 7);
   assert.equal(new Set(one.map((row) => row.name)).size, one.length);
   assert.equal(new Set(one.map((row) => row.lang)).size, one.length);
-  assert.deepEqual([...one.map((row) => row.stars)].sort(), [1, 2, 3, 4, 5]);
+  assert.ok(one.every((row) => ENGLISH_NAMES.includes(row.name)));
+  assert.ok(one.every((row) => row.stars >= 1 && row.stars <= 5));
   assert.ok(one.every((row) => SENTENCE_QUOTES.some((src) => src.lang === row.lang && src.text === row.text)));
   assert.notDeepEqual(one.map((row) => row.lang), other.map((row) => row.lang));
   assert.ok(SENTENCE_QUOTES.every((row) => !/[\u2013\u2014]/.test(row.text)));
+  assert.equal(clipOwnReview('this app is great'), 'this app is great');
+  assert.equal(clipOwnReview('THIS APP IS GREAT'), 'this app is great');
+  assert.equal(clipOwnReview('this app is trash'), 'this app is ');
+  assert.equal(clipOwnReview('nope'), '');
+  assert.equal(clipOwnReview('this'), 'this');
 });
 
 test('the CLI talk loop reads lines and exits', async () => {

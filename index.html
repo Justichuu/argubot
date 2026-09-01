@@ -156,7 +156,6 @@
     html.full #thing { min-height: min(46vh, 24rem); }
     html.full .here,
     html.full .notes,
-    html.full .customer-notes,
     html.full .sign,
     html.full footer.site > p { display: none; }
     .here { margin: 12px 0 16px; }
@@ -182,17 +181,51 @@
     }
     footer.site p { margin: 0 1.5em 10px 0; }
     footer.site a { margin-right: 12px; }
-    .customer-notes { margin: 8px 0 12px; max-width: 54ch; }
-    .customer-notes h2 { margin: 0 0 .35em; }
-    .customer-notes p { margin: 0 0 .8em; color: var(--muted); font-size: 14px; }
-    .customer-notes ul { list-style: none; margin: 0; padding: 0; }
-    .customer-notes li { margin: 0 0 .9em; }
-    .customer-notes blockquote {
-      margin: 0; font-style: italic; color: var(--ink);
+    .pesky-reviews { margin: 8px 0 12px; width: 100%; }
+    .review-cards {
+      list-style: none;
+      margin: 12px 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
     }
-    .customer-notes cite {
-      display: block; margin-top: .2em; font-style: normal; font-size: .9em; color: var(--muted);
+    @media (min-width: 901px) {
+      .review-cards { grid-template-columns: 1fr 1fr; }
     }
+    .review-card {
+      margin: 0;
+      padding: 12px 14px;
+      border: 1.8px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--field);
+      box-shadow: 5px 5px 0 rgba(18, 12, 20, .1);
+    }
+    .review-card blockquote {
+      margin: 0 0 .45em;
+      font-style: italic;
+      color: var(--ink);
+    }
+    .review-card cite {
+      display: block;
+      font-style: normal;
+      font-size: .9em;
+      color: var(--muted);
+    }
+    .review-stars {
+      margin: 0 0 .35em;
+      font-family: var(--sans);
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+    .pesky-box > p { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+    .pesky-box[hidden] { display: none; }
+    #own-review { margin: 12px 0 0; display: grid; gap: 8px; }
+    #own-line {
+      width: 100%; min-height: 44px; padding: 8px 14px;
+      border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--field);
+      font: inherit; color: var(--ink);
+    }
+    #own-note { margin: 0; color: var(--muted); font-size: 14px; }
     .customer-how { margin: 4px 0 0; }
     .customer-how > summary {
       list-style: none;
@@ -216,11 +249,11 @@
     html.access-big { font-size: 22px; }
     html.access-bigger { font-size: 26px; }
     html.access-hi { --paper: #fff; --ink: #000; --muted: #000; --field: #fff; }
-    html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary {
+    html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line {
       background: #fff; color: #000;
     }
     html.access-hi body::after { display: none; }
-    html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary { border-color: #000; }
+    html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line { border-color: #000; }
     h2 { font: italic 400 clamp(22px, 3.5vw, 30px)/1.2 var(--serif); margin: 1.2em 0 .4em; }
     .film { margin: 1.4rem 0 1.8rem; }
     .film-trigger { margin: 0 0 1rem; }
@@ -312,14 +345,21 @@
         <a href="https://chuumind.com/attributions/">Attributions</a>
       </p>
       <p>A person made this page. A machine did not.</p>
-      <aside class="customer-notes" aria-label="Customer feedback">
-        <h2>Customer feedback</h2>
-        <p>Rolled this visit. Not saved.</p>
-        <ul id="customer-lines"></ul>
-        <details class="customer-how">
-          <summary>How these lines got here</summary>
-          <p>Same sentence. Different languages. Different stars. The names are generated. Nothing is sent.</p>
-        </details>
+      <aside class="pesky-reviews" aria-label="Pesky reviews">
+        <button type="button" id="pesky" aria-pressed="false" aria-expanded="false" aria-controls="pesky-box">Pesky reviews</button>
+        <div class="pesky-box" id="pesky-box" hidden>
+          <p>Rolled this visit. Not saved.</p>
+          <ul id="customer-lines" class="review-cards"></ul>
+          <details class="customer-how">
+            <summary>How these lines got here</summary>
+            <p>English names. Other languages. One is gibberish. Random stars. Nothing is sent.</p>
+          </details>
+          <form id="own-review">
+            <input id="own-line" name="own" autocomplete="off" enterkeyhint="send" spellcheck="false" aria-label="Leave your own review">
+            <button type="submit" id="own-send">Leave your own review</button>
+            <p id="own-note" role="status"></p>
+          </form>
+        </div>
       </aside>
       <div class="site-access" role="region" aria-label="Access">
         <button type="button" id="acc_type" aria-pressed="false" title="Type. Normal, big, bigger.">Type</button>
