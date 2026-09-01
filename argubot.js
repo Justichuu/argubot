@@ -1524,14 +1524,53 @@ function lineLimit(value) {
   return Number.isFinite(n) && n >= 1 ? Math.floor(n) : LINE_LIMIT_BASELINE;
 }
 
+function coinFace(seed) {
+  const n = (Number(seed) >>> 0) % 3;
+  if (n === 0) return 'heads';
+  if (n === 1) return 'tails';
+  return 'edge';
+}
+
+const THINK_SHARDS = [
+  'måske',
+  '也许',
+  '0|1',
+  '…',
+  'xkdjh',
+  'lim',
+  'twin',
+  'spin',
+  'لا نعم',
+  'да/нет',
+  'gray',
+  '//',
+  '01?',
+  'neither face',
+  'both',
+  'xor',
+  'ht?',
+  'hm',
+  '…sí',
+  'Δ',
+];
+
+function thinkLines(debate, coin) {
+  const rng = makeRng(hashString(`think:${debate.seed}:${coin}`));
+  const n = coin === 'edge' ? 6 : 3;
+  const lines = [];
+  for (let i = 0; i < n; i += 1) lines.push(`\u200b${pick(rng, THINK_SHARDS)}`);
+  if (coin === 'edge') lines.push('\u200bthe coin stands on its edge');
+  return lines;
+}
+
 function orderSides(debate, lean) {
-  const yes = { label: 'MAYBE', side: 'for', lines: debate.for };
-  const no = { label: 'ALSO MAYBE', side: 'against', lines: debate.against };
+  const yes = { label: 'YES', side: 'for', lines: debate.for };
+  const no = { label: 'NO', side: 'against', lines: debate.against };
   if (lean === 'for') return { first: no, second: yes, coin: null };
   if (lean === 'against') return { first: yes, second: no, coin: null };
-  // ponytail: seed parity is the coin. Separate rng if two talks must disagree.
-  const heads = debate.seed % 2 === 0;
-  return heads ? { first: yes, second: no, coin: 'heads' } : { first: no, second: yes, coin: 'tails' };
+  const coin = coinFace(debate.seed);
+  if (coin === 'tails') return { first: no, second: yes, coin };
+  return { first: yes, second: no, coin };
 }
 
 function formatBeat(debate, options = {}) {
@@ -1541,12 +1580,13 @@ function formatBeat(debate, options = {}) {
   const check = debate.audit;
   const extras = [];
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
-  if (lean === 'for') extras.push('You said yes. ALSO MAYBE first.');
-  if (lean === 'against') extras.push('You said no. MAYBE first.');
+  if (lean === 'for') extras.push('You said yes. NO first.');
+  if (lean === 'against') extras.push('You said no. YES first.');
   if (coin) {
-    extras.push('bot flips coin');
-    extras.push(`bot lands on ${coin}`);
-    extras.push(`${first.label} first.`);
+    extras.push(...thinkLines(debate, coin));
+    extras.push('**bot flips coin**');
+    extras.push(`**bot lands on ${coin}**`);
+    extras.push(coin === 'edge' ? 'MAYBE' : `${first.label} first.`);
   }
   if (!isRedundantTalk(debate.claim)) {
     extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
@@ -1952,7 +1992,8 @@ Give it a thing. It argues maybe. It will not pick.
 
 No topic starts a conversation. A topic prints both sides.
 Type done to leave. yes and no lean. If it cannot tell which side you
-are on, it flips a coin for who talks first.
+are on, it flips a coin. Heads is YES first. Tails is NO first.
+A coin has two faces. Edge is MAYBE.
 
   --plain     everyday words (default)
   --classic   debate-club voice
@@ -2288,10 +2329,79 @@ if (typeof document !== 'undefined') {
       btnSpeak.textContent = 'Speak';
     }
     if (flags.includes('head') && filmWrap) filmWrap.open = true;
+    let streamTok = 0;
+    const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+    const paintLine = (line) => {
+      const wrap = document.createElement('span');
+      const raw = String(line || '');
+      const think = raw.charCodeAt(0) === 0x200b;
+      const body = think ? raw.slice(1) : raw;
+      if (think) wrap.className = 'think';
+      else if (/^(YES|NO|MAYBE)( first\.)?$/.test(body)) wrap.className = 'mark';
+      const bits = body.split(/(\*\*[^*]+\*\*)/g);
+      for (const bit of bits) {
+        const hit = bit.match(/^\*\*([^*]+)\*\*$/);
+        if (hit) {
+          const el = document.createElement('strong');
+          el.textContent = hit[1];
+          wrap.append(el);
+        } else if (bit) wrap.append(document.createTextNode(bit));
+      }
+      return wrap;
+    };
     const show = (text, moveFocus) => {
-      out.textContent = text;
-      voice(text);
-      if (moveFocus) try { out.focus(); } catch (err) {}
+      const my = ++streamTok;
+      out.replaceChildren();
+      out.setAttribute('aria-busy', 'true');
+      const caret = document.createElement('span');
+      caret.className = 'caret';
+      caret.setAttribute('aria-hidden', 'true');
+      out.append(caret);
+      const lines = String(text || '').split('\n');
+      const run = async () => {
+        for (let i = 0; i < lines.length; i += 1) {
+          if (my !== streamTok) return;
+          if (i > 0) out.insertBefore(document.createTextNode('\n'), caret);
+          const wrap = paintLine(lines[i]);
+          const fill = wrap.cloneNode(false);
+          out.insertBefore(fill, caret);
+          const isThink = wrap.className === 'think';
+          if (/\*\*bot lands on /.test(lines[i])) await wait(240);
+          const parts = [...wrap.childNodes];
+          for (const node of parts) {
+            if (my !== streamTok) return;
+            if (node.nodeType === 3) {
+              const dest = document.createTextNode('');
+              fill.append(dest);
+              if (isThink) {
+                for (const ch of node.textContent) {
+                  if (my !== streamTok) return;
+                  dest.textContent += ch;
+                  await wait(28);
+                }
+              } else {
+                const words = node.textContent.split(/(\s+)/);
+                for (const word of words) {
+                  if (my !== streamTok) return;
+                  dest.textContent += word;
+                  if (word.trim()) await wait(18);
+                }
+              }
+            } else {
+              fill.append(node);
+              await wait(/\*\*bot /.test(lines[i]) ? 90 : 40);
+            }
+          }
+          if (isThink) await wait(70);
+        }
+        if (my !== streamTok) return;
+        caret.remove();
+        out.setAttribute('aria-busy', 'false');
+        const heard = String(text || '').replace(/\u200b/g, '').replace(/\*\*/g, '');
+        voice(heard);
+        if (moveFocus) try { out.focus(); } catch (err) {}
+      };
+      run();
     };
     let state = createTalkState({ style: 'plain' });
     const say = (action) => {
@@ -2357,6 +2467,7 @@ export {
   detectLean,
   openingLines,
   formatBeat,
+  coinFace,
   LINE_LIMIT_BASELINE,
   lineLimit,
   runTalk,

@@ -21,6 +21,6 @@ node argubot.js
 ```
 
 The first one prints both sides. The second one talks. Type `done` to leave.
-`yes` and `no` say your side. If it cannot tell, it flips a coin.
+`yes` and `no` say your side. If it cannot tell, it flips a coin. Heads is YES first. Tails is NO first. Edge is MAYBE.
 
 Read `argubot.js`. Checks are `test.js`. `npm test`. MIT.

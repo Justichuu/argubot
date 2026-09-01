@@ -194,6 +194,20 @@
       padding: 16px 18px; min-height: 8rem; max-height: 24em; overflow: auto; margin: 0 0 28px;
     }
     #out:empty { display: none; }
+    #out strong { font-weight: 800; font-style: italic; }
+    #out .mark {
+      font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      font-variant: small-caps;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+    #out .think { font-style: italic; color: var(--muted); }
+    #out .caret {
+      display: inline-block; width: .55ch; height: .95em; margin-left: 1px;
+      background: currentColor; vertical-align: -0.08em;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
     .sign { margin: 52px 0 12px; max-width: 38rem; font-style: italic; font-size: 17px; line-height: 1.5; }
     footer.site {
       display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start;
@@ -352,7 +366,7 @@
       </div>
     </form>
     <p class="notes">This stays here. It does not call this website. Nothing is sent.</p>
-    <pre id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></pre>
+    <div id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></div>
     <noscript>
       <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
     </noscript>
