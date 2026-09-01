@@ -36,9 +36,16 @@
     }
     * { box-sizing: border-box; }
     /* Document height follows the letter. The rainbow is position:fixed.
-       min-height:100vh on html/body invents a second viewport of nothing
-       for every phone test. Happens on all ChuuMind letter pages. Do not put it back. */
-    html, body { margin: 0; padding: 0; }
+       Official chuumind.com/styles.css says this first, then later puts
+       min-height:100svh back on body. That invents a second viewport of
+       nothing on every phone and Playwright run. All ChuuMind letter pages.
+       Do not put the stretch back. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 0;
+      height: auto;
+    }
     html { overflow-x: hidden; }
     body {
       color: var(--ink);
