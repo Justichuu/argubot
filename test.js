@@ -524,10 +524,9 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /Sometimes people do but not all the time/);
   assert.match(html, /Saying something doesn't make it true for everyone witnessing or not witnessing/);
   const body = html.slice(html.indexOf('<body>'));
-  assert.match(body, /it's me as a bot/);
-  assert.match(body, /Not really that funny/);
-  assert.match(body, /Not confirmed comedy gold/);
-  assert.match(body, /None of this makes sense to anyone mostly on earth\./);
+  assert.match(body, /It's me as a bot, not really funny\./);
+  assert.doesNotMatch(body, /Not really that funny|Not confirmed comedy gold/);
+  assert.equal((body.match(/It's me as a bot, not really funny\./g) || []).length, 1);
   assert.doesNotMatch(body, /The irony is|irony is |\u2e2e/i);
   assert.doesNotMatch(body, /bullshit|I hate it/i);
   assert.ok(body.indexOf('id="thing"') > 0);
