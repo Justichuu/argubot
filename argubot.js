@@ -1531,7 +1531,7 @@ function orderSides(debate, lean) {
   if (lean === 'against') return { first: yes, second: no, coin: null };
   // ponytail: seed parity is the coin. Separate rng if two talks must disagree.
   const heads = debate.seed % 2 === 0;
-  return heads ? { first: yes, second: no, coin: 'Heads' } : { first: no, second: yes, coin: 'Tails' };
+  return heads ? { first: yes, second: no, coin: 'heads' } : { first: no, second: yes, coin: 'tails' };
 }
 
 function formatBeat(debate, options = {}) {
@@ -1543,7 +1543,11 @@ function formatBeat(debate, options = {}) {
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
   if (lean === 'for') extras.push('You said yes. ALSO MAYBE first.');
   if (lean === 'against') extras.push('You said no. MAYBE first.');
-  if (coin) extras.push(`${coin}. ${first.label} first.`);
+  if (coin) {
+    extras.push('bot flips coin');
+    extras.push(`bot lands on ${coin}`);
+    extras.push(`${first.label} first.`);
+  }
   if (!isRedundantTalk(debate.claim)) {
     extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
     extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');

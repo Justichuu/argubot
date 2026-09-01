@@ -1139,7 +1139,8 @@ test('a sentence that starts with I want is a topic, not a yes lean', () => {
   assert.equal(classifyTurn('I want a four day week').lean, null);
   const reply = talkReply(createTalkState(), 'I want a four day week');
   assert.match(reply.text, /You said I want a four day week/);
-  assert.match(reply.text, /Heads|Tails/);
+  assert.match(reply.text, /bot flips coin/);
+  assert.match(reply.text, /bot lands on (heads|tails)/);
   assert.doesNotMatch(reply.text, /You said yes/);
 });
 
@@ -1165,14 +1166,16 @@ test('unknown lean flips a coin for who speaks first', () => {
   const first = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
   const again = talkReply(createTalkState({ seed: 'coin-a', style: 'plain' }), 'pineapple on pizza');
   assert.equal(first.text, again.text);
-  assert.match(first.text, /(Heads|Tails)\. (MAYBE|ALSO MAYBE) first\./);
-  const heads = /Heads/.test(first.text);
+  assert.match(first.text, /bot flips coin/);
+  assert.match(first.text, /bot lands on (heads|tails)/);
+  assert.match(first.text, /(MAYBE|ALSO MAYBE) first\./);
+  const heads = /bot lands on heads/.test(first.text);
   const yesAt = first.text.indexOf('\nMAYBE\n');
   const noAt = first.text.indexOf('\nALSO MAYBE\n');
   if (heads) assert.ok(yesAt > 0 && yesAt < noAt);
   else assert.ok(noAt > 0 && noAt < yesAt);
   const leaned = talkReply(first.state, 'yes');
-  assert.doesNotMatch(leaned.text, /Heads|Tails/);
+  assert.doesNotMatch(leaned.text, /bot flips coin|bot lands on/);
   assert.match(leaned.text, /You said yes/);
 });
 
