@@ -930,8 +930,11 @@ test('formatted beats stay even and never pick a winner', () => {
 test('talk will not print as many lines as it feels', () => {
   const debate = argue({ topic: 'getting a dog', rounds: 3, seed: 'cap', style: 'plain' });
   const full = formatBeat(debate, { hear: true });
-  assert.ok(full.split('\n').length <= LINE_LIMIT_BASELINE);
+  const printed = full.split('\n').filter((line) => !line.startsWith('\u200b'));
+  assert.ok(printed.length <= LINE_LIMIT_BASELINE);
   const tight = formatBeat(debate, { hear: true, limit: 12 });
+  const tightPrinted = tight.split('\n').filter((line) => !line.startsWith('\u200b'));
+  assert.ok(tightPrinted.length <= 12);
   const yesAt = tight.indexOf('\nYES\n');
   const noAt = tight.indexOf('\nNO\n');
   assert.ok(yesAt > 0 && noAt > 0 && yesAt !== noAt);

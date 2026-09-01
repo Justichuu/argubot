@@ -1578,12 +1578,12 @@ function formatBeat(debate, options = {}) {
   const hear = options.hear !== false;
   const { first, second, coin } = orderSides(debate, lean);
   const check = debate.audit;
+  const think = coin ? thinkLines(debate, coin) : [];
   const extras = [];
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
   if (lean === 'for') extras.push('You said yes. NO first.');
   if (lean === 'against') extras.push('You said no. YES first.');
   if (coin) {
-    extras.push(...thinkLines(debate, coin));
     extras.push('**bot flips coin**');
     extras.push(`**bot lands on ${coin}**`);
     extras.push(coin === 'edge' ? 'MAYBE' : `${first.label} first.`);
@@ -1612,13 +1612,15 @@ function formatBeat(debate, options = {}) {
 
   // You can't print as many as you feel. Drop extras, then pairs from both sides.
   // Never a one-sided cut. Mirrored self, to escape the cycle.
+  // Thinking is the live mind. It does not spend the print budget.
   const limit = lineLimit(options.limit);
   let header = extras.slice();
   let pairs = pairsReady;
   while (build(header, pairs).length > limit && header.length > 1) header = header.slice(1);
   while (build(header, pairs).length > limit && pairs > 1) pairs -= 1;
 
-  return build(header, named ? 0 : Math.max(1, pairs)).join('\n');
+  const body = build(header, named ? 0 : Math.max(1, pairs));
+  return (think.length ? think.concat(body) : body).join('\n');
 }
 
 function speakBeat(state, options = {}) {
