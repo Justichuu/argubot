@@ -58,9 +58,9 @@ function personalize(text, name) {
 }
 
 // One roll per visit. Memory only. Do not write it down.
-// Same lie. Different mouths. Different languages. Different stars.
-const SAME_LIE = 'wow really works';
-const FAKE_QUOTES = [
+// Same sentence. Different mouths. Different languages. Different stars.
+const SAME_SENTENCE = 'wow really works';
+const SENTENCE_QUOTES = [
   { lang: 'en', text: 'wow really works' },
   { lang: 'es', text: 'wow de verdad funciona' },
   { lang: 'fr', text: 'wow ca marche vraiment' },
@@ -103,9 +103,9 @@ function audioFromRoll(roll) {
 }
 
 function quotesFromRoll(roll, count = 5) {
-  const take = Math.max(1, Math.min(FAKE_QUOTES.length, Number(count) || 5));
+  const take = Math.max(1, Math.min(SENTENCE_QUOTES.length, Number(count) || 5));
   const rng = makeRng(hashString(`quotes:${String(roll)}`));
-  const lines = shuffled(rng, FAKE_QUOTES).slice(0, take);
+  const lines = shuffled(rng, SENTENCE_QUOTES).slice(0, take);
   const stars = shuffled(rng, [1, 2, 3, 4, 5]);
   return lines.map((item, i) => ({
     lang: item.lang,
@@ -1940,7 +1940,7 @@ if (typeof document !== 'undefined') {
     const roll = rollVisitor();
     const audio = audioFromRoll(roll);
     const quotes = quotesFromRoll(roll);
-    const quoteBox = document.getElementById('fake-quotes');
+    const quoteBox = document.getElementById('customer-lines');
     if (quoteBox) {
       quoteBox.replaceChildren();
       for (const line of quotes) {
@@ -2132,6 +2132,6 @@ export {
   rollVisitor,
   audioFromRoll,
   quotesFromRoll,
-  FAKE_QUOTES,
-  SAME_LIE,
+  SENTENCE_QUOTES,
+  SAME_SENTENCE,
 };

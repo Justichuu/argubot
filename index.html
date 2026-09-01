@@ -174,17 +174,25 @@
     }
     footer.site p { margin: 0 1.5em 10px 0; }
     footer.site a { margin-right: 12px; }
-    .fake-feedback { margin: 8px 0 12px; max-width: 54ch; }
-    .fake-feedback h2 { margin: 0 0 .35em; }
-    .fake-feedback p { margin: 0 0 .8em; color: var(--muted); font-size: 14px; }
-    .fake-feedback ul { list-style: none; margin: 0; padding: 0; }
-    .fake-feedback li { margin: 0 0 .9em; }
-    .fake-feedback blockquote {
+    .customer-notes { margin: 8px 0 12px; max-width: 54ch; }
+    .customer-notes h2 { margin: 0 0 .35em; }
+    .customer-notes p { margin: 0 0 .8em; color: var(--muted); font-size: 14px; }
+    .customer-notes ul { list-style: none; margin: 0; padding: 0; }
+    .customer-notes li { margin: 0 0 .9em; }
+    .customer-notes blockquote {
       margin: 0; font-style: italic; color: var(--ink);
     }
-    .fake-feedback cite {
+    .customer-notes cite {
       display: block; margin-top: .2em; font-style: normal; font-size: .9em; color: var(--muted);
     }
+    .customer-how { margin: 4px 0 0; }
+    .customer-how > summary {
+      list-style: none;
+      min-height: 44px; min-width: 44px; padding: 8px 0; cursor: pointer;
+      display: inline-flex; align-items: center;
+      color: var(--muted); font-size: 14px;
+    }
+    .customer-how > summary::-webkit-details-marker { display: none; }
     .site-access { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
     html.access-big { font-size: 22px; }
     html.access-bigger { font-size: 26px; }
@@ -308,10 +316,14 @@
         <a href="https://chuumind.com/attributions/">Attributions</a>
       </p>
       <p>A person made this page. A machine did not.</p>
-      <aside class="fake-feedback" aria-label="Customer feedback">
+      <aside class="customer-notes" aria-label="Customer feedback">
         <h2>Customer feedback</h2>
-        <p>Verified. Five stars. A lie.</p>
-        <ul id="fake-quotes"></ul>
+        <p>Rolled this visit. Not saved.</p>
+        <ul id="customer-lines"></ul>
+        <details class="customer-how">
+          <summary>How these lines got here</summary>
+          <p>Same sentence. Different languages. Different stars. The names are generated. Nothing is sent.</p>
+        </details>
       </aside>
       <div class="site-access" role="region" aria-label="Access">
         <button type="button" id="acc_type" aria-pressed="false" title="Type. Normal, big, bigger.">Type</button>
