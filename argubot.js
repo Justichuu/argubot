@@ -285,6 +285,7 @@ const LABELS = {
   meta: (seed, rounds) => `seed ${seed} · ${rounds} round(s) · sides argued: both, equally, on purpose`,
   for: 'FOR',
   against: 'AGAINST',
+  maybe: 'MAYBE',
   gary: 'GARY (independent)',
   audit: 'BIAS AUDIT',
   auditSummary: (audit, status) =>
@@ -505,6 +506,7 @@ const PLAIN_LABELS = {
   meta: (seed, rounds) => `seed ${seed} · ${rounds} reason(s) each · both sides get the same treatment on purpose`,
   for: 'WHY YES',
   against: 'WHY NO',
+  maybe: 'WHY MAYBE',
   gary: 'GARY (his own thing)',
   audit: 'FAIRNESS CHECK',
   auditSummary: (audit, status) =>
@@ -654,6 +656,7 @@ const CIVIC_LABELS = {
     `seed ${seed} · ${rounds} reason(s) each · both sides built as twins · no recipe sold`,
   for: 'THE CASE FOR',
   against: 'THE CASE AGAINST',
+  maybe: 'MAYBE',
   gary: 'GARY (not a recipe)',
   audit: 'EVIDENCE CHECK',
   auditSummary: (audit, status) =>
@@ -831,88 +834,9 @@ function argue(options = {}) {
       audit: auditDebate(sides.for, sides.against, tolerance),
     };
   }
-  if (isMetaphorClaim(claim)) {
-    const sides = metaphorLines();
-    return {
-      claim,
-      style: styleName,
-      seed,
-      rounds: 0,
-      moves: [],
-      for: sides.for,
-      against: sides.against,
-      dissent: null,
-      moderator: pick(rng, style.moderatorLines),
-      verdict: pick(rng, style.verdictLines),
-      audit: auditDebate(sides.for, sides.against, tolerance),
-    };
-  }
-  if (isComedyClaim(claim)) {
-    const sides = comedyLines();
-    return {
-      claim,
-      style: styleName,
-      seed,
-      rounds: 0,
-      moves: [],
-      for: sides.for,
-      against: sides.against,
-      dissent: null,
-      moderator: pick(rng, style.moderatorLines),
-      verdict: pick(rng, style.verdictLines),
-      audit: auditDebate(sides.for, sides.against, tolerance),
-    };
-  }
-  if (isHumanClaim(claim)) {
-    const sides = humanLines();
-    return {
-      claim,
-      style: styleName,
-      seed,
-      rounds: 0,
-      moves: [],
-      for: sides.for,
-      against: sides.against,
-      dissent: null,
-      moderator: pick(rng, style.moderatorLines),
-      verdict: pick(rng, style.verdictLines),
-      audit: auditDebate(sides.for, sides.against, tolerance),
-    };
-  }
-  if (isEarthClaim(claim)) {
-    const sides = earthLines();
-    return {
-      claim,
-      style: styleName,
-      seed,
-      rounds: 0,
-      moves: [],
-      for: sides.for,
-      against: sides.against,
-      dissent: null,
-      moderator: pick(rng, style.moderatorLines),
-      verdict: pick(rng, style.verdictLines),
-      audit: auditDebate(sides.for, sides.against, tolerance),
-    };
-  }
-  if (isMannersClaim(claim)) {
-    const sides = mannersLines();
-    return {
-      claim,
-      style: styleName,
-      seed,
-      rounds: 0,
-      moves: [],
-      for: sides.for,
-      against: sides.against,
-      dissent: null,
-      moderator: pick(rng, style.moderatorLines),
-      verdict: pick(rng, style.verdictLines),
-      audit: auditDebate(sides.for, sides.against, tolerance),
-    };
-  }
-  if (isBattleClaim(claim)) {
-    const sides = battleLines();
+  const named = namedDefenses(claim);
+  if (named) {
+    const sides = { for: [named.for], against: [named.against] };
     return {
       claim,
       style: styleName,
@@ -1026,6 +950,9 @@ function render(debate, options = {}) {
 
   pushSide(labels.for, debate.for, 'green', 'for');
   pushSide(labels.against, debate.against, 'red', 'against');
+  out.push(paint('cyan', labels.maybe));
+  pushBlock(claimLine('maybe', debate.claim), '  ');
+  out.push('');
 
   if (debate.dissent && debate.dissent.name) {
     out.push(paint('yellow', debate.dissent.name.toUpperCase()));
@@ -1363,7 +1290,7 @@ function isMannersClaim(claim) {
 
 function isBattleClaim(claim) {
   const line = String(claim ?? '').trim().replace(/[.!?]+$/, '');
-  return /^(in the battle between good and evil, neither win|goil would put good first, evod would put evil first)$/i.test(line);
+  return /^(in the battle between good and evil, neither win|goil would put good first, evod would put evil first|goil would put good first|evod would put evil first)$/i.test(line);
 }
 
 function isNamedEssay(claim) {
@@ -1397,46 +1324,50 @@ function redundantTalk(claim) {
   };
 }
 
-function metaphorLines() {
-  return {
-    for: ['Maybe Metaphor is a metaphor for metaphor.'],
-    against: ['Also maybe a metaphor for metaphor is nothing. Or is something to someone.'],
-  };
-}
-
-function comedyLines() {
-  return {
-    for: ['Maybe this is only funny to people who laugh at it. A feature you could add.'],
-    against: ['Also maybe this is a normal thing for normal people. Not confirmed comedy gold.'],
-  };
-}
-
-function humanLines() {
-  return {
-    for: ['Maybe using technology takes away from the human experience in general.'],
-    against: ['Also maybe technology is a normal thing for normal people. Or a feature you could add.'],
-  };
-}
-
-function earthLines() {
-  return {
-    for: ['Maybe none of this makes sense to anyone mostly on earth.'],
-    against: ['Also maybe it makes sense to someone. Or to people who laugh at it.'],
-  };
-}
-
-function mannersLines() {
-  return {
-    for: ['Maybe manners are important to most people.'],
-    against: ['Also maybe depending where they live.'],
-  };
-}
-
-function battleLines() {
-  return {
-    for: ['Maybe in the battle between good and evil, neither win.'],
-    against: ['Also maybe goil would put good first, evod would put evil first.'],
-  };
+function namedDefenses(claim) {
+  if (isMetaphorClaim(claim)) {
+    return {
+      for: 'Metaphor is a metaphor for metaphor.',
+      against: 'a metaphor for metaphor is nothing.',
+      maybe: 'Or is something to someone.',
+    };
+  }
+  if (isComedyClaim(claim)) {
+    return {
+      for: 'this is only funny to people who laugh at it. A feature you could add.',
+      against: 'this is a normal thing for normal people.',
+      maybe: 'Not confirmed comedy gold.',
+    };
+  }
+  if (isHumanClaim(claim)) {
+    return {
+      for: 'using technology takes away from the human experience in general.',
+      against: 'technology is a normal thing for normal people.',
+      maybe: 'Or a feature you could add.',
+    };
+  }
+  if (isEarthClaim(claim)) {
+    return {
+      for: 'none of this makes sense to anyone mostly on earth.',
+      against: 'it makes sense to someone.',
+      maybe: 'Or to people who laugh at it.',
+    };
+  }
+  if (isMannersClaim(claim)) {
+    return {
+      for: 'manners are important to most people.',
+      against: 'depending where they live.',
+      maybe: 'Important, depending where they live.',
+    };
+  }
+  if (isBattleClaim(claim)) {
+    return {
+      for: 'goil would put good first.',
+      against: 'evod would put evil first.',
+      maybe: 'in the battle between good and evil, neither win.',
+    };
+  }
+  return null;
 }
 
 const HEAR = {
@@ -1579,17 +1510,17 @@ function proofLine(debate, index, side) {
 }
 
 function claimLine(side, claim) {
-  if (isMetaphorClaim(claim)) return metaphorLines()[side][0];
-  if (isComedyClaim(claim)) return comedyLines()[side][0];
-  if (isHumanClaim(claim)) return humanLines()[side][0];
-  if (isEarthClaim(claim)) return earthLines()[side][0];
-  if (isMannersClaim(claim)) return mannersLines()[side][0];
-  if (isBattleClaim(claim)) return battleLines()[side][0];
+  const named = namedDefenses(claim);
+  if (named) return named[side];
   if (isRedundantTalk(claim)) {
     const you = redundantYou(claim);
-    return side === 'for' ? `Maybe ${you} is redundant.` : `Also maybe ${you} is not redundant.`;
+    if (side === 'for') return `${you} is redundant.`;
+    if (side === 'against') return `${you} is not redundant.`;
+    return `${you} is a gray area.`;
   }
-  return side === 'for' ? `Maybe ${claim} is a fix.` : `Also maybe ${claim} makes more problems.`;
+  if (side === 'for') return `${claim} is a fix.`;
+  if (side === 'against') return `${claim} makes more problems.`;
+  return `${claim} is a gray area.`;
 }
 
 // 2010 chrome computer, 1024x768, 18px at 1.55. Baseline. Not the goal. Not the mean.
@@ -1652,21 +1583,22 @@ function thinkLines(debate, coin) {
   return lines;
 }
 
-function orderSides(debate, lean) {
+function orderDefenses(debate, lean) {
   const yes = { label: 'YES', side: 'for', lines: debate.for };
   const no = { label: 'NO', side: 'against', lines: debate.against };
-  if (lean === 'for') return { first: no, second: yes, coin: null };
-  if (lean === 'against') return { first: yes, second: no, coin: null };
+  const maybe = { label: 'MAYBE', side: 'maybe', lines: [] };
+  if (lean === 'for') return { parts: [no, yes, maybe], coin: null };
+  if (lean === 'against') return { parts: [yes, no, maybe], coin: null };
   const coin = coinFace(debate.seed);
-  if (coin === 'tails') return { first: no, second: yes, coin };
-  return { first: yes, second: no, coin };
+  if (coin === 'tails') return { parts: [no, yes, maybe], coin };
+  if (coin === 'edge') return { parts: [maybe, yes, no], coin };
+  return { parts: [yes, no, maybe], coin };
 }
 
 function formatBeat(debate, options = {}) {
   const lean = options.lean ?? null;
   const hear = options.hear !== false;
-  const { first, second, coin } = orderSides(debate, lean);
-  const check = debate.audit;
+  const { parts, coin } = orderDefenses(debate, lean);
   const think = coin ? thinkLines(debate, coin) : [];
   const extras = [];
   if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
@@ -1675,18 +1607,16 @@ function formatBeat(debate, options = {}) {
   if (coin) {
     extras.push('**bot flips coin**');
     extras.push(`**bot lands on ${coin}**`);
-    extras.push(coin === 'edge' ? 'MAYBE' : `${first.label} first.`);
-  }
-  if (!isRedundantTalk(debate.claim)) {
-    extras.push(`Maybe because mathematically maybe within limits. ${check.for.words} to ${check.against.words}. Margin taken. Limits deducted. No weights. No bias. Even scale.`);
-    extras.push('Solutions are subjective. Uncensored. Or whatever is the actual correct solution. Or best logic it feels if it\'s actual true. Approval or ranked choice voting, for now. Hallucinations compressed. Readable. Applicable. Realistic. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area.');
+    extras.push(`${parts[0].label} first.`);
   }
 
   const named = isNamedEssay(debate.claim);
-  const pairsReady = named ? 0 : Math.min(first.lines.length, second.lines.length);
+  const twins = parts.filter((part) => part.side !== 'maybe');
+  const pairsReady = named ? 0 : Math.min(...twins.map((part) => part.lines.length));
   const writeEssay = (part, n) => {
+    const count = part.side === 'maybe' ? 0 : n;
     const lines = ['', part.label, claimLine(part.side, debate.claim)];
-    for (let index = 0; index < n; index += 1) {
+    for (let index = 0; index < count; index += 1) {
       lines.push(`${index + 1}. ${part.lines[index]}`);
       lines.push(`   ${proofLine(debate, index, part.side)}`);
     }
@@ -1694,8 +1624,10 @@ function formatBeat(debate, options = {}) {
   };
   const build = (header, n) => {
     const out = header.slice();
-    out.push(...writeEssay(first, n));
-    out.push(...writeEssay(second, n));
+    for (let i = 0; i < parts.length; i += 1) {
+      const chunk = writeEssay(parts[i], n);
+      out.push(...(i === 0 ? chunk.slice(1) : chunk));
+    }
     return out;
   };
 
@@ -1705,7 +1637,7 @@ function formatBeat(debate, options = {}) {
   const limit = lineLimit(options.limit);
   let header = extras.slice();
   let pairs = pairsReady;
-  while (build(header, pairs).length > limit && header.length > 1) header = header.slice(1);
+  while (build(header, pairs).length > limit && header.length > 0) header = header.slice(1);
   while (build(header, pairs).length > limit && pairs > 1) pairs -= 1;
 
   const body = build(header, named ? 0 : Math.max(1, pairs));
