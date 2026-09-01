@@ -559,6 +559,14 @@ test('the html page can sit on chuumind.com', () => {
   assert.match(html, /--violet:\s*#b44cff/);
   assert.match(html, /wrap letter/);
   assert.match(html, /class="squiggle"/);
+  assert.match(html, /title="Type\. Feel\. Vibe\."/);
+  assert.match(html, /html\.feel \{/);
+  assert.match(html, /html\.vibe \{/);
+  assert.doesNotMatch(html, /Type \+|Type \+\+|access-big|access-bigger/);
+  const src = readFileSync(new URL('./argubot.js', import.meta.url), 'utf8');
+  assert.match(src, /\['Type', 'Feel', 'Vibe'\]/);
+  assert.match(src, /typeLevel === 1 && 'feel'/);
+  assert.match(src, /typeLevel === 2 && 'vibe'/);
   assert.doesNotMatch(html, /chuumind\.com\/styles\.css|chuumind\.com\/access\.js/);
 });
 

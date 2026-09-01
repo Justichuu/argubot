@@ -133,8 +133,8 @@
     }
     .wip-stamp strong { letter-spacing: .1em; }
     html.access-hi .wip-stamp { background: var(--paper); color: var(--ink); box-shadow: none; border-color: currentColor; }
-    html.access-big .wip-stamp { font-size: 18px; }
-    html.access-bigger .wip-stamp { font-size: 21px; }
+    html.feel .wip-stamp { font-size: 18px; }
+    html.vibe .wip-stamp { font-size: 21px; }
     @media print { .wip-stamp { box-shadow: none; break-inside: avoid; } }
     .notes { margin: 12px 0 16px; }
     .notes details { max-width: 100%; }
@@ -246,8 +246,11 @@
     .site-options[open] > summary { background: var(--ink); color: var(--paper); }
     .site-options .opt-acts { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
     .film[hidden] { display: none; }
-    html.access-big { font-size: 22px; }
-    html.access-bigger { font-size: 26px; }
+    html.feel { font-size: 22px; }
+    html.vibe { font-size: 26px; }
+    html.feel .lede { letter-spacing: .02em; }
+    html.vibe .lede { letter-spacing: .04em; }
+    html.vibe h1 { letter-spacing: .02em; }
     html.access-hi { --paper: #fff; --ink: #000; --muted: #000; --field: #fff; }
     html.access-hi, html.access-hi body, html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line {
       background: #fff; color: #000;
@@ -295,8 +298,8 @@
     .film-transcript ol { margin: 0; padding: .2rem 1rem 1rem 3.5rem; }
     .film-transcript li { padding: .42rem 0 .42rem .35rem; }
     .film-transcript time { display: inline-block; min-width: 3.4rem; font: 700 .82rem var(--sans); color: var(--muted); }
-    html.access-big .film-transcript, html.access-big .film-meta { font-size: 19px; }
-    html.access-bigger .film-transcript, html.access-bigger .film-meta { font-size: 23px; }
+    html.feel .film-transcript, html.feel .film-meta { font-size: 19px; }
+    html.vibe .film-transcript, html.vibe .film-meta { font-size: 23px; }
     @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
     @media (forced-colors: active) { button, textarea, #out, summary, video { border: 2px solid CanvasText; } }
   </style>
@@ -362,7 +365,7 @@
         </div>
       </aside>
       <div class="site-access" role="region" aria-label="Access">
-        <button type="button" id="acc_type" aria-pressed="false" title="Type. Normal, big, bigger.">Type</button>
+        <button type="button" id="acc_type" aria-pressed="false" title="Type. Feel. Vibe.">Type</button>
         <button type="button" id="acc_hi" aria-pressed="false" title="Light or dark.">Contrast</button>
         <button type="button" id="acc_speak" aria-pressed="false" title="A voice. It will not hear you.">Speak</button>
         <span id="acc_note" role="status" aria-live="polite"></span>

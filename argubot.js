@@ -2171,8 +2171,8 @@ if (typeof document !== 'undefined') {
     };
     const writeHash = () => {
       const parts = [
-        typeLevel === 1 && 'type',
-        typeLevel === 2 && 'type2',
+        typeLevel === 1 && 'feel',
+        typeLevel === 2 && 'vibe',
         root.classList.contains('access-hi') && 'hi',
         speakOn && 'speak',
         !fullOn && 'nofull',
@@ -2185,15 +2185,15 @@ if (typeof document !== 'undefined') {
     };
     const applyType = () => {
       if (!btnType) return;
-      root.classList.toggle('access-big', typeLevel === 1);
-      root.classList.toggle('access-bigger', typeLevel === 2);
+      root.classList.toggle('feel', typeLevel === 1);
+      root.classList.toggle('vibe', typeLevel === 2);
       btnType.setAttribute('aria-pressed', typeLevel > 0 ? 'true' : 'false');
-      btnType.textContent = ['Type', 'Type +', 'Type ++'][typeLevel];
+      btnType.textContent = ['Type', 'Feel', 'Vibe'][typeLevel];
     };
     btnType?.addEventListener('click', () => {
       typeLevel = (typeLevel + 1) % 3;
       applyType();
-      hint(['Normal type.', 'Big type.', 'Bigger type.'][typeLevel]);
+      hint(['Type.', 'Feel.', 'Vibe.'][typeLevel]);
       writeHash();
     });
     btnHi?.addEventListener('click', () => {
@@ -2284,8 +2284,8 @@ if (typeof document !== 'undefined') {
       }
     });
     const flags = ((location.hash || '').match(/access=([\w,]+)/) || [, ''])[1].split(',').filter(Boolean);
-    if (flags.includes('type2')) typeLevel = 2;
-    else if (flags.includes('type')) typeLevel = 1;
+    if (flags.includes('vibe') || flags.includes('type2')) typeLevel = 2;
+    else if (flags.includes('feel') || flags.includes('type')) typeLevel = 1;
     applyType();
     if (flags.includes('hi') && btnHi) {
       root.classList.add('access-hi');
