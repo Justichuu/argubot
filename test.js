@@ -1293,6 +1293,20 @@ test('the page treats the box as the thing even if you tap maybe first', () => {
   assert.doesNotMatch(reply.text, /bot flips coin|bot lands on/);
 });
 
+test('maybe on battle keeps the named essay, it does not argue the word battle', () => {
+  const first = talkAct(createTalkState(), 'maybe', 'battle');
+  assert.match(first.text, /neither win/);
+  assert.match(first.text, /goil would put good first/);
+  assert.match(first.text, /You said maybe\. MAYBE first\./);
+  assert.doesNotMatch(first.text, /battle is a gray area/);
+  const argued = talkAct(createTalkState(), 'argue', 'battle');
+  const leaned = talkAct(argued.state, 'maybe', 'battle');
+  assert.match(leaned.text, /neither win/);
+  assert.match(leaned.text, /You said maybe\. MAYBE first\./);
+  assert.doesNotMatch(leaned.text, /battle is a gray area/);
+  assert.doesNotMatch(leaned.text, /bot flips coin|bot lands on/);
+});
+
 test('arguing the same thing again is another pair, not a reset', () => {
   const first = talkAct(createTalkState({ seed: 'same' }), 'argue', 'getting a dog');
   const again = talkAct(first.state, 'argue', 'getting a dog');

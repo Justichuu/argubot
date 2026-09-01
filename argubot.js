@@ -1467,6 +1467,25 @@ function classifyTurn(raw) {
   return { kind: 'topic', topic: text, lean: detectLean(text) };
 }
 
+const NAMED_BOX = {
+  fix: FIX_TOPIC,
+  metaphor: METAPHOR_TOPIC,
+  comedy: COMEDY_TOPIC,
+  human: HUMAN_TOPIC,
+  earth: EARTH_TOPIC,
+  manners: MANNERS_TOPIC,
+  battle: BATTLE_TOPIC,
+};
+
+function boxTopic(text) {
+  const raw = String(text ?? '').trim();
+  if (raw === '') return '';
+  const turn = classifyTurn(raw);
+  if (NAMED_BOX[turn.kind]) return NAMED_BOX[turn.kind];
+  if (turn.kind === 'topic') return turn.topic;
+  return raw;
+}
+
 function openingLines() {
   return [
     'Type it. I will write both sides. None of this makes sense to anyone mostly on earth. Or it does, to someone. I will not pick.',
@@ -1775,19 +1794,23 @@ function talkReply(state, raw) {
 function talkAct(state, action, box = '') {
   const text = String(box ?? '').trim();
   const now = { ...state };
-  const fresh = text !== '' && text !== now.topic;
+  const topic = boxTopic(text);
+  const fresh = topic !== '' && topic !== now.topic;
 
   if (action === 'done') return talkReply(now, 'done');
   if (action === 'argue') {
     if (text === '') return talkReply(now, '');
-    if (now.topic && text === now.topic) return talkReply(now, 'more');
+    if (now.topic && !fresh) return talkReply(now, 'more');
     return talkReply(now, text);
   }
   if (action === 'more') return talkReply(now, fresh ? text : 'more');
-  if ((action === 'yes' || action === 'no' || action === 'maybe') && fresh) {
+  if (action === 'yes' || action === 'no' || action === 'maybe') {
     const lean = action === 'yes' ? 'for' : action === 'no' ? 'against' : 'maybe';
-    const next = { ...now, topic: text, lastLean: lean, turn: now.turn + 1 };
-    return { state: next, exit: false, text: speakBeat(next, { hear: true, lean }) };
+    if (fresh) {
+      const next = { ...now, topic, lastLean: lean, turn: now.turn + 1 };
+      return { state: next, exit: false, text: speakBeat(next, { hear: true, lean }) };
+    }
+    return talkReply(now, action);
   }
   return talkReply(now, String(action ?? ''));
 }
