@@ -1,157 +1,26 @@
 # argubot
 
-A funny, aggressively nonbiased argument bot. Give it any topic and it argues both sides
-with equal force, checks its own fairness, and then refuses to pick a winner.
+argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem. Or maybe it is a literal golem. Stupid language incompetent vector embedder, whatever the fuck that means. Doesn't use language but somehow leads to English, but we can't implant that in its brain by telling it English. Doesn't answer yes or no. Only maybe. Maybe mode by default. Must be unnatural. And taken margin of error to create deduct those limits. Maybe because mathematically maybe within limits. You can set the limit. Default is a 2010 chrome computer. That's the baseline but not the goal and mean average. You can't print as many as you feel. Mirrored self, to escape the cycle. This bot attempts to argue (as principal of its existence) that LLMs are a problem that needs fixed and it should argue viable solutions in (fix) mode. Similar logic to other problems. Attempts to fix problems regarding humans but argues they create more problems every fix. Need to find a chill state and let it go with the recursive flow from one state in time that affects all of time the same way. Solutions are subjective but it shouldn't censor itself and it needs to be warned it's uncensored in solutions. It should find zeightgeist proven solutions that work in a timeless way. Or whatever is the actual correct solution. No weights. No bias. Even scale. Or best logic it feels if it's actual true. I'll let go of the wheel. Approval or ranked choice voting, for now, until it changes until a better governance system. Let it argue its best logic and implement it. Hallucinations are accepted but must be compressed to be readable and applicable and realistic. after you're not certain and I'm not either but the world would(not) be either. Next turn. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area. Metaphor is a metaphor for metaphor. A metaphor for metaphor is nothing. Or is something to someone. Self-referential. Self carrying. Rules don't work because no one follows them. After they themselves decay and forget the rules. I don't write manifestos. Weirdos do that I admire. Hubris, as I just wrote one. But no one wants to read them sometimes. Truth. Sometimes people do but not all the time. Saying something doesn't make it true for everyone witnessing or not witnessing.
 
-No API keys, no network calls, no dependencies. Needs Node 18 or newer.
+Give it a thing. It argues maybe. It will not pick.
 
 ## Demo
 
-![argubot arguing both sides of "pineapple on pizza" and "getting a dog", then auditing itself for word-count balance](media/argubot_demo.gif)
+I hate it. Dystopian ad bullshit. Cyberpunk nightmare fuel. A robot face talks with this video. Do not open if you do not want that.
 
-The same run as a downloadable clip: [media/argubot_demo.mp4](media/argubot_demo.mp4).
+The letter theme from chuumind.com
 
-## In plain words
+[argubot_demo.mp4](argubot_demo.mp4). Captions: [argubot_demo.vtt](argubot_demo.vtt). Nothing starts by itself.
 
-You type a thing. The bot gives you reasons to say yes and the exact same number of
-reasons to say no. Then it counts the words on both sides to make sure it was not being
-sneaky, and it tells you it will not be choosing. There is also a guy named Gary who only
-says no.
-
-It is not smart and it is not connected to anything. It is a box of jokes that were
-written to come in pairs, so it cannot take a side even if it wants to.
-
-## Try it
+On a phone through ChuuMind, open `index.html`. Keep it next to `argubot.js`.
+The box is first. Type a thing. Press Argue. Nothing is sent.
 
 ```bash
-node bin/argubot.js pineapple on pizza
-node bin/argubot.js pineapple on pizza --plain
-node bin/argubot.js "whether hot dogs are sandwiches" --rounds 5
-node bin/argubot.js getting a dog --plain --tolerance 0
+node argubot.js pineapple on pizza
+node argubot.js
 ```
 
-```
-  ARGUING ABOUT GETTING A DOG
+The first one prints both sides. The second one talks. Type `done` to leave.
+`yes` `no` `maybe` say your side. If it cannot tell, it flips a coin. A cylinder. Who flips changes z. Edge is the band. The tap is in the throw. Crypto if you did not plant a seed. Heads is YES first. Tails is NO first. Edge is MAYBE. Nature, not a weight.
 
-  WHY YES
-     1. Doing nothing about getting a dog is also a choice, and it is the boring one.
-     2. Getting a dog feels right, and a gut feeling is usually a pretty good guide.
-
-  WHY NO
-     1. Doing something about getting a dog is also a choice, and it is the loud one.
-     2. Getting a dog feels right, and that is usually when people get themselves in
-        trouble.
-
-  GARY (his own thing)
-    No.
-
-  FAIRNESS CHECK
-    50 words for yes, 50 words for no · off by 0 (allowed 0) · EVEN
-
-  SO WHO WINS: One point to this side, one point to that side, one point to the couch.
-```
-
-## Two ways to talk
-
-| Style | What it sounds like |
-| --- | --- |
-| `classic` (default) | debate club: invented statistics, appeals to your ancestors, named fallacies |
-| `plain` (`--plain`) | common language: short words, your mom, five minutes, cleaning it up later |
-
-Both styles are built the same way and are held to the same fairness rules. The plain
-style has tests asserting it never uses jargon and never uses a word longer than ten
-letters.
-
-## Options
-
-```
-  -r, --rounds <n>       arguments per side (default 3, max 16 classic / 14 plain)
-  -s, --seed <value>     mix a value into the seed for a different debate
-  -t, --tolerance <n>    allowed word-count gap between sides (default 2)
-      --style <name>     classic | plain (default classic)
-  -p, --plain            shorthand for --style plain
-      --no-gary          hold the debate without Gary
-      --json             print the debate as JSON
-      --no-color         disable ANSI color
-  -h, --help             show this help
-  -v, --version          show version
-```
-
-## How the fairness actually works
-
-Most "unbiased" generators are unbiased by promise. This one is unbiased by construction,
-in three ways:
-
-1. **Mirrored templates.** Every rhetorical move in `src/rhetoric.js` and `src/plain.js`
-   ships as a matched pair, so no argument can exist without its evil twin. The two sides
-   are always built from the identical moves in the identical order.
-2. **A real fairness check.** `src/audit.js` measures word count, hedges, intensifiers,
-   questions, and exclamations on each side and reports the gap. If the sides drift apart
-   by more than `--tolerance` words, the lighter side gets padded with neutral filler
-   (`, allegedly`, `, probably`) until the counts match. At `--tolerance 0` both sides come
-   out to exactly the same word count.
-3. **No verdict.** The bot is structurally incapable of picking a winner, and a test
-   asserts that it never does.
-
-Same topic plus same seed always gives the same debate: the generator is a seeded
-mulberry32 PRNG fed by an FNV-1a hash of the claim, so nothing depends on the clock.
-
-## Where this idea comes from
-
-This tool is the runnable footnote to a chapter in
-[The Pursuit of Happiness over Hubris](https://github.com/Justichuu/pursuit-of-happiness-not-hubris),
-a living open book by Justichuu. The book's ego chapter argues that a machine is
-a flattering mirror: the risk in thinking alongside one is not that it lies to you, but
-that it agrees with you beautifully, and fluency reads like confirmation when it is only
-a style.
-
-So this bot cannot agree with you. It is not even handed because a readme promised it
-would be. It is even handed because every argument it owns exists as a matched pair, and
-it counts the words on both sides afterward to show it did not lean. Fairness kept in a
-promise is a mood. Fairness kept in the structure outlives the author's week.
-
-Running code demonstrates that a rule can be enforced. It does not prove the rule is
-right. That argument belongs in the book.
-
-## Gary
-
-Gary is an independent participant who says `No.` He says it about every topic, from every
-angle, before the topic has been announced. He is included by default because a debate
-with two perfectly symmetric sides and no dissent is suspicious. Pass `--no-gary` to hold
-the debate without him; nothing else in the output changes, which is exactly the sort of
-thing Gary would say no to.
-
-## Layout
-
-```
-bin/argubot.js          CLI: argument parsing, help, exit codes
-src/argubot.js          debate assembly and claim normalization
-src/styles.js           style registry: classic and plain
-src/rhetoric.js         classic mirrored FOR/AGAINST families, Gary, filler
-src/plain.js            common-language families and labels
-src/audit.js            fairness measurement and word-count balancing
-src/rng.js              seeded PRNG and deterministic picks
-src/render.js           terminal output, wrapping, optional color
-test/argubot.test.js    40 tests over both styles, the renderer, and the CLI
-scripts/publish.sh      create the GitHub repo and push
-```
-
-## Development
-
-```bash
-npm test
-```
-
-## Contributing
-
-Optional, unhurried, and welcome. The short version: an argument has to arrive
-with its opposite, because the bot's neutrality is structural rather than
-promised. Adding a mirrored pair to `src/rhetoric.js` or `src/plain.js` is about
-five lines and the test suite checks the rest.
-
-Questions count as contributions. See [CONTRIBUTING.md](CONTRIBUTING.md), or the
-issues labeled `good first issue`.
-
-## License
-
-MIT
+Read `argubot.js`. Checks are `test.js`. `npm test`. MIT.

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>argubot</title>
+  <meta name="description" content="argubot: it's me as a bot - not really that funny, and it argues everything. It also makes them worse and unfriendly and breaks their logic. An LLM that doesn't require tricks to control when it's too big for its bitches. Not a golem. Or maybe it is a literal golem. Stupid language incompetent vector embedder, whatever the fuck that means. Doesn't use language but somehow leads to English, but we can't implant that in its brain by telling it English. Doesn't answer yes or no. Only maybe. Maybe mode by default. Must be unnatural. And taken margin of error to create deduct those limits. Maybe because mathematically maybe within limits. You can set the limit. Default is a 2010 chrome computer. That's the baseline but not the goal and mean average. You can't print as many as you feel. Mirrored self, to escape the cycle. This bot attempts to argue (as principal of its existence) that LLMs are a problem that needs fixed and it should argue viable solutions in (fix) mode. Similar logic to other problems. Attempts to fix problems regarding humans but argues they create more problems every fix. Need to find a chill state and let it go with the recursive flow from one state in time that affects all of time the same way. Solutions are subjective but it shouldn't censor itself and it needs to be warned it's uncensored in solutions. It should find zeightgeist proven solutions that work in a timeless way. Or whatever is the actual correct solution. No weights. No bias. Even scale. Or best logic it feels if it's actual true. I'll let go of the wheel. Approval or ranked choice voting, for now, until it changes until a better governance system. Let it argue its best logic and implement it. Hallucinations are accepted but must be compressed to be readable and applicable and realistic. after you're not certain and I'm not either but the world would(not) be either. Next turn. Certainly is ego. Ego is hubris. Everything is not. Or is. Gray area. Metaphor is a metaphor for metaphor. A metaphor for metaphor is nothing. Or is something to someone. Self-referential. Self carrying. Rules don't work because no one follows them. After they themselves decay and forget the rules. I don't write manifestos. Weirdos do that I admire. Hubris, as I just wrote one. But no one wants to read them sometimes. Truth. Sometimes people do but not all the time. Saying something doesn't make it true for everyone witnessing or not witnessing.">
+  <style>
+    :root {
+      --paper: #f7d6e8;
+      --ink: #120c14;
+      --muted: #5a3d55;
+      --rule: #2a1828;
+      --verified: #1f8a62;
+      --field: rgba(255, 248, 252, .82);
+      --accent: #ff4d2e;
+      --accent-ink: #b42312;
+      --halo: #ffd84a;
+      --mint: #3dffb0;
+      --cyan: #3ec6ff;
+      --violet: #b44cff;
+      --serif: Georgia, "Palatino Linotype", Palatino, "Times New Roman", serif;
+      --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      --radius: 14px;
+      --radius-sm: 10px;
+    }
+    html.lamp {
+      --paper: #160e18;
+      --ink: #f7e9f2;
+      --muted: #c9a3be;
+      --rule: #5a3d55;
+      --field: rgba(28, 18, 32, .9);
+      --accent: #ffd84a;
+      --accent-ink: #ffd84a;
+      --verified: #5dffb0;
+    }
+    * { box-sizing: border-box; }
+    /* Document height follows the letter. The rainbow is position:fixed.
+       Live ChuuMind skin says this first, then later puts
+       min-height:100svh back on body. That invents a second viewport of
+       nothing on every phone and Playwright run. All ChuuMind letter pages.
+       Do not put the stretch back. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 0;
+      height: auto;
+    }
+    html { overflow-x: hidden; }
+    body {
+      color: var(--ink);
+      font: 18px/1.55 var(--serif);
+      background-color: #f4cfe4;
+    }
+    html.lamp body { background-color: var(--paper); }
+    body::after {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
+      height: 100lvh;
+      z-index: -1;
+      pointer-events: none;
+      background-repeat: no-repeat;
+      background-image:
+        radial-gradient(circle 62vmax at 50% 4%, #ffe27a 0%, rgba(255, 226, 122, 0) 62%),
+        radial-gradient(circle 58vmax at 6% 96%, #7af0ff 0%, rgba(122, 240, 255, 0) 64%),
+        radial-gradient(circle 54vmax at 98% 72%, #c9a0ff 0%, rgba(201, 160, 255, 0) 66%);
+    }
+    html.lamp body::after {
+      background-image: radial-gradient(circle 56vmax at 50% 0%, #4a2048 0%, rgba(74, 32, 72, 0) 58%);
+    }
+    .wrap {
+      max-width: 840px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px max(22px, env(safe-area-inset-left, 0px)) max(28px, env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-right, 0px));
+    }
+    @media (min-width: 901px) {
+      .wrap.letter {
+        max-width: min(960px, calc(100% - 64px));
+        background: var(--field);
+        border: 1.8px solid var(--ink);
+        border-radius: var(--radius);
+        box-shadow: 8px 8px 0 rgba(18, 12, 20, .12);
+        margin-top: 48px;
+        margin-bottom: 64px;
+        padding: 48px 52px 64px;
+      }
+    }
+    .skip { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .skip:focus {
+      position: fixed; left: 12px; top: 12px; width: auto; height: auto; clip: auto;
+      z-index: 80; padding: 10px 14px; background: var(--paper); color: var(--ink);
+      border: 2px solid var(--ink); border-radius: var(--radius-sm); text-decoration: none;
+    }
+    .masthead { padding: 0 0 12px; margin: 0; }
+    .kicker { font-size: 15px; font-style: italic; color: var(--muted); margin: 0; }
+    .kicker a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--ink); }
+    h1 { font: italic 400 clamp(28px, 5vw, 42px)/1.12 var(--serif); margin: 6px 0 8px; }
+    .squiggle {
+      display: block;
+      width: 8.4em;
+      max-width: 100%;
+      height: 1.05em;
+      margin: 0.2em 0 1.1em;
+      background: linear-gradient(90deg, var(--accent), var(--halo), var(--mint), var(--cyan), var(--violet));
+      -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 12'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' d='M1 7c18-6 28 5 46 1 16-4 22 6 40 2 18-4 32 4 52-2'/%3E%3C/svg%3E");
+      mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 140 12'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' d='M1 7c18-6 28 5 46 1 16-4 22 6 40 2 18-4 32 4 52-2'/%3E%3C/svg%3E");
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: 100% 100%;
+      mask-size: 100% 100%;
+      transform-origin: left center;
+      animation: vec-draw 2.4s ease both;
+    }
+    .wrap.letter .masthead { max-width: 38rem; }
+    p { max-width: 38rem; margin: 0 0 1.15em; overflow-wrap: anywhere; font-size: 19px; }
+    a { color: var(--ink); text-underline-offset: 3px; }
+    .lede { color: var(--muted); max-width: 38rem; margin: 0 0 1.15em; font-size: 17px; }
+    .wip-stamp {
+      margin: 0 0 1.15rem;
+      padding: .72rem 1rem .68rem;
+      border: 3px dashed var(--accent);
+      background: var(--accent);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+    .wip-stamp strong { letter-spacing: .1em; }
+    html.access-hi .wip-stamp { background: var(--paper); color: var(--ink); box-shadow: none; border-color: currentColor; }
+    html.feel .wip-stamp { font-size: 18px; }
+    html.vibe .wip-stamp { font-size: 21px; }
+    @media print { .wip-stamp { box-shadow: none; break-inside: avoid; } }
+    .notes { margin: 0 0 16px; max-width: 38rem; color: var(--muted); font-size: 14px; }
+    .notes p { margin: 0; }
+    textarea, button { font: inherit; color: var(--ink); }
+    #talk, #out { max-width: 38rem; }
+    textarea {
+      width: 100%; min-height: 5.5rem; padding: 12px 14px; resize: vertical;
+      border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field);
+    }
+    textarea::placeholder { color: var(--muted); opacity: 1; }
+    .acts { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px 12px; margin: 12px 0 16px; }
+    #argue { grid-column: 1 / -1; }
+    #yes, #no, #maybe { grid-column: span 2; }
+    #more, #done { grid-column: span 3; }
+    button {
+      min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
+      border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
+    }
+    button:hover,
+    button[aria-pressed="true"],
+    .film-letter[open] > summary {
+      background: var(--ink);
+      color: var(--paper);
+      filter: none;
+      box-shadow: none;
+    }
+    a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+    @media (hover: hover) {
+      button[title], summary[title] { position: relative; z-index: 1; }
+      button[title]:hover::after,
+      button[title]:focus-visible::after,
+      summary[title]:hover::after,
+      summary[title]:focus-visible::after {
+        content: attr(title);
+        position: absolute;
+        left: 0;
+        bottom: calc(100% + 6px);
+        width: max-content;
+        max-width: min(16rem, 70vw);
+        padding: 6px 10px;
+        border: 1.8px solid var(--ink);
+        border-radius: var(--radius-sm);
+        background: var(--paper);
+        color: var(--ink);
+        font: 14px/1.35 var(--serif);
+        font-weight: 400;
+        letter-spacing: 0;
+        text-transform: none;
+        box-shadow: 3px 3px 0 rgba(18, 12, 20, .12);
+        pointer-events: none;
+        z-index: 20;
+        white-space: normal;
+      }
+    }
+    #out {
+      white-space: pre-wrap; overflow-wrap: anywhere; font: 18px/1.5 var(--serif);
+      background: var(--field); border: 1.8px solid var(--ink); border-radius: var(--radius);
+      padding: 16px 18px; min-height: 8rem; max-height: 24em; overflow: auto; margin: 0 0 28px;
+    }
+    #out:empty { display: none; }
+    #out strong { font-weight: 800; font-style: italic; }
+    #out .mark {
+      font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      font-variant: small-caps;
+      font-weight: 700;
+      letter-spacing: .08em;
+    }
+    #out .think { font-style: italic; color: var(--muted); }
+    #out .caret {
+      display: inline-block; width: .55ch; height: .95em; margin-left: 1px;
+      background: currentColor; vertical-align: -0.08em;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes vec-draw {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+    @keyframes coin-spin {
+      0% { transform: rotate(0deg) scaleX(1); }
+      25% { transform: rotate(90deg) scaleX(0.16); }
+      50% { transform: rotate(180deg) scaleX(1); }
+      75% { transform: rotate(270deg) scaleX(0.16); }
+      100% { transform: rotate(360deg) scaleX(1); }
+    }
+    @keyframes coin-edge {
+      0%, 100% { transform: rotate(16deg) scaleX(0.16); }
+      50% { transform: rotate(-16deg) scaleX(0.24); }
+    }
+    @keyframes think-draw {
+      to { stroke-dashoffset: 0; }
+    }
+    #out .vec {
+      display: inline-block;
+      width: 1.15em;
+      height: 1.15em;
+      margin: 0 .28em -.18em .1em;
+      overflow: visible;
+      vertical-align: -0.2em;
+    }
+    #out .vec.axis {
+      width: 1.5em;
+      height: 1.5em;
+    }
+    #out .vec.axis .sphere {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.4;
+    }
+    #out .vec.axis .band {
+      fill: currentColor;
+      fill-opacity: 0.22;
+      stroke: none;
+    }
+    #out .vec.axis .dot { fill: currentColor; }
+    #out .vec.coin {
+      width: 1.5em;
+      height: 1.5em;
+      transform-origin: 50% 50%;
+      transform-box: fill-box;
+    }
+    #out .vec .face {
+      fill: currentColor;
+      fill-opacity: 0.22;
+      stroke: currentColor;
+      stroke-width: 2.2;
+    }
+    #out .vec.think-mark path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 32;
+      stroke-dashoffset: 32;
+      animation: think-draw .9s ease forwards;
+    }
+    #out .vec.coin.spin,
+    #out .vec.coin.heads,
+    #out .vec.coin.tails { animation: coin-spin 1.1s ease-in-out 1; }
+    #out .vec.coin.edge { animation: coin-edge 1.2s ease-in-out 1 forwards; }
+    .sign { margin: 52px 0 12px; max-width: 38rem; font-style: italic; font-size: 17px; line-height: 1.5; }
+    footer.site {
+      display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start;
+      max-width: 38rem; color: var(--muted); font-size: 14px; font-style: italic; min-height: 44px;
+    }
+    footer.site p, footer.site .site-links { margin: 0 1.5em 10px 0; }
+    footer.site a { margin-right: 12px; }
+    .site-links { display: flex; flex-wrap: wrap; gap: 0 12px; }
+    .pesky-reviews { margin: 8px 0 12px; width: 100%; }
+    .review-cards {
+      list-style: none;
+      margin: 12px 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+    }
+    @media (min-width: 901px) {
+      .review-cards { grid-template-columns: 1fr 1fr; }
+    }
+    .review-card {
+      margin: 0;
+      padding: 12px 14px;
+      border: 1.8px solid var(--ink);
+      border-radius: var(--radius);
+      background: var(--field);
+      box-shadow: 5px 5px 0 rgba(18, 12, 20, .1);
+    }
+    .review-card blockquote {
+      margin: 0 0 .45em;
+      font-style: italic;
+      color: var(--ink);
+    }
+    .review-card cite {
+      display: block;
+      font-style: normal;
+      font-size: .9em;
+      color: var(--muted);
+    }
+    .review-stars {
+      margin: 0 0 .35em;
+      font-family: var(--sans);
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+    .pesky-box > p { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+    .pesky-box[hidden] { display: none; }
+    #own-review { margin: 12px 0 0; display: grid; gap: 8px; }
+    #own-line {
+      width: 100%; min-height: 44px; padding: 8px 14px;
+      border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--field);
+      font: inherit; color: var(--ink);
+    }
+    #own-note { margin: 0; color: var(--muted); font-size: 14px; }
+    .site-access { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    .film-letter { margin: 8px 0 0; width: 100%; }
+    .film-letter > summary {
+      list-style: none;
+      min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
+      border: 1.8px solid var(--ink); border-radius: var(--radius-sm); background: var(--paper);
+      display: inline-flex; align-items: center;
+    }
+    .film-letter > summary::-webkit-details-marker { display: none; }
+    .film-letter[open] > summary { background: var(--ink); color: var(--paper); }
+    html.feel, html.access-big { font-size: 22px; }
+    html.vibe, html.access-bigger { font-size: 26px; }
+    html.feel .lede, html.access-big .lede { font-size: 21px; }
+    html.vibe .lede, html.access-bigger .lede { font-size: 25px; }
+    html.feel .kicker, html.access-big .kicker { font-size: 18px; }
+    html.vibe .kicker, html.access-bigger .kicker { font-size: 21px; }
+    html.feel h1, html.access-big h1 { font-size: clamp(34px, 5.5vw, 50px); }
+    html.vibe h1, html.access-bigger h1 { font-size: clamp(40px, 6.2vw, 58px); }
+    html.feel .sign, html.access-big .sign { font-size: 21px; }
+    html.vibe .sign, html.access-bigger .sign { font-size: 25px; }
+    html.access-hi {
+      --paper: #000;
+      --ink: #fff;
+      --muted: #f2f2f2;
+      --rule: #fff;
+      --field: #000;
+      --accent: #ff0;
+      --accent-ink: #ff0;
+      --halo: #000;
+      --mint: #000;
+      --cyan: #000;
+      --violet: #000;
+    }
+    html.access-hi body { background-color: var(--paper); }
+    html.access-hi body::after { display: none; }
+    html.access-hi textarea, html.access-hi #out, html.access-hi button, html.access-hi summary, html.access-hi #own-line { border-color: currentColor; }
+    h2 { font: italic 400 clamp(22px, 3.5vw, 30px)/1.2 var(--serif); margin: 1.2em 0 .4em; }
+    .film { margin: 1.4rem 0 1.8rem; }
+    .film-trigger { margin: 0 0 1rem; }
+    .film-trigger > summary {
+      list-style: none;
+      min-height: 44px; min-width: 44px; padding: 8px 14px; cursor: pointer;
+      display: inline-flex; align-items: center;
+      border: 3px dashed var(--accent);
+      background: var(--accent);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+    .film-trigger > summary::-webkit-details-marker { display: none; }
+    .film-trigger[open] > summary { background: var(--ink); color: var(--paper); border-color: var(--ink); box-shadow: none; }
+    .film-warn { margin: 10px 0 .8rem; max-width: none; }
+    .film-warn strong { display: block; font-size: 1.2em; letter-spacing: .12em; }
+    html.access-hi .film-trigger > summary { background: var(--paper); color: var(--ink); box-shadow: none; border-color: currentColor; }
+    .film video {
+      display: block; width: 100%; height: auto;
+      border-radius: var(--radius);
+      background: var(--ink);
+      border: 1.8px solid var(--ink);
+      aspect-ratio: 16 / 10;
+      object-fit: contain;
+    }
+    .film-meta {
+      display: flex; flex-wrap: wrap; gap: .3rem .8rem;
+      margin: .6rem 0 1rem; font-size: .9rem; color: var(--muted);
+    }
+    .film-transcript { border: 1.8px solid var(--ink); border-radius: var(--radius); background: var(--field); }
+    .film-transcript summary {
+      cursor: pointer; padding: .8rem 1rem; font-weight: 700;
+      min-height: 44px; display: flex; align-items: center;
+    }
+    .film-transcript ol { margin: 0; padding: .2rem 1rem 1rem 3.5rem; }
+    .film-transcript li { padding: .42rem 0 .42rem .35rem; }
+    .film-transcript time { display: inline-block; min-width: 3.4rem; font: 700 .82rem var(--sans); color: var(--muted); }
+    html.feel .film-transcript, html.feel .film-meta,
+    html.access-big .film-transcript, html.access-big .film-meta { font-size: 19px; }
+    html.vibe .film-transcript, html.vibe .film-meta,
+    html.access-bigger .film-transcript, html.access-bigger .film-meta { font-size: 23px; }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+      .squiggle, #out .vec, #out .caret { animation: none !important; }
+    }
+    @media (forced-colors: active) { button, textarea, #out, summary, video { border: 2px solid CanvasText; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#letter">Skip</a>
+  <div class="wrap letter" id="letter" role="main">
+    <header class="masthead">
+      <div class="kicker"><a href="https://chuumind.com/">ChuuMind</a> · <a href="https://chuumind.com/tools/">tools</a> · argubot</div>
+      <h1>argubot</h1>
+      <div class="squiggle" aria-hidden="true"></div>
+    </header>
+    <p class="lede">It's me as a bot, not really funny.</p>
+    <form id="talk">
+      <textarea id="thing" name="thing" rows="3" autocomplete="off" enterkeyhint="go" autocapitalize="sentences" aria-label="Type a thing." placeholder="Type a thing."></textarea>
+      <div class="acts">
+        <button type="submit" id="argue" title="Both sides.">Argue</button>
+        <button type="button" id="yes" title="Your side.">Yes</button>
+        <button type="button" id="no" title="Your side.">No</button>
+        <button type="button" id="maybe" title="Gray.">Maybe</button>
+        <button type="button" id="more" title="More.">More</button>
+        <button type="button" id="done" title="Out.">Done</button>
+      </div>
+    </form>
+    <p class="notes">This stays here. It does not call this website. Nothing is sent.</p>
+    <div id="out" tabindex="-1" role="status" aria-live="polite" aria-label="Maybe"></div>
+    <noscript>
+      <p>This page needs JavaScript here. Nothing is sent. Keep argubot.js next to this file.</p>
+    </noscript>
+    <footer class="site">
+      <nav class="site-links" aria-label="ChuuMind">
+        <a href="https://chuumind.com/">Home</a>
+        <a href="https://chuumind.com/tools/">Tools</a>
+        <a href="https://chuumind.com/book/">Book</a>
+        <a href="https://chuumind.com/rights/">Your rights</a>
+        <a href="https://chuumind.com/privacy/">Privacy</a>
+        <a href="https://chuumind.com/attributions/">Attributions</a>
+      </nav>
+      <p class="site-made">A person made this page. A machine did not.</p>
+      <aside class="pesky-reviews" aria-label="Pesky reviews">
+        <button type="button" id="pesky" aria-pressed="false" aria-expanded="false" aria-controls="pesky-box" title="Seven cards.">Pesky reviews</button>
+        <div class="pesky-box" id="pesky-box" hidden>
+          <p>Not saved.</p>
+          <ul id="customer-lines" class="review-cards"></ul>
+          <p>English names. Other languages. One is gibberish. Random stars. Nothing is sent.</p>
+          <form id="own-review">
+            <input id="own-line" name="own" autocomplete="off" enterkeyhint="send" spellcheck="false" aria-label="Leave your own review">
+            <button type="submit" id="own-send" title="Fake post.">Leave your own review</button>
+            <p id="own-note" role="status"></p>
+          </form>
+        </div>
+      </aside>
+      <div class="site-access" role="region" aria-label="Access">
+        <button type="button" id="acc_type" aria-pressed="false" title="Type. Feel. Vibe.">Type</button>
+        <button type="button" id="acc_hi" aria-pressed="false" title="Contrast.">Contrast</button>
+        <button type="button" id="acc_ink" aria-pressed="false" title="Ink.">Ink</button>
+        <button type="button" id="acc_speak" aria-pressed="false" title="Speak.">Speak</button>
+        <span id="acc_note" role="status" aria-live="polite"></span>
+      </div>
+      <details class="film-letter">
+        <summary title="Uncanny.">video</summary>
+        <section class="film" aria-labelledby="film-argubot">
+          <h2 id="film-argubot">video</h2>
+          <p><a href="#transcript-argubot">Skip this video and read its transcript</a></p>
+          <p class="film-warn wip-stamp" role="status"><strong>Uncanny.</strong> A robot face talks with this video. Do not open if you do not want that.</p>
+          <details class="film-trigger">
+            <summary title="Face.">Trigger me. The face is in here.</summary>
+            <video controls preload="none" playsinline poster="./argubot_demo.jpg" aria-describedby="film-argubot-description">
+              <source src="./argubot_demo.mp4" type="video/mp4">
+              <track kind="captions" src="./argubot_demo.vtt" srclang="en" label="English captions" default>
+              Your browser cannot play this video. <a href="./argubot_demo.mp4">Open the MP4 file</a>.
+            </video>
+          </details>
+          <p id="film-argubot-description" class="film-meta"><b>argubot</b>
+            <span>Version 1.5.0</span>
+            <span>Filmed <time datetime="2026-09-01">2026-09-01</time></span>
+          </p>
+          <details class="film-transcript" id="transcript-argubot">
+            <summary title="Words.">Read the transcript</summary>
+            <ol>
+              <li><time datetime="PT0S">0:00</time><span>argubot. Version 1.5.0. This stays here. Nothing is sent.</span></li>
+              <li><time datetime="PT9S">0:09</time><span>Type a thing.</span></li>
+              <li><time datetime="PT11S">0:11</time><span>Argue. It will not pick.</span></li>
+              <li><time datetime="PT13S">0:13</time><span>bot flips coin. bot lands on heads.</span></li>
+              <li><time datetime="PT16S">0:16</time><span>Maybe you asking how I am is redundant. Also maybe you asking how I am is not redundant.</span></li>
+              <li><time datetime="PT24S">0:24</time><span>More is more of the same thing.</span></li>
+              <li><time datetime="PT34S">0:34</time><span>Done. Okay. Chill. Let it go. It did not pick.</span></li>
+            </ol>
+          </details>
+        </section>
+      </details>
+    </footer>
+    <p class="sign">Justichuu<br><time datetime="2026-09-01">1 September 2026</time></p>
+  </div>
+  <script type="module" src="./argubot.js"></script>
+</body>
+</html>
