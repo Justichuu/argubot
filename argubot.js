@@ -327,8 +327,8 @@ const PLAIN_FAMILIES = [
   {
     id: 'tried-it',
     move: 'I tried it once',
-    for: (c) => `I did ${c} one time and my whole day got a little bit better after that.`,
-    against: (c) => `I did ${c} one time and my whole day got a little bit worse after that.`,
+    for: (c) => `I tried ${c} one time and my whole day got a little bit better after that.`,
+    against: (c) => `I tried ${c} one time and my whole day got a little bit worse after that.`,
     proof: twinProof('Check: one try of $. Same day. Better.', 'Check: one try of $. Same day. Worse.'),
   },
   {
@@ -362,7 +362,7 @@ const PLAIN_FAMILIES = [
   {
     id: 'everyone',
     move: 'everybody does it',
-    for: (c) => `Plenty of people already do ${c} and honestly most of them seem to be doing fine.`,
+    for: (c) => `Plenty of people have tried ${c} and honestly most of them seem to be doing fine.`,
     against: (c) => `Plenty of people already do ${c} and we have all quietly stopped asking them why.`,
     proof: twinProof('Check: count people who do $ and look fine.', 'Check: count people who do $ and stay quiet.'),
   },
@@ -673,6 +673,78 @@ const CIVIC_LABELS = {
 
 const isClause = (text) => ['whether', 'if', 'that'].includes(text.split(/\s+/)[0].toLowerCase());
 
+// Every plain family slots the topic into a sentence that wants a NOUN PHRASE:
+// "$ takes five minutes", "a kid would love $", "no rule against $". A gerund
+// satisfies that and so does a plain noun. A clause does not, which is why
+// "pineapple belongs on pizza" came out as "your friends would think pineapple
+// belongs on pizza is funny". The reasons were never wrong about the topic;
+// they were handed the wrong shape and had no way to say so.
+//
+// So: shape a clause into a noun phrase before the families ever see it.
+// Deterministic, no model, no word list beyond the finite verbs that make a
+// clause a clause.
+// Only auxiliaries and copulas. Words like "work", "matter" and "cost" are
+// verbs in a dictionary and nouns in a topic box, and guessing wrong turns
+// "remote work" into "agreeing that remote work". These do not have that
+// problem: nothing is a noun and "was" at the same time.
+const COPULAS = new Set([
+  'is', 'are', 'was', 'were', 'am', 'be', 'been', 'being',
+  'will', 'would', 'should', 'shall', 'must', 'can', 'could', 'might', 'may',
+  'has', 'have', 'had', 'does', 'did', 'belongs', 'belong', 'isnt', 'arent',
+]);
+const SUBJECTS = new Set(['i', 'we', 'you', 'they', 'he', 'she', 'it']);
+
+// The authored topics live further down the file, so this resolves on first
+// call rather than at load. Nothing argues a topic while the module is still
+// being read, so by the time it runs they exist.
+let curatedTopics = null;
+const isCurated = (text) => {
+  if (curatedTopics === null) {
+    curatedTopics = new Set([
+      FIX_TOPIC, METAPHOR_TOPIC, COMEDY_TOPIC, HUMAN_TOPIC,
+      EARTH_TOPIC, MANNERS_TOPIC, BATTLE_TOPIC,
+    ]);
+  }
+  return curatedTopics.has(text);
+};
+
+const looksLikeGerund = (text) => {
+  const first = text.split(/\s+/)[0].toLowerCase();
+  return first.length > 4 && first.endsWith('ing');
+};
+
+const bare = (w) => w.replace(/[^a-z']/g, '');
+
+function shapePlainClaim(topic) {
+  const text = String(topic ?? '').trim();
+  if (text === '') return text;
+  // The built-in topics are hand written and the author picked their wording.
+  // Shaping them would be this function overruling a person on their own
+  // sentence, which is not its job.
+  if (isCurated(text)) return text;
+  // A whether/if/that clause is already the shape the families want, and the
+  // test says so out loud. Leave it exactly alone.
+  if (isClause(text)) return text;
+  if (looksLikeGerund(text)) return text;
+
+  const words = text.split(/\s+/);
+  if (words.length < 2) return text;
+
+  // "should I quit my job" is a question, not a name for a thing. Drop the
+  // modal and its subject and it becomes a clause the families can hold.
+  if (COPULAS.has(bare(words[0].toLowerCase())) && SUBJECTS.has(bare(words[1].toLowerCase()))) {
+    const rest = words.slice(2).join(' ').trim();
+    if (rest !== '') return `whether to ${rest}`;
+  }
+
+  // A copula anywhere after the first word makes this a claim about the world
+  // rather than a name for something you could do. The families need a noun
+  // phrase, so give them one and keep the claim intact inside it.
+  const claimish = words.slice(1).some((w) => COPULAS.has(bare(w.toLowerCase())));
+  return claimish ? `agreeing that ${text}` : text;
+}
+
+
 const STYLES = {
   classic: {
     id: 'classic',
@@ -691,7 +763,7 @@ const STYLES = {
     id: 'plain',
     description: 'common language, short words, reasons a normal person would give',
     defaultTopic: 'whether this needed an argument at all',
-    shapeClaim: (topic) => topic,
+    shapeClaim: shapePlainClaim,
     families: PLAIN_FAMILIES,
     moderatorLines: PLAIN_MODERATOR_LINES,
     verdictLines: PLAIN_VERDICT_LINES,
@@ -791,6 +863,8 @@ function balance(forLines, againstLines, rng, tolerance, flourishes = FLOURISHES
 const DEFAULT_TOPIC = 'whether this sentence required an argument';
 const MAX_ROUNDS = FAMILIES.length;
 
+
+
 function normalizeClaim(topic, styleName = DEFAULT_STYLE) {
   const style = getStyle(styleName);
   const trimmed = String(topic ?? '').trim().replace(/[.!?]+$/, '');
@@ -811,6 +885,10 @@ function argue(options = {}) {
   const style = getStyle(styleName);
   const topic = options.topic ?? style.defaultTopic;
   const claim = normalizeClaim(topic, styleName);
+  // What was typed, for the headline. claim is the shaped noun phrase the
+  // reason families need. Showing somebody their own words back is worth a
+  // field.
+  const heading = String(topic ?? '').trim().replace(/[.!?]+$/, '') || claim;
   const asked = Math.max(0, options.tolerance ?? 2);
   const tolerance = Math.max(0, asked - 2); // old slack is the margin. Deduct it.
   const includeDissent = options.dissent === true || options.gary === true;
@@ -822,6 +900,7 @@ function argue(options = {}) {
     const sides = redundantTalk(claim);
     return {
       claim,
+      heading,
       style: styleName,
       seed,
       rounds: 1,
@@ -839,6 +918,7 @@ function argue(options = {}) {
     const sides = { for: [named.for], against: [named.against] };
     return {
       claim,
+      heading,
       style: styleName,
       seed,
       rounds: 0,
@@ -869,6 +949,7 @@ function argue(options = {}) {
 
   return {
     claim,
+    heading,
     style: styleName,
     seed,
     rounds: families.length,
@@ -928,7 +1009,7 @@ function render(debate, options = {}) {
   };
 
   out.push('');
-  pushBlock(labels.question(debate.claim), '', 'bold');
+  pushBlock(labels.question(debate.heading ?? debate.claim), '', 'bold');
   pushBlock(labels.meta(debate.seed, debate.rounds), '', 'dim');
   out.push('');
 
@@ -1703,7 +1784,11 @@ function formatBeat(debate, options = {}) {
   const { parts, coin, toss } = orderDefenses(debate, lean, options.tossSeed, options.toss);
   const think = coin ? thinkLines(debate, toss) : [];
   const extras = [];
-  if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](debate.claim) : HEAR.plain(debate.claim));
+  // Echo the person's own words back, not the shaped noun phrase. Hearing
+  // "you said agreeing that hot dogs are sandwiches" when you said no such
+  // thing is the bot putting words in your mouth on turn one.
+  const heard = debate.heading ?? debate.claim;
+  if (hear) extras.push(HEAR[debate.style] ? HEAR[debate.style](heard) : HEAR.plain(heard));
   if (lean === 'for') extras.push('You said yes. NO first.');
   if (lean === 'against') extras.push('You said no. YES first.');
   if (lean === 'maybe') extras.push('You said maybe. MAYBE first.');
@@ -2487,9 +2572,23 @@ if (typeof document !== 'undefined') {
     }
     if (flags.includes('head') && filmWrap) filmWrap.open = true;
     let streamTok = 0;
-    const wait = (ms) => new Promise((ok) => setTimeout(ok, ms));
+    // The typewriter is the bot thinking out loud and it stays. What was wrong
+    // is that it could not be got past. At 320 ms a word a full debate took
+    // eighty-eight seconds to finish, so in practice a reader saw whichever
+    // side the coin put first and left before the other two arrived. The coin
+    // was never picking the answer, only the running order, but a minute of
+    // forced waiting made it look like it had picked.
+    //
+    // Content that animates for more than five seconds needs a way to stop it.
+    // Three ways, then: the system setting, a click, and a key.
+    let hurry = false;
+    const restLabel = 'Maybe';
+    const busyLabel = 'Maybe. Still typing. Click or press Escape for the rest.';
+    const still = typeof matchMedia === 'function'
+      && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const wait = (ms) => (hurry || still ? Promise.resolve() : new Promise((ok) => setTimeout(ok, ms)));
     // Human paced always. About talking speed, not a dump.
-    const PACE = { word: 320, think: 96, line: 260, land: 720 };
+    const PACE = { word: 110, think: 45, line: 90, land: 340 };
     const SVG_NS = 'http://www.w3.org/2000/svg';
     const svgEl = (name, attrs) => {
       const el = document.createElementNS(SVG_NS, name);
@@ -2561,8 +2660,12 @@ if (typeof document !== 'undefined') {
     };
     const show = (text, moveFocus) => {
       const my = ++streamTok;
+      hurry = false;
       out.replaceChildren();
       out.setAttribute('aria-busy', 'true');
+      out.setAttribute('aria-label', busyLabel);
+      out.setAttribute('title', 'Click for the rest');
+      out.style.cursor = 'pointer';
       silence();
       const caret = document.createElement('span');
       caret.className = 'caret';
@@ -2650,6 +2753,9 @@ if (typeof document !== 'undefined') {
         if (my !== streamTok) return;
         caret.remove();
         out.setAttribute('aria-busy', 'false');
+        out.setAttribute('aria-label', restLabel);
+        out.removeAttribute('title');
+        out.style.cursor = '';
         if (moveFocus) try { out.focus(); } catch (err) {}
       };
       run();
@@ -2666,6 +2772,18 @@ if (typeof document !== 'undefined') {
         try { thing.focus(); } catch (err) {}
       }
     };
+    // Click the answer or press Escape and the rest arrives at once. A skip
+    // nobody can find is not a skip, so the label says so and changes back
+    // when there is nothing left to skip.
+    const hurryUp = () => {
+      if (out.getAttribute('aria-busy') !== 'true') return;
+      hurry = true;
+    };
+    out.addEventListener('click', hurryUp);
+    document.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') hurryUp();
+    });
+
     form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       say('argue');
